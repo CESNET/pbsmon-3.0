@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@/modules/app/app.module';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { AppConfig } from './config/app.config';
+import { setupSwagger } from './common/swagger/swagger-document';
 import * as cookieParser from 'cookie-parser';
 import './common/types/session.types';
 
@@ -77,17 +77,7 @@ async function bootstrap() {
   const appConfig = configService.get<AppConfig>('app')!;
   const port = appConfig.port || 3000;
 
-  // Swagger configuration - setup before global prefix
-  const config = new DocumentBuilder()
-    .setTitle('PBSMON API')
-    .setDescription('API for showing data from Metacentrum computing grid')
-    .setVersion('1.0')
-    .addServer('/api', 'Production API')
-    .addServer('/', 'Development API')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  setupSwagger(app);
 
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}`);
