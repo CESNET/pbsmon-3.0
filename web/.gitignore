@@ -1,5 +1,6 @@
 # Generated API client
 src/lib/generated-api/
+openapi/
 
 # Dependencies
 node_modules/

@@ -80,8 +80,52 @@ fi
 # Set the docker compose file
 COMPOSE_FILE="docker-compose.prod.yml"
 
+# Pre-generate OpenAPI spec and web API client before any service build/start
+OPENAPI_SPEC_PATH="$SCRIPT_DIR/web/openapi/openapi.json"
+echo -e "${YELLOW}Pre-generating OpenAPI spec and web API client...${NC}"
+mkdir -p "$(dirname "$OPENAPI_SPEC_PATH")"
 
-# Build and start API first (web depends on API for OpenAPI spec generation)
+echo -e "${YELLOW}Generating OpenAPI spec from API source...${NC}"
+if [ -f "$ENV_FILE" ]; then
+    if docker run --rm \
+        --env-file "$ENV_FILE" \
+        -v "$SCRIPT_DIR:/workspace" \
+        -w /workspace/api \
+        node:24-alpine \
+        sh -c "npm ci && npm run generate:openapi -- --output /workspace/web/openapi/openapi.json"; then
+        echo -e "${GREEN}✓ OpenAPI spec generated${NC}"
+    else
+        echo -e "${RED}✗ Failed to generate OpenAPI spec${NC}"
+        exit 1
+    fi
+else
+    if docker run --rm \
+        -v "$SCRIPT_DIR:/workspace" \
+        -w /workspace/api \
+        node:24-alpine \
+        sh -c "npm ci && npm run generate:openapi -- --output /workspace/web/openapi/openapi.json"; then
+        echo -e "${GREEN}✓ OpenAPI spec generated${NC}"
+    else
+        echo -e "${RED}✗ Failed to generate OpenAPI spec${NC}"
+        exit 1
+    fi
+fi
+
+echo -e "${YELLOW}Generating web API client from local OpenAPI spec...${NC}"
+if docker run --rm \
+    -e OPENAPI_SPEC_FILE=/workspace/web/openapi/openapi.json \
+    -v "$SCRIPT_DIR:/workspace" \
+    -w /workspace/web \
+    node:24-alpine \
+    sh -c "npm ci && npm run generate:api"; then
+    echo -e "${GREEN}✓ Web API client generated${NC}"
+else
+    echo -e "${RED}✗ Failed to generate web API client${NC}"
+    exit 1
+fi
+
+
+# Build and start API first
 echo -e "${YELLOW}Building and starting API container first...${NC}"
 if $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d --build api; then
     echo -e "${GREEN}✓ API container started${NC}"

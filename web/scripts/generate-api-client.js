@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { generate } from "openapi-typescript-codegen";
-import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { mkdirSync, existsSync, readFileSync } from "fs";
 import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { loadEnv } from "vite";
@@ -38,33 +38,36 @@ const API_AUTH_USERNAME =
   env.API_AUTH_USERNAME || process.env.API_AUTH_USERNAME;
 const API_AUTH_PASSWORD =
   env.API_AUTH_PASSWORD || process.env.API_AUTH_PASSWORD;
+const OPENAPI_SPEC_FILE =
+  env.OPENAPI_SPEC_FILE || process.env.OPENAPI_SPEC_FILE;
 const OUTPUT_DIR = join(__dirname, "../src/lib/generated-api");
 const GENERATED_CLIENT_EXISTS = existsSync(OUTPUT_DIR);
 
 // Provide helpful message about .env file location
-if (!envFileExists && !process.env.API_BASE_URL) {
+if (!envFileExists && !process.env.API_BASE_URL && !process.env.OPENAPI_SPEC_FILE) {
   console.warn(`⚠️  No .env file found at ${envFile}`);
   console.warn(`   You can create a .env file in the web/ directory with:`);
   console.warn(`   API_BASE_URL=your_api_url`);
   console.warn(`   API_AUTH_USERNAME=your_username`);
   console.warn(`   API_AUTH_PASSWORD=your_password`);
+  console.warn(`   OPENAPI_SPEC_FILE=path_to_openapi.json`);
 }
 
-if (!API_URL) {
+if (!API_URL && !OPENAPI_SPEC_FILE) {
   if (GENERATED_CLIENT_EXISTS) {
     console.warn(
-      "⚠️  API_BASE_URL is not set, but generated API client exists. Skipping regeneration."
+      "⚠️  Neither API_BASE_URL nor OPENAPI_SPEC_FILE is set, but generated API client exists. Skipping regeneration."
     );
     console.warn(
-      "   To regenerate the client, set API_BASE_URL environment variable or create a .env file."
+      "   To regenerate the client, set API_BASE_URL or OPENAPI_SPEC_FILE (or create a .env file)."
     );
     process.exit(0);
   } else {
     console.error(
-      "ERROR: API_BASE_URL is not set and no generated API client exists."
+      "ERROR: Neither API_BASE_URL nor OPENAPI_SPEC_FILE is set, and no generated API client exists."
     );
     console.error(
-      `   Please set API_BASE_URL as an environment variable or in a .env file at: ${envFile}`
+      `   Please set API_BASE_URL or OPENAPI_SPEC_FILE as an environment variable or in a .env file at: ${envFile}`
     );
     process.exit(1);
   }
@@ -108,10 +111,36 @@ async function fetchOpenApiSpec() {
   }
 }
 
+function loadOpenApiSpecFromFile() {
+  const resolvedPath = resolve(process.cwd(), OPENAPI_SPEC_FILE);
+  if (!existsSync(resolvedPath)) {
+    throw new Error(`OpenAPI spec file not found: ${resolvedPath}`);
+  }
+
+  console.log(`Loading OpenAPI spec from file: ${resolvedPath}`);
+  const fileContent = readFileSync(resolvedPath, "utf-8");
+  return JSON.parse(fileContent);
+}
+
 async function generateClient() {
   try {
-    // Fetch the OpenAPI spec directly from API
-    const openApiSpec = await fetchOpenApiSpec();
+    let openApiSpec;
+    if (OPENAPI_SPEC_FILE) {
+      try {
+        openApiSpec = loadOpenApiSpecFromFile();
+      } catch (error) {
+        if (API_URL) {
+          console.warn(
+            `⚠️  Failed to load OPENAPI_SPEC_FILE (${error.message}). Falling back to ${OPENAPI_JSON_URL}.`
+          );
+          openApiSpec = await fetchOpenApiSpec();
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      openApiSpec = await fetchOpenApiSpec();
+    }
 
     // Ensure output directory exists
     mkdirSync(OUTPUT_DIR, { recursive: true });

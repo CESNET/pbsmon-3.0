@@ -30,6 +30,14 @@ to deploy:
 ./deploy.sh
 ```
 
+`deploy.sh` now performs a pre-build OpenAPI preparation phase before building any service:
+
+1. Generate OpenAPI JSON from API source code (`api/src/scripts/generate-openapi.ts`) into `web/openapi/openapi.json`
+2. Generate frontend API client from that local spec (`web/scripts/generate-api-client.js`)
+3. Build/start containers with Docker Compose
+
+This removes the previous dependency where frontend build needed a running API container to fetch `/docs-json`.
+
 In case of need to restart nginx, run
 
 ```sh
