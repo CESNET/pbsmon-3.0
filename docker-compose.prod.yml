@@ -9,7 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - FRONTEND_URL=${FRONTEND_URL:-https://mu-pub-245-82.flt.openstack.cloud.e-infra.cz}
+      - FRONTEND_URL=${FRONTEND_URL:-https://pbsmon.metacentrum.cz}
       - PBS_DATA_PATH=/app/data/pbs
       - PERUN_DATA_PATH=/app/data/perun
       - ACCOUNTING_CONNECTION_STRING=${ACCOUNTING_CONNECTION_STRING:-}
@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        API_BASE_URL: ${API_BASE_URL:-https://mu-pub-245-82.flt.openstack.cloud.e-infra.cz/api}
+        API_BASE_URL: ${API_BASE_URL:-https://pbsmon.metacentrum.cz/api}
         API_AUTH_USERNAME: ${API_AUTH_USERNAME:-}
         API_AUTH_PASSWORD: ${API_AUTH_PASSWORD:-}
     container_name: pbsmon-web
@@ -79,7 +79,7 @@ services:
       - PBS_SERVER_NAME=${PBS_SERVER_NAME:-pbs-m1}
       - PBS_DATA_PATH=/app/data/pbs
       - KEYTAB_PATH=/pbsmon.keytab
-      - KEYTAB_USER=${KEYTAB_USER:-karilub@META}
+      - KEYTAB_USER=${KEYTAB_USER:-pbsmon@META}
     volumes:
       # Shared data directory with API service
       - ./api/data:/app/data
