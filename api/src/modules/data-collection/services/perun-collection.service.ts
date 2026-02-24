@@ -193,11 +193,11 @@ export class PerunCollectionService {
       return null;
     }
 
-    const [, usedValue, usedUnit, freeValue, freeUnit, directory] = match;
+    const [, totalValue, totalUnit, freeValue, freeUnit, directory] = match;
 
-    const usedTiB = this.convertToTiB(usedValue, usedUnit);
+    const totalTiB = this.convertToTiB(totalValue, totalUnit);
     const freeTiB = this.convertToTiB(freeValue, freeUnit);
-    const totalTiB = usedTiB + freeTiB;
+    const usedTiB = totalTiB - freeTiB;
     const usagePercent =
       totalTiB > 0 ? Math.round((usedTiB / totalTiB) * 100) : 0;
 
