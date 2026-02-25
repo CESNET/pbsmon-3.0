@@ -1,12 +1,20 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { useInfrastructure } from "@/hooks/useInfrastructure";
 import { OrganizationPreview } from "@/components/infrastructure/OrganizationPreview";
 import { MetacentrumTotal } from "@/components/infrastructure/MetacentrumTotal";
 import { QuickLinksSidebar } from "@/components/infrastructure/QuickLinksSidebar";
+import { MachineSearchBar } from "@/components/infrastructure/MachineSearchBar";
 
 export function MachinesPage() {
+  const [machineSearch, setMachineSearch] = useState("");
+  const handleMachinePageChange = (query: string) => {
+    setMachineSearch(query);
+  }
   const { t, i18n } = useTranslation();
-  const { data, isLoading, error } = useInfrastructure();
+  const { data, isLoading, error } = useInfrastructure({
+    search: machineSearch.trim() || undefined
+  });
 
   const currentLanguage = i18n.language as "cs" | "en";
 
@@ -22,6 +30,12 @@ export function MachinesPage() {
       <div className="flex gap-6 p-6">
         {/* Main Content */}
         <div className="flex-1">
+          <MachineSearchBar
+            searchQuery={machineSearch}
+            onSearchChange={handleMachinePageChange}
+            totalMachines={data?.meta?.totalNodes || 0}
+          />
+
           {isLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-gray-600">{t("common.loading")}</div>

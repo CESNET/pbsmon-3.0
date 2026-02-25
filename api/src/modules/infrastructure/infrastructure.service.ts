@@ -27,7 +27,9 @@ import { PrometheusResponse } from '@/modules/data-collection/clients/prometheus
 export class InfrastructureService {
   constructor(private readonly dataCollectionService: DataCollectionService) {}
 
-  getInfrastructureList(): {
+  getInfrastructureList(
+    search?: string,
+  ): {
     data: InfrastructureOrganizationListDTO[];
     meta: InfrastructureListMetaDto;
   } {
@@ -45,6 +47,50 @@ export class InfrastructureService {
     );
 
     const meta = this.calculateStatistics(data);
+
+    // Apply search filter
+    if (search && search.trim()) {
+      const searchLower = search.toLowerCase().trim();
+
+      // Filter by search term
+      const filtered = data
+        .map((org) => {
+          const clusters = org.clusters
+            .map((cluster) => {
+              // Filter nodes within cluster by node name
+              const nodes = cluster.nodes.filter((node) =>
+                node.name.toLowerCase().includes(searchLower) ||
+                node.actualState?.toLowerCase().includes(searchLower) ||
+                node.queueNames?.some((q) => q.toLowerCase().includes(searchLower))
+              );
+
+              if (nodes.length > 0) {
+                return {
+                  ...cluster,
+                  nodes,
+                  nodeCount: nodes.length,
+                } as InfrastructureClusterListDTO;
+              }
+
+              return null;
+            })
+            .filter(Boolean) as InfrastructureClusterListDTO[];
+
+          if (clusters.length > 0) {
+            return {
+              ...org,
+              clusters,
+              clusterCount: clusters.length,
+            } as InfrastructureOrganizationListDTO;
+          }
+
+          return null;
+        })
+        .filter(Boolean) as InfrastructureOrganizationListDTO[];
+
+      // Replace data with filtered result
+      return { data: filtered, meta };
+    }
 
     return { data, meta };
   }

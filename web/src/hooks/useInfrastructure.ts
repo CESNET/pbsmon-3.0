@@ -24,12 +24,25 @@ type InfrastructureListResponse = {
   meta?: InfrastructureListMetaDto;
 };
 
-export function useInfrastructure() {
+interface UseInfrastructureParams {
+  search?: string;
+}
+
+export function useInfrastructure(params: UseInfrastructureParams = {}) {
+  const {
+    search,
+  } = params;
   return useQuery<InfrastructureListResponse>({
-    queryKey: ["infrastructure"],
+    queryKey: [
+      "infrastructure",
+      search,
+
+    ],
     queryFn: async () => {
       const response =
-        await apiClient.infrastructure.infrastructureControllerGetInfrastructure();
+        await apiClient.infrastructure.infrastructureControllerGetInfrastructure({
+          search,
+        });
       return response;
     },
   });

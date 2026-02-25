@@ -1,5 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiNotFoundResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, Param } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiNotFoundResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponse } from '@/common/dto/api-response.dto';
 import {
   ApiOkResponseArray,
@@ -28,11 +28,21 @@ export class InfrastructureController {
     'List of infrastructure organizations',
     InfrastructureListMetaDto,
   )
-  getInfrastructure(): ApiResponse<
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search query (searches machines by name or queue)',
+  })
+  getInfrastructure(
+    @Query('search') search?: string,
+  ): ApiResponse<
     InfrastructureOrganizationListDTO[],
     InfrastructureListMetaDto
   > {
-    const { data, meta } = this.infrastructureService.getInfrastructureList();
+    const { data, meta } = this.infrastructureService.getInfrastructureList(
+      search,
+    );
     return new ApiResponse(data, meta);
   }
 
