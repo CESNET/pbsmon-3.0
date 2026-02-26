@@ -258,7 +258,7 @@ export function SidebarLayout() {
         <aside className="w-64 bg-primary-600 text-white flex flex-col shadow-[1px_1px_5px_rgba(0,0,0,0.25),inset_0_0_8px_rgba(0,0,0,0.25)]">
           <div className="pl-[29px] pr-4 pt-10 pb-6 border-b border-primary-700">
             <img
-              src="/images/logo-white.png"
+              src="/images/logo-white.svg"
               alt={t("common.logoAlt")}
               className="w-[195px] h-[47px]"
             />
