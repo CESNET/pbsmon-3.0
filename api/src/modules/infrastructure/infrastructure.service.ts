@@ -46,14 +46,23 @@ export class InfrastructureService {
       this.mapOrganizationToList(org),
     );
 
-    const meta = this.calculateStatistics(data);
+    // Sort nodes within each cluster by name (natural sort)
+    const sortedData = data.map((org) => ({
+      ...org,
+      clusters: org.clusters.map((cluster) => ({
+        ...cluster,
+        nodes: cluster.nodes.sort((a, b) => this.naturalSort(a.name, b.name)),
+      })),
+    }));
+
+    const meta = this.calculateStatistics(sortedData);
 
     // Apply search filter
     if (search && search.trim()) {
       const searchLower = search.toLowerCase().trim();
 
       // Filter by search term
-      const filtered = data
+      const filtered = sortedData
         .map((org) => {
           const clusters = org.clusters
             .map((cluster) => {
@@ -92,7 +101,37 @@ export class InfrastructureService {
       return { data: filtered, meta };
     }
 
-    return { data, meta };
+    return { data: sortedData, meta };
+  }
+
+  /**
+   * Natural sort comparison for alphanumeric strings
+   * Ensures node2 comes before node11
+   */
+  private naturalSort(a: string, b: string): number {
+    const regex = /(\d+)/g;
+    const aParts = a.split(regex);
+    const bParts = b.split(regex);
+
+    for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+      const aPart = aParts[i];
+      const bPart = bParts[i];
+
+      // Check if parts are numeric
+      if (/^\d+$/.test(aPart) && /^\d+$/.test(bPart)) {
+        const aNum = parseInt(aPart, 10);
+        const bNum = parseInt(bPart, 10);
+        if (aNum !== bNum) {
+          return aNum - bNum;
+        }
+      } else {
+        // String comparison
+        if (aPart < bPart) return -1;
+        if (aPart > bPart) return 1;
+      }
+    }
+
+    return aParts.length - bParts.length;
   }
 
   private calculateStatistics(
