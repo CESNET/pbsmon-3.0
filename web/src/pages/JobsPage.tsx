@@ -321,6 +321,12 @@ export function JobsPage() {
       label: t("jobs.tabs.waitingJobs"),
       content: (
         <div>
+          <JobsSearchBar
+            searchQuery={waitingJobsSearch}
+            onSearchChange={handleWaitingJobsSearchChange}
+            totalJobs={waitingJobsData?.meta?.totalCount || 0}
+          />
+
           {waitingJobsLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-gray-600">{t("common.loading")}</div>
@@ -348,11 +354,6 @@ export function JobsPage() {
                 />
               )}
 
-              <JobsSearchBar
-                searchQuery={waitingJobsSearch}
-                onSearchChange={handleWaitingJobsSearchChange}
-                totalJobs={waitingJobsData?.meta?.totalCount || 0}
-              />
               <WaitingJobsTable
                 jobs={waitingJobsData.data.jobs}
                 sortColumn={waitingJobsSort}
