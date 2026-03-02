@@ -670,18 +670,20 @@ export class InfrastructureService {
 
     // Get queue from reservation if node has a reservation
     if (pbsNodeData?.pbsNode?.attributes.resv && pbsNodeData.serverName) {
-      const reservationName = pbsNodeData.pbsNode.attributes.resv;
+      const reservationNames = pbsNodeData.pbsNode.attributes.resv.split(',').map((r) => r.trim());
       const pbsData = this.dataCollectionService.getPbsData();
       const serverData = pbsData?.servers?.[pbsNodeData.serverName];
 
-      if (serverData?.reservations?.items) {
-        const reservation = serverData.reservations.items.find(
-          (r) => r.name === reservationName,
-        );
-        if (reservation?.attributes.queue) {
-          queueNamesSet.add(reservation.attributes.queue);
+      reservationNames.forEach((reservationName) => {
+        if (serverData?.reservations?.items) {
+          const reservation = serverData.reservations.items.find(
+            (r) => r.name === reservationName,
+          );
+          if (reservation?.attributes.queue) {
+            queueNamesSet.add(reservation.attributes.queue);
+          }
         }
-      }
+      });
     }
 
     if (queueNamesSet.size > 0) {
@@ -817,10 +819,8 @@ export class InfrastructureService {
     const commentAux = pbsNodeData?.pbsNode?.attributes?.comment_aux || null;
 
     // Parse reservation information if node has a reservation
-    const reservation = this.parseNodeReservation(
+    const reservations = this.parseNodeReservations(
       pbsNodeData?.pbsNode,
-      pbsNodeData?.serverName || undefined,
-      userContext,
     );
 
     const pbsData = pbsNodeData?.pbsNode
@@ -852,7 +852,7 @@ export class InfrastructureService {
           scratchSsdAvailable: pbsState.scratchSsdAvailable,
           scratchSharedTotal: pbsState.scratchSharedTotal,
           scratchShmAvailable: pbsState.scratchShmAvailable,
-          reservation,
+          reservations,
         }
       : null;
 
@@ -874,183 +874,21 @@ export class InfrastructureService {
   }
 
   /**
-   * Parse reservation information for a node
+   * Parse reservations information for a node
    */
-  private parseNodeReservation(
+  private parseNodeReservations(
     pbsNode: PbsNode | null | undefined,
-    serverName: string | undefined,
-    userContext?: UserContext,
-  ): {
-    name: string;
-    displayName?: string | null;
-    owner?: string | null;
-    canSeeOwner?: boolean;
-    hasAccess?: boolean;
-    state?: string | null;
-    startTime?: number | null;
-    endTime?: number | null;
-    duration?: number | null;
-    resourceMem?: string | null;
-    resourceNcpus?: string | null;
-    resourceNgpus?: string | null;
-    resourceNodect?: string | null;
-    authorizedUsers?: Array<{ username: string; hasAccess: boolean }> | null;
-    queue?: string | null;
-    isStarted?: boolean | null;
-  } | null {
-    if (!pbsNode?.attributes?.resv || !serverName) {
-      return null;
-    }
+  ): Array<string> | null {
 
-    const reservationName = pbsNode.attributes.resv;
-    const pbsData = this.dataCollectionService.getPbsData();
-    const serverData = pbsData?.servers?.[serverName];
-
-    if (!serverData?.reservations?.items) {
-      return null;
-    }
-
-    const reservation = serverData.reservations.items.find(
-      (r) => r.name === reservationName,
-    );
-
-    if (!reservation) {
-      return null;
-    }
-
-    // Check if reservation has started
-    // Reservation state 5 typically means "RESV_RUNNING" (started)
-    const isStarted = reservation.attributes.reserve_state === '5';
-
-    // Parse authorized users
-    const authorizedUsersRaw = reservation.attributes.Authorized_Users
-      ? reservation.attributes.Authorized_Users.split(',')
-          .map((u) => u.trim())
-          .filter(Boolean)
-      : null;
-
-    // Check if current user has access to the reservation
-    let hasAccess = true;
-    if (userContext && authorizedUsersRaw && authorizedUsersRaw.length > 0) {
-      if (userContext.role !== UserRole.ADMIN) {
-        const usernameBase = userContext.username.split('@')[0];
-        // Check if user is in authorized users list
-        hasAccess = authorizedUsersRaw.some((authUser) => {
-          const authUserBase = authUser.split('@')[0];
-          return (
-            authUser === userContext.username ||
-            authUserBase === usernameBase ||
-            authUser === usernameBase
-          );
-        });
-      }
-    }
-
-    // Format authorized users with access information
-    let authorizedUsers: Array<{
-      username: string;
-      hasAccess: boolean;
-    }> | null = null;
-    if (authorizedUsersRaw && authorizedUsersRaw.length > 0) {
-      // Get allowed usernames for checking access to each authorized user
-      const allowedUsernames = new Set<string>();
-      if (userContext) {
-        if (userContext.role === UserRole.ADMIN) {
-          // Admins can see all users
-          authorizedUsersRaw.forEach((u) => {
-            const username = u.split('@')[0];
-            allowedUsernames.add(u);
-            allowedUsernames.add(username);
-          });
-        } else {
-          const usernameBase = userContext.username.split('@')[0];
-          allowedUsernames.add(userContext.username);
-          allowedUsernames.add(usernameBase);
-
-          // Get users from groups the current user belongs to
-          const perunData = this.dataCollectionService.getPerunData();
-          const groupMembers = this.getUsersFromUserGroups(
-            perunData,
-            userContext.username,
-          );
-          for (const member of groupMembers) {
-            allowedUsernames.add(member);
-            allowedUsernames.add(member.split('@')[0]);
-          }
-        }
-      }
-
-      authorizedUsers = authorizedUsersRaw.map((authUser) => {
-        const username = authUser.split('@')[0];
-        const userHasAccess =
-          !userContext ||
-          userContext.role === UserRole.ADMIN ||
-          allowedUsernames.has(authUser) ||
-          allowedUsernames.has(username);
-        return {
-          username,
-          hasAccess: userHasAccess,
-        };
+    const reservationNames: string[] = [];
+    if (pbsNode?.attributes?.resv) {
+      const resvList = pbsNode.attributes.resv.split(',');
+      resvList.forEach((r) => {
+        reservationNames.push(r.trim());
       });
     }
 
-    // Parse reservation start/end times
-    const startTime = reservation.attributes.reserve_start
-      ? parseInt(reservation.attributes.reserve_start, 10)
-      : null;
-    const endTime = reservation.attributes.reserve_end
-      ? parseInt(reservation.attributes.reserve_end, 10)
-      : null;
-    const duration = reservation.attributes.reserve_duration
-      ? parseInt(reservation.attributes.reserve_duration, 10)
-      : null;
-
-    const owner = reservation.attributes.Reserve_Owner || null;
-
-    // Calculate if current user can see the reservation owner
-    let canSeeOwner = true;
-    if (userContext && owner) {
-      if (userContext.role !== UserRole.ADMIN) {
-        const usernameBase = userContext.username.split('@')[0];
-        const ownerBase = owner.split('@')[0];
-        const allowedUsernames = new Set<string>();
-        allowedUsernames.add(userContext.username);
-        allowedUsernames.add(usernameBase);
-
-        // Get users from groups the current user belongs to
-        const perunData = this.dataCollectionService.getPerunData();
-        const groupMembers = this.getUsersFromUserGroups(
-          perunData,
-          userContext.username,
-        );
-        for (const member of groupMembers) {
-          allowedUsernames.add(member);
-          allowedUsernames.add(member.split('@')[0]);
-        }
-
-        canSeeOwner =
-          allowedUsernames.has(owner) || allowedUsernames.has(ownerBase);
-      }
-    }
-
-    return {
-      name: reservation.name,
-      displayName: reservation.attributes.Reserve_Name || null,
-      owner: canSeeOwner ? owner : 'Anonym',
-      canSeeOwner,
-      hasAccess,
-      state: reservation.attributes.reserve_state || null,
-      startTime,
-      endTime,
-      duration,
-      resourceMem: reservation.attributes['Resource_List.mem'] || null,
-      resourceNcpus: reservation.attributes['Resource_List.ncpus'] || null,
-      resourceNgpus: reservation.attributes['Resource_List.ngpus'] || null,
-      resourceNodect: reservation.attributes['Resource_List.nodect'] || null,
-      authorizedUsers,
-      queue: reservation.attributes.queue || null,
-      isStarted,
-    };
+    return reservationNames.length > 0 ? reservationNames : null;
   }
 
   private mapPbsQueueToList(queue: PbsQueue, serverName: string): QueueListDTO {

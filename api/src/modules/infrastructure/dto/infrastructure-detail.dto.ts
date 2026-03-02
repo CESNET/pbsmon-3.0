@@ -236,29 +236,12 @@ export class InfrastructureNodePbsDTO {
 
   @Expose()
   @ApiProperty({
-    description: 'Reservation information if this node is reserved',
-    type: Object,
+    description: 'Reservations information if this node is reserved',
+    type: [String],
     nullable: true,
     required: false,
   })
-  reservation?: {
-    name: string;
-    displayName?: string | null;
-    owner?: string | null;
-    canSeeOwner?: boolean;
-    hasAccess?: boolean;
-    state?: string | null;
-    startTime?: number | null;
-    endTime?: number | null;
-    duration?: number | null;
-    resourceMem?: string | null;
-    resourceNcpus?: string | null;
-    resourceNgpus?: string | null;
-    resourceNodect?: string | null;
-    authorizedUsers?: Array<{ username: string; hasAccess: boolean }> | null;
-    queue?: string | null;
-    isStarted?: boolean | null;
-  } | null;
+  reservations?: string[] | null;
 }
 
 export class InfrastructureNodeDetailDTO {
