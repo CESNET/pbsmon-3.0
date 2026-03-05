@@ -25,6 +25,7 @@ export interface PerunResource {
   owner: LocalizedString;
   vos: string[];
   machines: PerunMachine[];
+  cpu: number | null;
 }
 
 export interface PerunPhysicalMachine {

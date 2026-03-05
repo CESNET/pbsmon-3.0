@@ -401,18 +401,20 @@ export class InfrastructureService {
   private mapOrganizationToList(
     org: PerunPhysicalMachine,
   ): InfrastructureOrganizationListDTO {
-    let totalNodes = 0;
     const clusters = (org.resources || []).map((resource) => {
       const machines = resource.machines || [];
-      const nodes = machines.map((machine) =>
-        this.mapNodeToList(machine, resource.id),
-      );
-      totalNodes += nodes.length;
+      const nodes =
+        resource.cluster === 'true'
+          ? machines.map((machine) => this.mapNodeToList(machine, resource.id))
+          : [this.mapOrganizationToMachine(resource)];
       return {
         id: resource.id,
         name: resource.name,
         cluster: resource.cluster,
-        totalCpu: machines.reduce((sum, m) => sum + m.cpu, 0),
+        totalCpu:
+          resource.cluster === 'true'
+            ? machines.reduce((sum, m) => sum + m.cpu, 0)
+            : resource.cpu || 0,
         nodeCount: nodes.length,
         nodes,
       } as InfrastructureClusterListDTO;
@@ -712,6 +714,22 @@ export class InfrastructureService {
       queueNames,
       ostack: cloudInfo,
     };
+  }
+
+  private mapOrganizationToMachine(resource: PerunResource): InfrastructureNodeListDTO {
+    if (resource.cluster === 'true') {
+      throw new Error(
+        `Resource '${resource.name}' is a cluster, cannot be mapped to machine`,
+      );
+    }
+
+    return this.mapNodeToList(
+      {
+        name: resource.name,
+        cpu: resource.cpu || 0,
+      } as PerunMachine,
+      resource.id,
+    );
   }
 
   /**
@@ -1473,7 +1491,10 @@ export class InfrastructureService {
     for (const org of organizations) {
       const resources = org.resources || [];
       for (const resource of resources) {
-        const machines = resource.machines || [];
+        const machines =
+          resource.cluster === 'true'
+            ? resource.machines || []
+            : [{ name: resource.name, cpu: resource.cpu || 0 } as PerunMachine];
         // Try exact match first
         let machine = machines.find((m) => m.name === nodeName);
         if (machine) {
