@@ -778,6 +778,10 @@ export class InfrastructureService {
         for (const q of serverData.queues.items) {
           allQueuesMap.set(q.name, q);
 
+          if (q.attributes['default_chunk.queue_list']) {
+            allQueuesMap.set(q.attributes['default_chunk.queue_list'], q);
+          }
+
           if (q.attributes.queue_type === 'Route') {
             const destinations = this.parseRouteDestinations(q);
             for (const destination of destinations) {
