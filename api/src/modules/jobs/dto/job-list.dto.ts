@@ -98,8 +98,16 @@ export class JobListDTO {
   cpuUsagePercent?: number | null;
 
   @Expose()
+  @ApiProperty({ description: 'CPU usage percentage per CPU', nullable: true })
+  cpuUsagePercentPerCpu?: number | null;
+
+  @Expose()
   @ApiProperty({ description: 'GPU usage percentage', nullable: true })
   gpuUsagePercent?: number | null;
+
+  @Expose()
+  @ApiProperty({ description: 'GPU usage percentage per GPU', nullable: true })
+  gpuUsagePercentPerGpu?: number | null;
 
   @Expose()
   @ApiProperty({ description: 'Memory usage percentage', nullable: true })

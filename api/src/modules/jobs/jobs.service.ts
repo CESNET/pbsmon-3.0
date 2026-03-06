@@ -214,14 +214,17 @@ export class JobsService {
 
     // Calculate usage percentages
     let cpuUsagePercent: number | null = null;
+    let cpuUsagePercentPerCpu: number | null = null;
     let gpuUsagePercent: number | null = null;
+    let gpuUsagePercentPerGpu: number | null = null;
     let memoryUsagePercent: number | null = null;
 
     // Use CPU percent from PBS directly
     if (hasResourceUsage && attrs['resources_used.cpupercent']) {
       const cpuPercent = parseFloat(attrs['resources_used.cpupercent']);
       if (!isNaN(cpuPercent)) {
-        cpuUsagePercent = Math.min(100, Math.round(cpuPercent));
+        cpuUsagePercent = Math.round(cpuPercent);
+        cpuUsagePercentPerCpu = Math.round(cpuPercent / (cpuReserved > 0 ? cpuReserved : 1));
       }
     }
 
@@ -229,7 +232,8 @@ export class JobsService {
     if (hasResourceUsage && attrs['resources_used.gpupercent']) {
       const gpuPercent = parseFloat(attrs['resources_used.gpupercent']);
       if (!isNaN(gpuPercent)) {
-        gpuUsagePercent = Math.min(100, Math.round(gpuPercent));
+        gpuUsagePercent = Math.round(gpuPercent);
+        gpuUsagePercentPerGpu = Math.round(gpuPercent / (gpuReserved > 0 ? gpuReserved : 1));
       }
     } else if (
       hasResourceUsage &&
@@ -312,7 +316,9 @@ export class JobsService {
       memoryUsed,
       runtime,
       cpuUsagePercent,
+      cpuUsagePercentPerCpu,
       gpuUsagePercent,
+      gpuUsagePercentPerGpu,
       memoryUsagePercent,
       createdAt,
       exitCode,
@@ -682,14 +688,17 @@ export class JobsService {
 
     // Calculate usage percentages
     let cpuUsagePercent: number | null = null;
+    let cpuUsagePercentPerCpu: number | null = null;
     let gpuUsagePercent: number | null = null;
+    let gpuUsagePercentPerGpu: number | null = null;
     let memoryUsagePercent: number | null = null;
 
     // Use CPU percent from PBS directly
     if (hasResourceUsage && attrs['resources_used.cpupercent']) {
       const cpuPercent = parseFloat(attrs['resources_used.cpupercent']);
       if (!isNaN(cpuPercent)) {
-        cpuUsagePercent = Math.min(100, Math.round(cpuPercent));
+        cpuUsagePercent = Math.round(cpuPercent);
+        cpuUsagePercentPerCpu = Math.round(cpuPercent / (cpuReserved > 0 ? cpuReserved : 1));
       }
     }
 
@@ -697,7 +706,8 @@ export class JobsService {
     if (hasResourceUsage && attrs['resources_used.gpupercent']) {
       const gpuPercent = parseFloat(attrs['resources_used.gpupercent']);
       if (!isNaN(gpuPercent)) {
-        gpuUsagePercent = Math.min(100, Math.round(gpuPercent));
+        gpuUsagePercent = Math.round(gpuPercent);
+        gpuUsagePercentPerGpu = Math.round(gpuPercent / (gpuReserved > 0 ? gpuReserved : 1));
       }
     } else if (
       hasResourceUsage &&
@@ -819,8 +829,8 @@ export class JobsService {
     // Generate custom messages
     const messages: JobMessageDTO[] = this.generateMessages(
       state,
-      cpuUsagePercent,
-      gpuUsagePercent,
+      cpuUsagePercentPerCpu,
+      gpuUsagePercentPerGpu,
       memoryUsagePercent,
       cpuReserved,
       gpuReserved,
@@ -861,7 +871,9 @@ export class JobsService {
       memoryUsed,
       runtime,
       cpuUsagePercent,
+      cpuUsagePercentPerCpu,
       gpuUsagePercent,
+      gpuUsagePercentPerGpu,
       memoryUsagePercent,
       createdAt,
       eligibleAt,
@@ -986,8 +998,8 @@ export class JobsService {
    */
   private generateMessages(
     state: string,
-    cpuUsagePercent: number | null,
-    gpuUsagePercent: number | null,
+    cpuUsagePercentPerCpu: number | null,
+    gpuUsagePercentPerGpu: number | null,
     memoryUsagePercent: number | null,
     cpuReserved: number,
     gpuReserved: number,
@@ -1008,12 +1020,12 @@ export class JobsService {
     }
 
     // Check CPU efficiency using cpupercent from PBS
-    if (cpuUsagePercent !== null && cpuUsagePercent < 75 && cpuReserved > 0) {
+    if (cpuUsagePercentPerCpu !== null && cpuUsagePercentPerCpu < 75 && cpuReserved > 0) {
       messages.push({
         type: 'warning',
-        message: `CPU usage is below 75% (${cpuUsagePercent}%). The job was inefficient. Consider reducing the number of CPUs requested.`,
+        message: `CPU usage is below 75% (${cpuUsagePercentPerCpu}%). The job was inefficient. Consider reducing the number of CPUs requested.`,
         code: 'cpuUsageLow',
-        params: { percent: cpuUsagePercent },
+        params: { percent: cpuUsagePercentPerCpu },
       });
     }
 
@@ -1041,12 +1053,12 @@ export class JobsService {
     }
 
     // Check GPU usage
-    if (gpuUsagePercent !== null && gpuUsagePercent < 75 && gpuReserved > 0) {
+    if (gpuUsagePercentPerGpu !== null && gpuUsagePercentPerGpu < 75 && gpuReserved > 0) {
       messages.push({
         type: 'error',
-        message: `GPU usage is below 75% (${gpuUsagePercent}%). Consider reducing the number of GPUs requested.`,
+        message: `GPU usage is below 75% (${gpuUsagePercentPerGpu}%). Consider reducing the number of GPUs requested.`,
         code: 'gpuUsageLow',
-        params: { percent: gpuUsagePercent },
+        params: { percent: gpuUsagePercentPerGpu },
       });
     }
 

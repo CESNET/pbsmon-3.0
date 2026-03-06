@@ -135,12 +135,12 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
           <div className="space-y-4">
             {job.cpuTimeUsed && (
               <div>
-                {typeof job.cpuUsagePercent === "number" &&
-                job.cpuUsagePercent !== null ? (
+                {typeof job.cpuUsagePercentPerCpu === "number" &&
+                job.cpuUsagePercentPerCpu !== null ? (
                   <ProgressBar
                     label={t("jobs.cpuTimeUsed")}
                     value={String(job.cpuTimeUsed)}
-                    percent={job.cpuUsagePercent}
+                    percent={job.cpuUsagePercentPerCpu}
                     color="#4b5563"
                   />
                 ) : (
@@ -160,18 +160,15 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
             {job.gpuReserved > 0 && (
               <div>
                 {typeof job.gpuUsagePercent === "number" &&
-                job.gpuUsagePercent !== null ? (
+                job.gpuUsagePercent !== null &&
+                typeof job.gpuUsagePercentPerGpu === "number" &&
+                job.gpuUsagePercentPerGpu !== null? (
                   (() => {
                     // Calculate GPU time from GPU percent
                     const calculatedGpuTime = calculateGpuTimeFromPercent(
                       job.gpuUsagePercent,
                       job.runtime ? String(job.runtime) : null,
                       job.gpuReserved
-                    );
-                    // Calculate per-GPU percentage for display (clamp to 100% max)
-                    const perGpuPercent = Math.min(
-                      100,
-                      job.gpuUsagePercent / job.gpuReserved
                     );
                     return (
                       <ProgressBar
@@ -181,7 +178,7 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
                             ? calculatedGpuTime
                             : `${job.gpuReserved} ${t("jobs.gpu")}`
                         }
-                        percent={perGpuPercent}
+                        percent={job.gpuUsagePercentPerGpu}
                         color="#4b5563"
                         icon={
                           <Icon

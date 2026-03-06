@@ -207,9 +207,9 @@ export function JobsTableRow({
           jobState === "C" ||
           jobState === "F" ||
           jobState === "X") &&
-        typeof job.cpuUsagePercent === "number" &&
-        job.cpuUsagePercent !== null &&
-        job.cpuUsagePercent !== undefined ? (
+        typeof job.cpuUsagePercentPerCpu === "number" &&
+        job.cpuUsagePercentPerCpu !== null &&
+        job.cpuUsagePercentPerCpu !== undefined ? (
           <div className="mb-1">
             <ProgressBar
               label={`CPU:`}
@@ -218,7 +218,7 @@ export function JobsTableRow({
                   ? job.cpuReserved
                   : Number(job.cpuReserved) || 0
               }
-              percent={job.cpuUsagePercent}
+              percent={job.cpuUsagePercentPerCpu}
               color={(percent) => (percent < 50 ? "#ef4444" : "#4b5563")}
               icon={
                 <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
@@ -294,20 +294,20 @@ export function JobsTableRow({
               (job as any).runtime,
               gpuReserved
             );
-            // Calculate per-GPU percentage for display (clamp to 100% max)
-            const perGpuPercent = Math.min(100, gpuUsagePercent / gpuReserved);
 
             return (
               <div className="mb-1">
+                { job.gpuUsagePercentPerGpu !== null && typeof job.gpuUsagePercentPerGpu === "number" && (
                 <ProgressBar
                   label=""
                   value={gpuReserved}
-                  percent={perGpuPercent}
+                  percent={job.gpuUsagePercentPerGpu}
                   color="#4b5563"
                   icon={
                     <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
                   }
                 />
+                )}
                 {calculatedGpuTime && (
                   <div className="text-gray-600 flex justify-between ">
                     <span>{t("jobs.gpuTime")}:</span>
