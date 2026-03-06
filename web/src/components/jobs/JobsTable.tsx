@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { JobListDTO } from "@/lib/generated-api";
 import { JobsTableHeader } from "./JobsTableHeader";
 import { JobsTableRow } from "./JobsTableRow";
+import type { JobFilterableState } from "./JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -21,6 +22,8 @@ interface JobsTableProps {
   onSort: (column: SortColumn) => void;
   hideMachineColumn?: boolean;
   hideUserColumn?: boolean;
+  stateFilter?: JobFilterableState;
+  onStateFilterChange?: (state: JobFilterableState) => void;
 }
 
 export function JobsTable({
@@ -30,6 +33,8 @@ export function JobsTable({
   onSort,
   hideMachineColumn = false,
   hideUserColumn = false,
+  stateFilter,
+  onStateFilterChange,
 }: JobsTableProps) {
   const { t } = useTranslation();
 
@@ -42,6 +47,8 @@ export function JobsTable({
           onSort={onSort}
           hideMachineColumn={hideMachineColumn}
           hideUserColumn={hideUserColumn}
+          stateFilter={stateFilter}
+          onStateFilterChange={onStateFilterChange}
         />
 
         {/* Table Body */}

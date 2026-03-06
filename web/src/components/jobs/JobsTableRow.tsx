@@ -106,13 +106,13 @@ export function JobsTableRow({
   // Calculate grid columns based on which columns are hidden
   let gridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    gridCols = "grid-cols-[80px_300px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_1fr_1fr_1fr_180px]";
   } else if (hideMachineColumn) {
-    gridCols = "grid-cols-[80px_300px_150px_120px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_120px_1fr_1fr_1fr_180px]";
   } else if (hideUserColumn) {
-    gridCols = "grid-cols-[80px_300px_150px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_150px_1fr_1fr_1fr_180px]";
   } else {
-    gridCols = "grid-cols-[80px_300px_150px_120px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_120px_150px_1fr_1fr_1fr_180px]";
   }
 
   return (

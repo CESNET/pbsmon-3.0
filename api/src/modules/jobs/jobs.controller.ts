@@ -56,7 +56,7 @@ export class JobsController {
     required: false,
     type: String,
     description:
-      'Filter by job state (Q=Queued, R=Running, C=Completed, E=Exiting, H=Held). If not provided, returns jobs with all states.',
+      'Filter by job state (Q=Queued, R=Running, C=Completed, E=Exiting, H=Held). Multiple states can be divided by "|". If not provided, returns jobs with all states.',
   })
   @ApiQuery({
     name: 'node',

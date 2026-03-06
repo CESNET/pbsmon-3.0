@@ -111,7 +111,8 @@ export class JobsService {
 
     // Apply state filter
     if (state && state.trim()) {
-      jobs = jobs.filter((job) => job.state === state.trim().toUpperCase());
+      const states = state.split('|').map((s) => s.trim().toUpperCase());
+      jobs = jobs.filter((job) => states.includes(job.state));
     }
 
     // Apply queue filter

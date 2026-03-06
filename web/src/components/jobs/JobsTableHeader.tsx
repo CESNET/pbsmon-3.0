@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { JobsSortableHeader } from "./JobsSortableHeader";
+import { JobsFilterableHeader, type JobFilterableState } from "./JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -18,6 +19,8 @@ interface JobsTableHeaderProps {
   onSort: (column: SortColumn) => void;
   hideMachineColumn?: boolean;
   hideUserColumn?: boolean;
+  stateFilter?: JobFilterableState;
+  onStateFilterChange?: (state: JobFilterableState) => void;
 }
 
 export function JobsTableHeader({
@@ -26,19 +29,21 @@ export function JobsTableHeader({
   onSort,
   hideMachineColumn = false,
   hideUserColumn = false,
+  stateFilter,
+  onStateFilterChange,
 }: JobsTableHeaderProps) {
   const { t } = useTranslation();
 
   // Calculate grid columns based on which columns are hidden
   let gridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    gridCols = "grid-cols-[80px_300px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_1fr_1fr_1fr_180px]";
   } else if (hideMachineColumn) {
-    gridCols = "grid-cols-[80px_300px_150px_120px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_120px_1fr_1fr_1fr_180px]";
   } else if (hideUserColumn) {
-    gridCols = "grid-cols-[80px_300px_150px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_150px_1fr_1fr_1fr_180px]";
   } else {
-    gridCols = "grid-cols-[80px_300px_150px_120px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[90px_300px_150px_120px_150px_1fr_1fr_1fr_180px]";
   }
 
   return (
@@ -46,14 +51,11 @@ export function JobsTableHeader({
       <div
         className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700`}
       >
-        <JobsSortableHeader
-          column="state"
-          currentSortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={onSort}
+        <JobsFilterableHeader
+          stateFilter={stateFilter}
+          onStateFilterChange={onStateFilterChange}
         >
-          {t("jobs.status")}
-        </JobsSortableHeader>
+        </JobsFilterableHeader>
 
         <JobsSortableHeader
           column="id"

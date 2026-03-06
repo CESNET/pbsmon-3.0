@@ -8,6 +8,7 @@ import { QueuePbsMachinesTab } from "@/components/queues/QueuePbsMachinesTab";
 import { QueuePbsSystemInfoTab } from "@/components/queues/QueuePbsSystemInfoTab";
 import { Icon } from "@iconify/react";
 import type { QueueDetailDTO, QueueListDTO } from "@/lib/generated-api";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -37,6 +38,7 @@ export function QueueDetailContent({
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
+  const [stateFilter, setStateFilter] = useState<JobFilterableState>("all");
 
   const queueName = queue.name;
 
@@ -90,6 +92,11 @@ export function QueueDetailContent({
     setJobsPage(1);
   };
 
+  const handleStateFilterChange = (state: JobFilterableState) => {
+    setStateFilter(state);
+    setJobsPage(1);
+  };
+
   const handleJobsPageChange = (newPage: number) => {
     setJobsPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -112,9 +119,11 @@ export function QueueDetailContent({
           jobsSort={jobsSort}
           jobsOrder={jobsOrder}
           jobsSearch={jobsSearch}
+          stateFilter={stateFilter}
           onJobsPageChange={handleJobsPageChange}
           onJobsSort={handleJobsSort}
           onJobsSearchChange={handleJobsSearchChange}
+          onStateFilterChange={handleStateFilterChange}
         />
       ),
     },

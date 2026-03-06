@@ -9,6 +9,7 @@ import { WaitingJobsTable } from "@/components/jobs/WaitingJobsTable";
 import { WaitingJobsSummary } from "@/components/jobs/WaitingJobsSummary";
 import { Pagination } from "@/components/common/Pagination";
 import { Tabs } from "@/components/common/Tabs";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -56,6 +57,7 @@ export function JobsPage() {
   const [allJobsSort, setAllJobsSort] = useState<SortColumn>("createdAt");
   const [allJobsOrder, setAllJobsOrder] = useState<"asc" | "desc">("desc");
   const [allJobsSearch, setAllJobsSearch] = useState("");
+  const [allStateFilter, setAllStateFilter] = useState<JobFilterableState>("all");
 
   // Waiting Jobs tab state
   const [waitingJobsPage, setWaitingJobsPage] = useState(1);
@@ -74,6 +76,7 @@ export function JobsPage() {
   const [myJobsSort, setMyJobsSort] = useState<SortColumn>("createdAt");
   const [myJobsOrder, setMyJobsOrder] = useState<"asc" | "desc">("desc");
   const [myJobsSearch, setMyJobsSearch] = useState("");
+  const [myStateFilter, setMyStateFilter] = useState<JobFilterableState>("all");
 
   const { data: currentUser } = useCurrentUser();
   const currentUsername = currentUser?.username?.split("@")[0] || "";
@@ -89,6 +92,7 @@ export function JobsPage() {
     sort: allJobsSort,
     order: allJobsOrder,
     search: allJobsSearch.trim() || undefined,
+    state: allStateFilter === 'all' ? undefined : allStateFilter,
     enabled: activeTab === "all",
   });
 
@@ -121,6 +125,7 @@ export function JobsPage() {
     order: myJobsOrder,
     search: myJobsSearch.trim() || undefined,
     owner: currentUsername || undefined, // Filter by current user's username
+    state: myStateFilter === 'all' ? undefined : myStateFilter,
     enabled: activeTab === "my" && !!currentUsername,
   });
 
@@ -144,6 +149,11 @@ export function JobsPage() {
       setAllJobsOrder("desc");
     }
     setAllJobsPage(1);
+  };
+
+  const handleAllStateFilterChange = (state: JobFilterableState) => {
+    setAllStateFilter(state);
+    setMyJobsPage(1);
   };
 
   const handleAllJobsPageChange = (newPage: number) => {
@@ -197,6 +207,11 @@ export function JobsPage() {
       setMyJobsSort(column);
       setMyJobsOrder("desc");
     }
+    setMyJobsPage(1);
+  };
+
+  const handleMyStateFilterChange = (state: JobFilterableState) => {
+    setMyStateFilter(state);
     setMyJobsPage(1);
   };
 
@@ -259,6 +274,8 @@ export function JobsPage() {
                 sortDirection={myJobsOrder}
                 onSort={handleMyJobsSort}
                 hideUserColumn={true}
+                stateFilter={myStateFilter}
+                onStateFilterChange={handleMyStateFilterChange}
               />
               <Pagination
                 currentPage={myJobsPage}
@@ -305,6 +322,8 @@ export function JobsPage() {
                 sortColumn={allJobsSort}
                 sortDirection={allJobsOrder}
                 onSort={handleAllJobsSort}
+                stateFilter={allStateFilter}
+                onStateFilterChange={handleAllStateFilterChange}
               />
               <Pagination
                 currentPage={allJobsPage}

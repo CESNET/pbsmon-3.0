@@ -11,6 +11,7 @@ import { UserFairshareSection } from "@/components/users/UserFairshareSection";
 import { UserAccountingSection } from "@/components/users/UserAccountingSection";
 import { UserJobsTab } from "@/components/users/UserJobsTab";
 import { UserQueuesTab } from "@/components/users/UserQueuesTab";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -44,6 +45,7 @@ export function UserDetailPage() {
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
+  const [stateFilter, setStateFilter] = useState<JobFilterableState>("all");
 
   // Fetch jobs filtered by user
   const {
@@ -56,6 +58,7 @@ export function UserDetailPage() {
     sort: jobsSort,
     order: jobsOrder,
     search: userId || undefined, // Filter by username
+    state: stateFilter === "all" ? undefined : stateFilter,
     enabled: activeTab === "jobs" && !!userId,
   });
 
@@ -88,6 +91,11 @@ export function UserDetailPage() {
     setJobsSearch(query);
     setJobsPage(1);
   };
+
+  const handleStateFilterChange = (state: JobFilterableState) => {
+    setStateFilter(state);
+    setJobsPage(1);
+  }
 
   if (isLoading) {
     return (
@@ -165,9 +173,11 @@ export function UserDetailPage() {
           jobsSort={jobsSort}
           jobsOrder={jobsOrder}
           jobsSearch={jobsSearch}
+          stateFilter={stateFilter}
           onSort={handleJobsSort}
           onPageChange={handleJobsPageChange}
           onSearchChange={handleJobsSearchChange}
+          onStateFilterChange={handleStateFilterChange}
         />
       ),
     },

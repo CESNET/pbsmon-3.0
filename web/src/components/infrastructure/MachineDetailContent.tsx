@@ -13,6 +13,7 @@ import type {
   QueueListDTO,
   InfrastructureDetailDTO,
 } from "@/lib/generated-api";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -38,6 +39,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
+  const [stateFilter, setStateFilter] = useState<JobFilterableState>("R|B");
 
   const nodeName = node.pbs ? node.pbs.name : null;
 
@@ -150,6 +152,11 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
     setJobsPage(1);
   };
 
+  const handleStateFilterChange = (state: JobFilterableState) => {
+    setStateFilter(state);
+    setJobsPage(1);
+  };
+
   const handleJobsPageChange = (newPage: number) => {
     setJobsPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -173,9 +180,11 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
               jobsSort={jobsSort}
               jobsOrder={jobsOrder}
               jobsSearch={jobsSearch}
+              stateFilter={stateFilter}
               onJobsPageChange={handleJobsPageChange}
               onJobsSort={handleJobsSort}
               onJobsSearchChange={handleJobsSearchChange}
+              onStateFilterChange={handleStateFilterChange}
             />
           ),
         },

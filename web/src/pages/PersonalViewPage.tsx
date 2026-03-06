@@ -13,6 +13,7 @@ import type {
   SortColumn as ProjectsSortColumn,
   Project,
 } from "@/components/projects/types";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type JobsSortColumnType =
   | "id"
@@ -37,6 +38,7 @@ export function PersonalViewPage() {
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
   const [debouncedJobsSearch, setDebouncedJobsSearch] = useState("");
+  const [stateFilter, setStateFilter] = useState<JobFilterableState>("all");
 
   // Projects state
   const [projectsPage, setProjectsPage] = useState(1);
@@ -83,6 +85,7 @@ export function PersonalViewPage() {
     order: jobsOrder,
     search: debouncedJobsSearch.trim() || undefined,
     owner: username,
+    state: stateFilter === "all" ? undefined : stateFilter,
     enabled: !!username,
   });
 
@@ -189,6 +192,11 @@ export function PersonalViewPage() {
       setJobsSort(column);
       setJobsOrder("desc");
     }
+    setJobsPage(1);
+  };
+
+  const handleStateFilterChange = (state: JobFilterableState) => {
+    setStateFilter(state);
     setJobsPage(1);
   };
 
@@ -530,6 +538,8 @@ export function PersonalViewPage() {
                 sortDirection={jobsOrder}
                 onSort={handleJobsSort}
                 hideUserColumn={true}
+                stateFilter={stateFilter}
+                onStateFilterChange={handleStateFilterChange}
               />
               <Pagination
                 currentPage={jobsPage}

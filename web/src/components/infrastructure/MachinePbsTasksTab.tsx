@@ -3,6 +3,7 @@ import { useJobs } from "@/hooks/useJobs";
 import { JobsTable } from "@/components/jobs/JobsTable";
 import { Pagination } from "@/components/common/Pagination";
 import { JobsSearchBar } from "@/components/jobs/JobsSearchBar";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -22,9 +23,11 @@ interface MachinePbsTasksTabProps {
   jobsSort: SortColumn;
   jobsOrder: "asc" | "desc";
   jobsSearch: string;
+  stateFilter: JobFilterableState;
   onJobsPageChange: (page: number) => void;
   onJobsSort: (column: SortColumn) => void;
   onJobsSearchChange: (query: string) => void;
+  onStateFilterChange: (state: JobFilterableState) => void;
 }
 
 export function MachinePbsTasksTab({
@@ -34,9 +37,11 @@ export function MachinePbsTasksTab({
   jobsSort,
   jobsOrder,
   jobsSearch,
+  stateFilter,
   onJobsPageChange,
   onJobsSort,
   onJobsSearchChange,
+  onStateFilterChange,
 }: MachinePbsTasksTabProps) {
   const { t } = useTranslation();
 
@@ -51,6 +56,7 @@ export function MachinePbsTasksTab({
     order: jobsOrder,
     search: jobsSearch.trim() || undefined,
     node: nodeName || undefined,
+    state: stateFilter === "all" ? undefined : stateFilter,
     enabled: !!nodeName,
   });
 
@@ -91,6 +97,8 @@ export function MachinePbsTasksTab({
             sortDirection={jobsOrder}
             onSort={onJobsSort}
             hideMachineColumn={true}
+            stateFilter={stateFilter}
+            onStateFilterChange={onStateFilterChange}
           />
           <Pagination
             currentPage={jobsPage}

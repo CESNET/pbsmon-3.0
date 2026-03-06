@@ -3,6 +3,7 @@ import { JobsTable } from "@/components/jobs/JobsTable";
 import { Pagination } from "@/components/common/Pagination";
 import { JobsSearchBar } from "@/components/jobs/JobsSearchBar";
 import type { JobsListDTO, MetaDto } from "@/lib/generated-api";
+import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
   | "id"
@@ -27,9 +28,11 @@ interface UserJobsTabProps {
   jobsSort: SortColumn;
   jobsOrder: "asc" | "desc";
   jobsSearch: string;
+  stateFilter: JobFilterableState;
   onSort: (column: SortColumn) => void;
   onPageChange: (page: number) => void;
   onSearchChange: (query: string) => void;
+  onStateFilterChange: (state: JobFilterableState) => void;
 }
 
 export function UserJobsTab({
@@ -41,9 +44,11 @@ export function UserJobsTab({
   jobsSort,
   jobsOrder,
   jobsSearch,
+  stateFilter,
   onSort,
   onPageChange,
   onSearchChange,
+  onStateFilterChange,
 }: UserJobsTabProps) {
   const { t } = useTranslation();
 
@@ -81,6 +86,8 @@ export function UserJobsTab({
             sortColumn={jobsSort}
             sortDirection={jobsOrder}
             onSort={onSort}
+            stateFilter={stateFilter}
+            onStateFilterChange={onStateFilterChange}
           />
           <Pagination
             currentPage={jobsPage}
