@@ -670,6 +670,10 @@ export class InfrastructureService {
       queuesFromList.forEach((q) => queueNamesSet.add(q));
     }
 
+    if (pbsNodeData?.pbsNode?.attributes['queue']) {
+      queueNamesSet.add(pbsNodeData.pbsNode.attributes['queue']);
+    }
+
     // Get queue from reservation if node has a reservation
     if (pbsNodeData?.pbsNode?.attributes.resv && pbsNodeData.serverName) {
       const reservationNames = pbsNodeData.pbsNode.attributes.resv.split(',').map((r) => r.trim());
@@ -757,13 +761,19 @@ export class InfrastructureService {
     // Parse queues from queue_list attribute and build QueueListDTO objects
     const queues: QueueListDTO[] = [];
     if (
-      pbsNodeData?.pbsNode?.attributes['resources_available.queue_list'] &&
-      pbsNodeData.serverName
+      pbsNodeData.serverName &&
+      (
+        pbsNodeData?.pbsNode?.attributes['resources_available.queue_list'] ||
+        pbsNodeData?.pbsNode?.attributes['queue']
+      )
     ) {
       const queuesStr =
-        pbsNodeData.pbsNode.attributes['resources_available.queue_list'];
+        pbsNodeData?.pbsNode?.attributes['resources_available.queue_list'] ?
+        pbsNodeData.pbsNode.attributes['resources_available.queue_list'] :
+        '';
       // Queues format: "q_2h,q_4h,q_1d,q_gpu,..."
       const queueNames = queuesStr.split(',').map((q) => q.trim());
+      pbsNodeData?.pbsNode?.attributes['queue'] && queueNames.push(...[pbsNodeData.pbsNode.attributes['queue']]);
 
       // Get PBS data to find queue objects
       const pbsData = this.dataCollectionService.getPbsData();
@@ -778,10 +788,6 @@ export class InfrastructureService {
         for (const q of serverData.queues.items) {
           allQueuesMap.set(q.name, q);
 
-          if (q.attributes['default_chunk.queue_list']) {
-            allQueuesMap.set(q.attributes['default_chunk.queue_list'], q);
-          }
-
           if (q.attributes.queue_type === 'Route') {
             const destinations = this.parseRouteDestinations(q);
             for (const destination of destinations) {
@@ -795,33 +801,37 @@ export class InfrastructureService {
 
         // Process Execution queues from node's queue_list
         for (const queueName of queueNames) {
-          const pbsQueue = allQueuesMap.get(queueName);
+          const pbsQueues = serverData.queues?.items.filter(
+            (q) => q.name === queueName || q.attributes['default_chunk.queue_list'] === queueName
+          );
 
-          // Only process Execution queues
-          if (pbsQueue && pbsQueue.attributes.queue_type === 'Execution') {
-            // Add the Execution queue itself
-            if (!queueMap.has(pbsQueue.name)) {
-              const queueDTO = this.mapPbsQueueToList(
-                pbsQueue,
-                pbsNodeData.serverName,
-              );
-              queueMap.set(pbsQueue.name, queueDTO);
-            }
-
-            // Find parent Route queues and add them too
-            const parentRouteQueues = parentMap.get(queueName) || [];
-            for (const parentQueueName of parentRouteQueues) {
-              const parentQueue = allQueuesMap.get(parentQueueName);
-              if (
-                parentQueue &&
-                parentQueue.attributes.queue_type === 'Route' &&
-                !queueMap.has(parentQueueName)
-              ) {
-                const parentQueueDTO = this.mapPbsQueueToList(
-                  parentQueue,
+          for (const pbsQueue of pbsQueues || []) {
+            // Only process Execution queues
+            if (pbsQueue && pbsQueue.attributes.queue_type === 'Execution') {
+              // Add the Execution queue itself
+              if (!queueMap.has(pbsQueue.name)) {
+                const queueDTO = this.mapPbsQueueToList(
+                  pbsQueue,
                   pbsNodeData.serverName,
                 );
-                queueMap.set(parentQueueName, parentQueueDTO);
+                queueMap.set(pbsQueue.name, queueDTO);
+              }
+
+              // Find parent Route queues and add them too
+              const parentRouteQueues = parentMap.get(queueName) || [];
+              for (const parentQueueName of parentRouteQueues) {
+                const parentQueue = allQueuesMap.get(parentQueueName);
+                if (
+                  parentQueue &&
+                  parentQueue.attributes.queue_type === 'Route' &&
+                  !queueMap.has(parentQueueName)
+                ) {
+                  const parentQueueDTO = this.mapPbsQueueToList(
+                    parentQueue,
+                    pbsNodeData.serverName,
+                  );
+                  queueMap.set(parentQueueName, parentQueueDTO);
+                }
               }
             }
           }

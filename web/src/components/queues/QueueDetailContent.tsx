@@ -121,7 +121,12 @@ export function QueueDetailContent({
     {
       id: "machines",
       label: t("queues.tabs.machines"),
-      content: <QueuePbsMachinesTab queueName={queueName} />,
+      content: (
+        <QueuePbsMachinesTab
+          queueName={queueName}
+          additionalAttributes={queue.additionalAttributes || null}
+        />
+      ),
     },
     {
       id: "system",

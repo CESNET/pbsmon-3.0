@@ -5,6 +5,7 @@ import type { InfrastructureNodeListDTO } from "@/lib/generated-api";
 
 interface QueuePbsMachinesTabProps {
   queueName: string;
+  additionalAttributes: Record<string, string> | null;
 }
 
 interface MachineWithCluster {
@@ -14,7 +15,8 @@ interface MachineWithCluster {
 
 function filterMachinesByQueue(
   infrastructure: any,
-  queueName: string
+  queueName: string,
+  additionalAttributes: Record<string, string> | null
 ): MachineWithCluster[] {
   const machines: MachineWithCluster[] = [];
 
@@ -35,7 +37,8 @@ function filterMachinesByQueue(
               q === queueNameOnly ||
               q === queueName ||
               q.startsWith(queueNameOnly + "@") ||
-              q === `q_${queueNameOnly}`
+              q === `q_${queueNameOnly}` ||
+              q === additionalAttributes?.["default_chunk.queue_list"]
           );
           if (hasQueue) {
             machines.push({
@@ -51,13 +54,16 @@ function filterMachinesByQueue(
   return machines;
 }
 
-export function QueuePbsMachinesTab({ queueName }: QueuePbsMachinesTabProps) {
+export function QueuePbsMachinesTab({
+  queueName,
+  additionalAttributes
+}: QueuePbsMachinesTabProps) {
   const { t } = useTranslation();
   const { data: infrastructureData, isLoading, error } = useInfrastructure();
 
   console.log(infrastructureData);
   const machines = infrastructureData
-    ? filterMachinesByQueue(infrastructureData, queueName)
+    ? filterMachinesByQueue(infrastructureData, queueName, additionalAttributes)
     : [];
 
   if (isLoading) {
