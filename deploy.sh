@@ -22,10 +22,14 @@ cd "$SCRIPT_DIR"
 
 # Check if --skip-pull flag is present
 SKIP_PULL=false
+USE_DEV=false
 for arg in "$@"; do
     if [ "$arg" = "--skip-pull" ]; then
         SKIP_PULL=true
-        break
+    fi
+
+    if [ "$arg" = "--dev" ]; then
+        USE_DEV=true
     fi
 done
 
@@ -79,6 +83,9 @@ fi
 
 # Set the docker compose file
 COMPOSE_FILE="docker-compose.prod.yml"
+if [ "$USE_DEV" = true ]; then
+	COMPOSE_FILE="docker-compose.dev.yml"
+fi
 
 # Pre-generate OpenAPI spec and web API client before any service build/start
 OPENAPI_SPEC_PATH="$SCRIPT_DIR/web/openapi/openapi.json"
@@ -139,6 +146,13 @@ echo -e "${YELLOW}Waiting for API to be ready...${NC}"
 API_READY=false
 MAX_ATTEMPTS=30
 ATTEMPT=0
+API_NAME="pbsmon-api"
+API_PORT=3000
+
+if [ "$USE_DEV" = true ]; then
+	API_NAME="pbsmon-api-dev"
+	API_PORT=4000
+fi
 
 # Try to connect to API health endpoint
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
@@ -146,9 +160,9 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
     echo -e "${YELLOW}Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking API health...${NC}"
     
     # Check if API container is running
-    if docker ps | grep -q pbsmon-api; then
+    if docker ps | grep -q $API_NAME; then
         # Try to hit the health endpoint inside the container
-        if docker exec pbsmon-api node -e "require('http').get('http://localhost:3000/status', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" 2>/dev/null; then
+        if docker exec $API_NAME node -e "require('http').get(\"http://localhost:${API_PORT}/status\", (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" 2>/dev/null; then
             API_READY=true
             echo -e "${GREEN}✓ API is ready${NC}"
             break
