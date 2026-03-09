@@ -32,7 +32,7 @@ export function WaitingJobsPage() {
     order,
     search: search.trim() || undefined,
     state: "Q", // Filter for queued jobs only
-    comment: commentFilter || undefined,
+    comment: (typeof commentFilter === "string") ? commentFilter : undefined,
   });
 
   // Fetch all waiting jobs for summary (no pagination, no search filter)

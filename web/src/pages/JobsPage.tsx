@@ -108,7 +108,7 @@ export function JobsPage() {
     order: waitingJobsOrder,
     search: waitingJobsSearch.trim() || undefined,
     state: "Q", // Filter for queued jobs only
-    comment: commentFilter || undefined,
+    comment: (typeof commentFilter === "string") ? commentFilter : undefined,
     enabled: activeTab === "waiting",
   });
 
