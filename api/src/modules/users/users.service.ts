@@ -117,7 +117,6 @@ export class UsersService {
         null;
 
       const totalTasks = tasks.total;
-      const doneTasks = tasks.begun + tasks.exiting;
 
       // Get fairshare rankings (only for users with jobs)
       let fairshareRankings: Record<string, number> | null = null;
@@ -147,7 +146,7 @@ export class UsersService {
         totalTasks,
         queuedTasks: tasks.queued,
         runningTasks: tasks.running,
-        doneTasks,
+        doneTasks : tasks.done,
         queuedCPU: resources.queuedCPU,
         runningCPU: resources.runningCPU,
         doneCPU: resources.doneCPU,
@@ -528,6 +527,7 @@ export class UsersService {
       running: 0,
       exiting: 0,
       begun: 0,
+      done: 0,
       total: 0,
     };
 
@@ -562,6 +562,10 @@ export class UsersService {
         case 'Begun':
           counts.begun++;
           break;
+        case 'C':
+        case 'F':
+        case 'X':
+          counts.done++;
       }
       counts.total++;
     }
@@ -643,10 +647,9 @@ export class UsersService {
           resources.runningCPU += cpuValue;
           resources.runningGPU += gpuValue;
           break;
-        case 'B':
-        case 'Begun':
-        case 'E':
-        case 'Exiting':
+        case 'C':
+        case 'F':
+        case 'X':
           resources.doneCPU += cpuValue;
           resources.doneGPU += gpuValue;
           break;

@@ -150,8 +150,7 @@ export function QueueDetailContent({
 
   const queuedJobs = queue.stateCount?.queued ?? 0;
   const runningJobs = queue.stateCount?.running ?? 0;
-  const doneJobs =
-    (queue.stateCount?.begun ?? 0) + (queue.stateCount?.exiting ?? 0);
+  const heldJobs = queue.stateCount?.held ?? 0;
   const totalJobs = typeof queue.totalJobs === "number" ? queue.totalJobs : 0;
 
   return (
@@ -745,9 +744,9 @@ export function QueueDetailContent({
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">{t("queues.done")}</div>
-                <div className="text-lg font-medium text-green-600">
-                  {doneJobs}
+                <div className="text-sm text-gray-500">{t("queues.held")}</div>
+                <div className="text-lg font-medium text-red-600">
+                  {heldJobs}
                 </div>
               </div>
               <div>

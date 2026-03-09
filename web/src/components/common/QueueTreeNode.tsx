@@ -22,8 +22,7 @@ export function QueueTreeNode({ queue, level, isLast }: QueueTreeNodeProps) {
 
   const queuedJobs = queue.stateCount?.queued ?? 0;
   const runningJobs = queue.stateCount?.running ?? 0;
-  const doneJobs =
-    (queue.stateCount?.begun ?? 0) + (queue.stateCount?.exiting ?? 0);
+  const heldJobs = queue.stateCount?.held ?? 0;
   const totalJobs = queue.totalJobs ?? 0;
 
   const bgColorClass =
@@ -225,9 +224,9 @@ export function QueueTreeNode({ queue, level, isLast }: QueueTreeNodeProps) {
               </span>
             </div>
             <div>
-              <span className="text-gray-500">{t("queues.done")}</span>
-              <span className="font-medium text-green-600 ml-2">
-                {doneJobs}
+              <span className="text-gray-500">{t("queues.held")}</span>
+              <span className="font-medium text-red-600 ml-2">
+                {heldJobs}
               </span>
             </div>
             <div>

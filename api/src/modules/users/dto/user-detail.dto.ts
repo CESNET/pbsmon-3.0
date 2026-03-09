@@ -34,6 +34,10 @@ export class UserTaskCountDTO {
   begun: number;
 
   @Expose()
+  @ApiProperty({ description: 'Number of jobs in Done state' })
+  done: number;
+
+  @Expose()
   @ApiProperty({ description: 'Total number of jobs' })
   total: number;
 }
