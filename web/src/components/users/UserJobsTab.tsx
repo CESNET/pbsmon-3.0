@@ -62,6 +62,7 @@ export function UserJobsTab({
         searchQuery={jobsSearch}
         onSearchChange={onSearchChange}
         totalJobs={jobsData?.meta?.totalCount || 0}
+        lastRunningCompletedBy={jobsData?.meta?.lastRunningCompletedBy || null}
       />
 
       {isLoading && (

@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { JobsListDTO, JobsListMetaDto } from "@/lib/generated-api";
+import type {
+  JobsListDTO,
+  JobsListMetaDto,
+} from "@/lib/generated-api";
 
 type JobsListResponse = {
   data: JobsListDTO;

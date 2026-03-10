@@ -247,6 +247,7 @@ export function JobsPage() {
             searchQuery={myJobsSearch}
             onSearchChange={handleMyJobsSearchChange}
             totalJobs={myJobsData?.meta?.totalCount || 0}
+            lastRunningCompletedBy={myJobsData?.meta?.lastRunningCompletedBy || null}
           />
 
           {myJobsLoading && (
@@ -297,6 +298,7 @@ export function JobsPage() {
             searchQuery={allJobsSearch}
             onSearchChange={handleAllJobsSearchChange}
             totalJobs={allJobsData?.meta?.totalCount || 0}
+            lastRunningCompletedBy={allJobsData?.meta?.lastRunningCompletedBy || null}
           />
 
           {allJobsLoading && (
@@ -346,6 +348,7 @@ export function JobsPage() {
             searchQuery={waitingJobsSearch}
             onSearchChange={handleWaitingJobsSearchChange}
             totalJobs={waitingJobsData?.meta?.totalCount || 0}
+            lastRunningCompletedBy={null}
           />
 
           {waitingJobsLoading && (

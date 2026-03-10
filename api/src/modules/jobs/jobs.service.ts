@@ -24,6 +24,7 @@ export class JobsService {
     return {
       totalCount: 0,
       filterableStates: null,
+      lastRunningCompletedBy: null,
     };
   }
 
@@ -174,11 +175,23 @@ export class JobsService {
       }
     }
 
+    let lastCompletedBy: number | null = null;
     // Apply state filter - must be last before sorting and pagination, because it depends on the final list of jobs to determine filterable states
     if (state && state.trim()) {
       const states = state.split('|').map((s) => s.trim().toUpperCase());
       jobs = jobs.filter((job) => states.includes(job.state));
+
+      if (state.includes('R') || state.includes('B')) { // running jobs
+        lastCompletedBy = Math.max(
+          ...jobs
+            .filter((job) => job.completedBy != null)
+            .map((job) => job.completedBy)
+            .filter((v): v is number => !!v)
+        );
+      }
     }
+
+    const lastRunningCompletedBy = lastCompletedBy;
 
     // Apply sorting
     jobs = this.sortJobs(jobs, sort, order);
@@ -194,6 +207,7 @@ export class JobsService {
       meta: {
         totalCount: totalCount,
         filterableStates: filterableStates,
+        lastRunningCompletedBy: lastRunningCompletedBy,
       },
     };
   }
@@ -214,6 +228,9 @@ export class JobsService {
     const memoryReserved = this.parseMemoryValue(
       attrs['Resource_List.mem'] || '0gb',
     );
+    const walltimeReserved = attrs['Resource_List.walltime']
+      ? this.parseTimeToSeconds(attrs['Resource_List.walltime'])
+      : null;
 
     // Parse used resources (for running, exiting, and completed jobs: C, F, X)
     const state = attrs['job_state'] || 'U';
@@ -264,15 +281,12 @@ export class JobsService {
     } else if (
       hasResourceUsage &&
       gpuTimeUsed &&
-      attrs['Resource_List.walltime'] &&
+      walltimeReserved &&
       gpuReserved > 0
     ) {
       // Fall back to calculation from gpuTimeUsed if gpupercent is not available
       const gpuTimeSeconds = this.parseTimeToSeconds(gpuTimeUsed);
-      const walltimeSeconds = this.parseTimeToSeconds(
-        attrs['Resource_List.walltime'],
-      );
-      const maxGpuTimeSeconds = walltimeSeconds * gpuReserved;
+      const maxGpuTimeSeconds = walltimeReserved * gpuReserved;
       if (maxGpuTimeSeconds > 0) {
         gpuUsagePercent = Math.min(
           100,
@@ -280,6 +294,11 @@ export class JobsService {
         );
       }
     }
+
+    const startedAt = attrs['stime'] ? parseInt(attrs['stime'], 10) : null;
+    const completedBy = startedAt && walltimeReserved
+      ? startedAt + walltimeReserved
+      : null;
 
     if (hasResourceUsage && memoryUsed !== null && memoryReserved > 0) {
       memoryUsagePercent = Math.min(
@@ -341,6 +360,7 @@ export class JobsService {
       gpuTimeUsed,
       memoryUsed,
       runtime,
+      completedBy,
       cpuUsagePercent,
       cpuUsagePercentPerCpu,
       gpuUsagePercent,
@@ -769,11 +789,15 @@ export class JobsService {
         ? parseInt(attrs['etime'], 10)
         : null;
     const startedAt = attrs['stime'] ? parseInt(attrs['stime'], 10) : null;
+    const obitAt = attrs['obittime'] ? parseInt(attrs['obittime'], 10) : null;
+    const completedBy = startedAt && walltimeReserved
+      ? startedAt + walltimeReserved
+      : null;
     const lastStateChangeAt = attrs['mtime']
       ? parseInt(attrs['mtime'], 10)
       : null;
-    const kerberosTicketAt = attrs['krtime']
-      ? parseInt(attrs['krtime'], 10)
+    const kerberosTicketAt = attrs['credential_validity']
+      ? parseInt(attrs['credential_validity'], 10)
       : null;
 
     // Get node name
@@ -904,6 +928,8 @@ export class JobsService {
       createdAt,
       eligibleAt,
       startedAt,
+      obitAt,
+      completedBy,
       lastStateChangeAt,
       kerberosTicketAt,
       stdoutDirectory: attrs['Output_Path']?.split(':')[0] || null,

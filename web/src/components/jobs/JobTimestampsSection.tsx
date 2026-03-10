@@ -50,6 +50,22 @@ export function JobTimestampsSection({ job }: JobTimestampsSectionProps) {
             </div>
           </div>
         )}
+        {job.obitAt === null && job.completedBy && (
+          <div>
+            <div className="text-sm text-gray-500">{t("jobs.completedBy")}</div>
+            <div className="text-sm text-gray-900">
+              {formatTimestamp(job.completedBy)}
+            </div>
+          </div>
+        )}
+        {job.obitAt && (
+          <div>
+            <div className="text-sm text-gray-500">{t("jobs.obitAt")}</div>
+            <div className="text-sm text-gray-900">
+              {formatTimestamp(job.obitAt)}
+            </div>
+          </div>
+        )}
         {job.lastStateChangeAt && (
           <div>
             <div className="text-sm text-gray-500">

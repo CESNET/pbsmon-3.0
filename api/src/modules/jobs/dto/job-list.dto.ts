@@ -94,6 +94,13 @@ export class JobListDTO {
   runtime?: string | null;
 
   @Expose()
+  @ApiProperty({
+    description: 'Timestamp (Unix epoch seconds) the job is expected to end by (start time + walltime)',
+    nullable: true,
+  })
+  completedBy?: number | null;
+
+  @Expose()
   @ApiProperty({ description: 'CPU usage percentage', nullable: true })
   cpuUsagePercent?: number | null;
 

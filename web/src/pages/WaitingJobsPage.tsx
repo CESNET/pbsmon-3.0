@@ -125,6 +125,7 @@ export function WaitingJobsPage() {
               searchQuery={search}
               onSearchChange={handleSearchChange}
               totalJobs={data?.meta?.totalCount || 0}
+              lastRunningCompletedBy={null}
             />
             <WaitingJobsTable
               jobs={data.data.jobs}

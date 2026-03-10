@@ -279,6 +279,20 @@ export class JobDetailDTO {
 
   @Expose()
   @ApiProperty({
+    description: 'Obit timestamp (Unix epoch seconds). End timestamp recorded by PBS when the job finishes.',
+    nullable: true,
+  })
+  obitAt?: number | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Timestamp (Unix epoch seconds) the job is expected to end by (start time + walltime)',
+    nullable: true,
+  })
+  completedBy?: number | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Last state change timestamp (Unix epoch seconds)',
     nullable: true,
   })

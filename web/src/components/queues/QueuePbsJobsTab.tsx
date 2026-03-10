@@ -70,6 +70,7 @@ export function QueuePbsJobsTab({
         searchQuery={jobsSearch}
         onSearchChange={onJobsSearchChange}
         totalJobs={jobsData?.meta?.totalCount || 0}
+        lastRunningCompletedBy={jobsData?.meta?.lastRunningCompletedBy || null}
       />
 
       {jobsLoading && (
