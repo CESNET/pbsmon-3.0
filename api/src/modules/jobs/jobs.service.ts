@@ -9,11 +9,23 @@ import {
   AllocatedResourceDTO,
   JobMessageDTO,
 } from './dto/job-detail.dto';
+import { JobsListMetaDto } from './dto/jobs-list-meta.dto';
 import { getJobStateFromPbsState } from './helpers/job-state.helper';
+
 
 @Injectable()
 export class JobsService {
   constructor(private readonly dataCollectionService: DataCollectionService) {}
+
+  /**
+   * Create empty meta for empty data
+   */
+  private createEmptyMeta(): JobsListMetaDto {
+    return {
+      totalCount: 0,
+      filterableStates: null,
+    };
+  }
 
   /**
    * Get paginated, sorted, and filtered list of jobs
@@ -41,13 +53,16 @@ export class JobsService {
     queue?: string,
     comment?: string,
     owner?: string,
-  ): { data: JobsListDTO; totalCount: number } {
+  ): {
+    data: JobsListDTO;
+    meta: JobsListMetaDto;
+  } {
     const pbsData = this.dataCollectionService.getPbsData();
 
     if (!pbsData?.servers) {
       return {
         data: { jobs: [] },
-        totalCount: 0,
+        meta: this.createEmptyMeta(),
       };
     }
 
@@ -109,12 +124,6 @@ export class JobsService {
       });
     }
 
-    // Apply state filter
-    if (state && state.trim()) {
-      const states = state.split('|').map((s) => s.trim().toUpperCase());
-      jobs = jobs.filter((job) => states.includes(job.state));
-    }
-
     // Apply queue filter
     if (queue && queue.trim()) {
       jobs = jobs.filter((job) => {
@@ -158,6 +167,19 @@ export class JobsService {
       });
     }
 
+    const filterableStates: Record<string, string> = {};
+    for (const job of jobs) {
+      if (!filterableStates[job.state]) {
+        filterableStates[job.state] = job.stateName;
+      }
+    }
+
+    // Apply state filter - must be last before sorting and pagination, because it depends on the final list of jobs to determine filterable states
+    if (state && state.trim()) {
+      const states = state.split('|').map((s) => s.trim().toUpperCase());
+      jobs = jobs.filter((job) => states.includes(job.state));
+    }
+
     // Apply sorting
     jobs = this.sortJobs(jobs, sort, order);
 
@@ -169,7 +191,10 @@ export class JobsService {
 
     return {
       data: { jobs: paginatedJobs },
-      totalCount,
+      meta: {
+        totalCount: totalCount,
+        filterableStates: filterableStates,
+      },
     };
   }
 

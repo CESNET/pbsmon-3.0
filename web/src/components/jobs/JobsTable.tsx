@@ -22,6 +22,7 @@ interface JobsTableProps {
   onSort: (column: SortColumn) => void;
   hideMachineColumn?: boolean;
   hideUserColumn?: boolean;
+  filterableStates?: Record<string, string> | null;
   stateFilter?: JobFilterableState;
   onStateFilterChange?: (state: JobFilterableState) => void;
 }
@@ -33,6 +34,7 @@ export function JobsTable({
   onSort,
   hideMachineColumn = false,
   hideUserColumn = false,
+  filterableStates,
   stateFilter,
   onStateFilterChange,
 }: JobsTableProps) {
@@ -47,6 +49,7 @@ export function JobsTable({
           onSort={onSort}
           hideMachineColumn={hideMachineColumn}
           hideUserColumn={hideUserColumn}
+          filterableStates={filterableStates}
           stateFilter={stateFilter}
           onStateFilterChange={onStateFilterChange}
         />

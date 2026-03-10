@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { JobsTable } from "@/components/jobs/JobsTable";
 import { Pagination } from "@/components/common/Pagination";
 import { JobsSearchBar } from "@/components/jobs/JobsSearchBar";
-import type { JobsListDTO, MetaDto } from "@/lib/generated-api";
+import type { JobsListDTO, JobsListMetaDto } from "@/lib/generated-api";
 import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
@@ -19,7 +19,7 @@ type SortColumn =
 interface UserJobsTabProps {
   jobsData?: {
     data: JobsListDTO;
-    meta?: MetaDto;
+    meta?: JobsListMetaDto;
   };
   isLoading: boolean;
   error: Error | null;
@@ -86,6 +86,7 @@ export function UserJobsTab({
             sortColumn={jobsSort}
             sortDirection={jobsOrder}
             onSort={onSort}
+            filterableStates={jobsData.meta?.filterableStates || null}
             stateFilter={stateFilter}
             onStateFilterChange={onStateFilterChange}
           />

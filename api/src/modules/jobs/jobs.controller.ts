@@ -7,7 +7,7 @@ import { UserContext } from '@/common/types/user-context.types';
 import { JobsService } from './jobs.service';
 import { JobsListDTO } from './dto/job-list.dto';
 import { JobDetailDTO } from './dto/job-detail.dto';
-import { MetaDto } from '@/common/dto/meta.dto';
+import { JobsListMetaDto } from './dto/jobs-list-meta.dto';
 
 @ApiTags('jobs')
 @Controller('pbs/jobs')
@@ -86,7 +86,7 @@ export class JobsController {
     description:
       'Filter by job owner username (exact match on username part, before @). If not provided, returns jobs from all owners.',
   })
-  @ApiOkResponseModel(JobsListDTO, 'List of jobs', MetaDto)
+  @ApiOkResponseModel(JobsListDTO, 'List of jobs', JobsListMetaDto)
   getJobs(
     @UserContextDecorator() userContext: UserContext,
     @Query('page') page?: string,
@@ -99,13 +99,13 @@ export class JobsController {
     @Query('queue') queue?: string,
     @Query('comment') comment?: string,
     @Query('owner') owner?: string,
-  ): ApiResponse<JobsListDTO, MetaDto> {
+  ): ApiResponse<JobsListDTO, JobsListMetaDto> {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
     const sortColumn = sort || 'createdAt';
     const sortOrder = order || 'desc';
 
-    const { data, totalCount } = this.jobsService.getJobsList(
+    const { data, meta } = this.jobsService.getJobsList(
       userContext,
       pageNum,
       limitNum,
@@ -119,9 +119,7 @@ export class JobsController {
       owner,
     );
 
-    return new ApiResponse(data, {
-      totalCount,
-    });
+    return new ApiResponse(data, meta);
   }
 
   @Get(':jobId')

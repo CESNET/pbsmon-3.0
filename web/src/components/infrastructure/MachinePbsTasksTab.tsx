@@ -97,6 +97,7 @@ export function MachinePbsTasksTab({
             sortDirection={jobsOrder}
             onSort={onJobsSort}
             hideMachineColumn={true}
+            filterableStates={jobsData.meta?.filterableStates || null}
             stateFilter={stateFilter}
             onStateFilterChange={onStateFilterChange}
           />

@@ -96,6 +96,7 @@ export function QueuePbsJobsTab({
             sortColumn={jobsSort}
             sortDirection={jobsOrder}
             onSort={onJobsSort}
+            filterableStates={jobsData.meta?.filterableStates || null}
             stateFilter={stateFilter}
             onStateFilterChange={onStateFilterChange}
           />

@@ -538,6 +538,7 @@ export function PersonalViewPage() {
                 sortDirection={jobsOrder}
                 onSort={handleJobsSort}
                 hideUserColumn={true}
+                filterableStates={userJobsData.meta?.filterableStates || null}
                 stateFilter={stateFilter}
                 onStateFilterChange={handleStateFilterChange}
               />

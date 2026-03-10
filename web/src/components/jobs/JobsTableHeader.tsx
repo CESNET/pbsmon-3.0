@@ -19,6 +19,7 @@ interface JobsTableHeaderProps {
   onSort: (column: SortColumn) => void;
   hideMachineColumn?: boolean;
   hideUserColumn?: boolean;
+  filterableStates?: Record<string, string> | null;
   stateFilter?: JobFilterableState;
   onStateFilterChange?: (state: JobFilterableState) => void;
 }
@@ -29,6 +30,7 @@ export function JobsTableHeader({
   onSort,
   hideMachineColumn = false,
   hideUserColumn = false,
+  filterableStates,
   stateFilter,
   onStateFilterChange,
 }: JobsTableHeaderProps) {
@@ -37,13 +39,13 @@ export function JobsTableHeader({
   // Calculate grid columns based on which columns are hidden
   let gridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    gridCols = "grid-cols-[90px_300px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
   } else if (hideMachineColumn) {
-    gridCols = "grid-cols-[90px_300px_150px_120px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
   } else if (hideUserColumn) {
-    gridCols = "grid-cols-[90px_300px_150px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
   } else {
-    gridCols = "grid-cols-[90px_300px_150px_120px_150px_1fr_1fr_1fr_180px]";
+    gridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
   }
 
   return (
@@ -52,6 +54,7 @@ export function JobsTableHeader({
         className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700`}
       >
         <JobsFilterableHeader
+          filterableStates={filterableStates}
           stateFilter={stateFilter}
           onStateFilterChange={onStateFilterChange}
         >

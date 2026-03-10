@@ -274,6 +274,7 @@ export function JobsPage() {
                 sortDirection={myJobsOrder}
                 onSort={handleMyJobsSort}
                 hideUserColumn={true}
+                filterableStates={myJobsData.meta?.filterableStates || null}
                 stateFilter={myStateFilter}
                 onStateFilterChange={handleMyStateFilterChange}
               />
@@ -322,6 +323,7 @@ export function JobsPage() {
                 sortColumn={allJobsSort}
                 sortDirection={allJobsOrder}
                 onSort={handleAllJobsSort}
+                filterableStates={allJobsData.meta?.filterableStates || null}
                 stateFilter={allStateFilter}
                 onStateFilterChange={handleAllStateFilterChange}
               />
