@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
     "generate:api": "node scripts/generate-api-client.js",
     "prebuild": "npm run generate:api",
     "build": "tsc -b && vite build",
