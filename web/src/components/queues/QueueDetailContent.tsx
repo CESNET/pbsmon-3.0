@@ -233,32 +233,9 @@ export function QueueDetailContent({
 
               let message = "";
               if (queue.acl?.groups && queue.acl.groups.length > 0) {
-                const groupNames = queue.acl.groups.map((g) =>
-                  typeof g === "string" ? g : g.name
-                );
-                message =
-                  queue.hasAccess === false
-                    ? t("queues.noAccessGroups", {
-                        groups: groupNames.join(", "),
-                      })
-                    : t("queues.restrictedGroups", {
-                        groups: groupNames.join(", "),
-                      });
+                message = t("queues.restrictedAccess");
               } else if (queue.acl?.users && queue.acl.users.length > 0) {
-                message = t("queues.reservedForUsers", {
-                  users: queue.acl.users
-                    .map((u) => {
-                      // Show full info if username is available, otherwise just nickname
-                      if (u.username) {
-                        return u.name
-                          ? `${u.name} (${u.username})`
-                          : u.username;
-                      } else {
-                        return u.nickname || "Unknown";
-                      }
-                    })
-                    .join(", "),
-                });
+                message = t("queues.noAccess");
               }
 
               return (
