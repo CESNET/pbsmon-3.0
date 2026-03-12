@@ -488,15 +488,25 @@ export class InfrastructureService {
     resource: PerunResource,
     organization?: PerunPhysicalMachine,
   ): InfrastructureClusterDetailDTO {
-    const machines = (resource.machines || []).map((machine) =>
-      this.mapNodeToDetailDTO(
-        machine,
-        resource.id,
-        resource,
-        organization,
-        undefined,
-      ),
-    );
+    const machines = resource.cluster === 'true'
+      ? (resource.machines || []).map((machine) =>
+          this.mapNodeToDetailDTO(
+            machine,
+            resource.id,
+            resource,
+            organization,
+            undefined,
+          ),
+        )
+      : [this.mapNodeToDetailDTO(
+          { cpu: (organization?.resources?.reduce((sum, node) => sum + (node.cpu || 0), 0)),
+            name: resource.name
+          } as PerunMachine,
+          resource.id,
+          resource,
+          organization,
+          undefined,
+        ),];
 
     return {
       id: resource.id,
