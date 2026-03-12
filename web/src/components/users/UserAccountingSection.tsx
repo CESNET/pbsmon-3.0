@@ -7,14 +7,34 @@ interface UserAccountingSectionProps {
   error: Error | null;
 }
 
-function formatCpuTime(seconds: number): string {
+function formatCpuTime(seconds: number, t: any): string {
   if (seconds === 0) return "0";
-  
-  const hours = Math.floor(seconds / 3600);
+
+  const secondsYear = 365 * 24 * 3600;
+  const secondsDay = 24 * 3600;
+  const years = Math.floor(seconds / secondsYear);
+  const days = Math.floor((seconds % secondsYear) / secondsDay);
+  const hours = Math.floor(((seconds % secondsYear) % secondsDay) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
   
-  if (hours > 0) {
+  if (years > 0) {
+    return `${years} ${
+      years === 1
+        ? t("users.accounting.year1")
+        : (years < 5 ? t("users.accounting.years4") : t("users.accounting.years5plus"))
+      } ${days} ${
+      days === 1
+        ? t("users.accounting.day1")
+        : (days < 5 ? t("users.accounting.days4") : t("users.accounting.days5plus"))
+      } ${hours}h ${minutes}m ${secs}s`;
+  } else if (days > 0){
+    return `${days} ${
+      days === 1
+        ? t("users.accounting.day1")
+        : (days < 5 ? t("users.accounting.days4") : t("users.accounting.days5plus"))
+    } ${hours}h ${minutes}m ${secs}s`;
+  } else if (hours > 0) {
     return `${hours}h ${minutes}m ${secs}s`;
   } else if (minutes > 0) {
     return `${minutes}m ${secs}s`;
@@ -88,7 +108,7 @@ export function UserAccountingSection({
             {t("users.accounting.totalCpuTime")}
           </div>
           <div className="text-2xl font-bold text-gray-900">
-            {formatCpuTime(accountingData.totalCpuTime)}
+            {formatCpuTime(accountingData.totalCpuTime, t)}
           </div>
         </div>
       </div>
@@ -124,7 +144,7 @@ export function UserAccountingSection({
                       {formatLargeNumber(usage.jobCount)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {formatCpuTime(usage.cpuTime)}
+                      {formatCpuTime(usage.cpuTime, t)}
                     </td>
                   </tr>
                 ))}
