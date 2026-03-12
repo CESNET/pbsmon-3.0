@@ -4,6 +4,7 @@ import i18n from "i18next";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { Tabs } from "@/components/common/Tabs";
 import { Icon } from "@iconify/react";
+import { Link } from "react-router-dom";
 import { MachinePbsTasksTab } from "@/components/infrastructure/MachinePbsTasksTab";
 import { MachinePbsQueuesTab } from "@/components/infrastructure/MachinePbsQueuesTab";
 import { MachinePbsSystemInfoTab } from "@/components/infrastructure/MachinePbsSystemInfoTab";
@@ -284,11 +285,26 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
                   <div className="text-sm text-gray-500">
                     {t("machines.clusterName")}
                   </div>
-                  <div className="text-lg font-medium text-gray-900">
-                    {i18n.language === "cs"
-                      ? node.clusterName.cs
-                      : node.clusterName.en}
-                  </div>
+                  {typeof node.clusterId === 'string' ?
+                  (
+                    <div className="mb-3">
+                      <Link
+                        to={`/clusters/${encodeURIComponent(node.clusterId)}`}
+                        className="text-lg font-medium text-gray-900 hover:text-gray-900 hover:underline inline-block"
+                      >
+                      {i18n.language === "cs"
+                        ? node.clusterName.cs
+                        : node.clusterName.en}
+                      </Link>
+                    </div>
+                  ) :
+                  (
+                    <div className="text-lg font-medium text-gray-900">
+                      {i18n.language === "cs"
+                        ? node.clusterName.cs
+                        : node.clusterName.en}
+                    </div>
+                  )}
                 </div>
               )}
               {node.owner && (
