@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useJobs } from "@/hooks/useJobs";
 import { useProjects } from "@/hooks/useProjects";
@@ -28,6 +29,7 @@ type JobsSortColumnType =
 
 export function PersonalViewPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: currentUser } = useCurrentUser();
   const username = currentUser?.username?.split("@")[0] || "";
 
@@ -234,6 +236,10 @@ export function PersonalViewPage() {
     setProjectsSearch(query);
   };
 
+  const handleUserDetail = (username: string) => {
+    navigate(`/users/${username}`);
+  };
+
   const userJobsTotalCount =
     userJobsData && typeof userJobsData === "object" && "meta" in userJobsData
       ? (userJobsData.meta as { totalCount?: number })?.totalCount || 0
@@ -334,6 +340,22 @@ export function PersonalViewPage() {
         </div>
       </header>
       <div className="p-6 space-y-6">
+
+        {/* User details Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            {t("pages.userDetail")}
+          </h2>
+          <div className="w-40">
+            <button
+              onClick={() => handleUserDetail(username)}
+              className="px-3 py-1 text-sm font-medium text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded border border-primary-300 hover:border-primary-400"
+            >
+              { `${username}` }
+            </button>
+          </div>
+        </div>
+
         {/* User Statistics Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
