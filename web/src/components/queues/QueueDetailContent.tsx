@@ -326,7 +326,7 @@ export function QueueDetailContent({
                   return (
                     <Link
                       key={displayKey}
-                      to={`/users/${encodeURIComponent(user.username)}`}
+                      to={`/users/${encodeURIComponent(user.username.split('@')[0])}`}
                       className="inline-flex items-center px-3 py-1 text-sm font-medium text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md hover:bg-yellow-100 hover:text-yellow-800"
                     >
                       <Icon icon="bxs:lock" className="w-4 h-4 mr-1" />
