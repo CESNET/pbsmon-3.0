@@ -272,7 +272,7 @@ export class AccountingService implements OnModuleDestroy {
       const usageQuery = `
         SELECT 
           count(*),
-          sum((j.end_time - j.start_time) * j.used_ncpus) as cpu_time,
+          sum(j.used_walltime * j.used_ncpus) as cpu_time,
           extract(year FROM to_timestamp(j.end_time)) as yearnum
         FROM acct_user u, acct_pbs_record j
         WHERE u.user_name = $1 AND u.acct_user_id = j.acct_user_id
