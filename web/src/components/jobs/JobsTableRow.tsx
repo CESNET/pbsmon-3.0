@@ -330,7 +330,10 @@ export function JobsTableRow({
 
       {/* RAM Column */}
       <div className="text-sm">
-        {jobState === "R" &&
+        {(jobState === "R" ||
+          jobState === "C" ||
+          jobState === "F" ||
+          jobState === "X") &&
         typeof job.memoryUsagePercent === "number" &&
         job.memoryUsagePercent !== null &&
         job.memoryUsagePercent !== undefined ? (
