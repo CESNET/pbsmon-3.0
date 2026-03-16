@@ -1327,97 +1327,47 @@ export class InfrastructureService {
     const scratchShmAvailable =
       pbsNode.attributes['resources_available.scratch_shm'] === 'True';
 
-    // Check if node is in maintenance or reserved queue FIRST - this overrides everything
-    // This must be checked before state/state_aux processing
-    if (this.isNodeInMaintenanceOrReservedQueue(pbsNode)) {
-      return {
-        state: NodeState.MAINTENANCE,
-        cpuUsage: null, // Don't show usage during maintenance
-        cpuAssigned: null,
-        gpuUsage: null,
-        gpuCount: availableGpus > 0 ? availableGpus : null,
-        gpuAssigned: null,
-        gpuCapability,
-        gpuMemory,
-        cudaVersion,
-        memoryTotal,
-        memoryUsed: null, // Don't show usage during maintenance
-        memoryUsagePercent: null,
-        scratchLocalTotal,
-        scratchLocalUsed: null,
-        scratchLocalAvailable: scratchLocalTotal,
-        scratchSsdTotal,
-        scratchSsdUsed: null,
-        scratchSsdAvailable: scratchSsdTotal,
-        scratchSharedTotal,
-        scratchShmAvailable,
-      };
-    }
-
     // Get state and state_aux, take the "worse" one
     const pbsState = pbsNode.attributes.state || '';
     const pbsStateAux = pbsNode.attributes.state_aux || '';
     const worseState = this.getWorseState(pbsState, pbsStateAux);
 
     // Map PBS state to our NodeState
-    const mappedState = this.mapPbsStateToNodeState(worseState);
-
-    // If mapped to maintenance or not-available, return early
-    if (mappedState === NodeState.MAINTENANCE) {
-      return {
-        state: NodeState.MAINTENANCE,
-        cpuUsage: null,
-        cpuAssigned: null,
-        gpuUsage: null,
-        gpuCount: availableGpus > 0 ? availableGpus : null,
-        gpuAssigned: null,
-        gpuCapability,
-        gpuMemory,
-        cudaVersion,
-        memoryTotal,
-        memoryUsed: null,
-        memoryUsagePercent: null,
-        scratchLocalTotal,
-        scratchLocalUsed: null,
-        scratchLocalAvailable: scratchLocalTotal,
-        scratchSsdTotal,
-        scratchSsdUsed: null,
-        scratchSsdAvailable: scratchSsdTotal,
-        scratchSharedTotal,
-        scratchShmAvailable,
-      };
-    }
-
-    if (mappedState === NodeState.NOT_AVAILABLE) {
-      return {
-        state: NodeState.NOT_AVAILABLE,
-        cpuUsage: null,
-        cpuAssigned: null,
-        gpuUsage: null,
-        gpuCount: availableGpus > 0 ? availableGpus : null,
-        gpuAssigned: null,
-        gpuCapability,
-        gpuMemory,
-        cudaVersion,
-        memoryTotal,
-        memoryUsed: null,
-        memoryUsagePercent: null,
-        scratchLocalTotal,
-        scratchLocalUsed: null,
-        scratchLocalAvailable: scratchLocalTotal,
-        scratchSsdTotal,
-        scratchSsdUsed: null,
-        scratchSsdAvailable: scratchSsdTotal,
-        scratchSharedTotal,
-        scratchShmAvailable,
-      };
-    }
+    const mappedState = this.isNodeInMaintenanceOrReservedQueue(pbsNode)
+      ? NodeState.MAINTENANCE
+      : this.mapPbsStateToNodeState(worseState);
 
     // Calculate usage percentages for occupancy states
     const cpuUsage =
       availableCpus > 0 ? (assignedCpus / availableCpus) * 100 : null;
     const gpuUsage =
       availableGpus > 0 ? (assignedGpus / availableGpus) * 100 : null;
+
+    // If empty machine and mapped to maintenance or not-available, return early
+    if (cpuUsage === 0 && (mappedState === NodeState.NOT_AVAILABLE || mappedState === NodeState.MAINTENANCE)) {
+      return {
+        state: mappedState,
+        cpuUsage: null,
+        cpuAssigned: null,
+        gpuUsage: null,
+        gpuCount: availableGpus > 0 ? availableGpus : null,
+        gpuAssigned: null,
+        gpuCapability,
+        gpuMemory,
+        cudaVersion,
+        memoryTotal,
+        memoryUsed: null,
+        memoryUsagePercent: null,
+        scratchLocalTotal,
+        scratchLocalUsed: null,
+        scratchLocalAvailable: scratchLocalTotal,
+        scratchSsdTotal,
+        scratchSsdUsed: null,
+        scratchSsdAvailable: scratchSsdTotal,
+        scratchSharedTotal,
+        scratchShmAvailable,
+      };
+    }
 
     // Determine state based on usage (free, partially_used, used)
     let state: NodeState = NodeState.UNKNOWN;
@@ -1428,6 +1378,24 @@ export class InfrastructureService {
         state = NodeState.USED;
       } else {
         state = NodeState.PARTIALLY_USED;
+      }
+    }
+
+    switch (mappedState) {
+      case NodeState.MAINTENANCE: {
+        state = mappedState;
+        break;
+      }
+      case NodeState.NOT_AVAILABLE: {
+        state = mappedState;
+        break;
+      }
+      case NodeState.FREE:
+      case NodeState.PARTIALLY_USED:
+      case NodeState.USED:
+      case NodeState.UNKNOWN:
+      default: {
+        break;
       }
     }
 

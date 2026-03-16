@@ -1,5 +1,5 @@
 import type { InfrastructureNodeListDTO } from "@/lib/generated-api";
-import { ProgressBar } from "@/components/common/ProgressBar";
+import { ProgressBarMinimal } from "@/components/common/ProgressBarMinimal";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -39,7 +39,7 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
 
   const getStateInfo = (
     state?: string | null
-  ): { label: string; color: string } | null => {
+  ): { label: string; color: string; colorLight: string; } | null => {
     if (!state) {
       return null; // No PBS detected - no state to show
     }
@@ -48,32 +48,38 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
         return {
           label: t("machines.nodeState.free"),
           color: "#22c55e",
+          colorLight: "#6ed393",
         };
       case "partially_used":
         return {
           label: t("machines.nodeState.partiallyUsed"),
           color: "#86efac",
+          colorLight: "#bcf3d0",
         };
       case "used":
         return {
           label: t("machines.nodeState.used"),
           color: "#3b82f6",
+          colorLight: "#86b1f8",
         };
       case "maintenance":
         return {
           label: t("machines.nodeState.maintenance") || "Maintenance",
           color: "#f59e0b",
+          colorLight: "#fed590",
         };
       case "not-available":
         return {
           label: t("machines.nodeState.notAvailable") || "Not Available",
           color: "#ef4444",
+          colorLight: "#ee7a7a",
         };
       case "unknown":
       default:
         return {
           label: t("machines.nodeState.unknown"),
           color: "#eab308",
+          colorLight: "#f6d36b",
         };
     }
   };
@@ -119,9 +125,13 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
   };
 
   const stateInfo = getStateInfo(node.actualState);
-  const isMaintenance = node.actualState === "maintenance";
+  const cpuAssigned = node.cpuAssigned || 0;
+  const unavailable =
+    node.actualState === "not-available" ||
+    node.actualState === "unknown" ||
+    (node.actualState === "maintenance" && cpuAssigned === 0);
   const hasPbs = node.actualState !== null && node.actualState !== undefined;
-  const shouldShowProgressBars = hasPbs && !isMaintenance;
+  const shouldShowProgressBars = hasPbs && !unavailable;
 
   const formatMemory = (gb: number): string => {
     if (gb >= 1000) {
@@ -133,6 +143,7 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
   return (
     <Link
       to={`/machines/${encodeURIComponent(node.name)}`}
+      style={stateInfo && stateInfo.color && { backgroundColor: stateInfo.color } || undefined}
       className="relative px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:border-primary-500 hover:shadow-md transition-all block w-full"
     >
       <div className="mb-3 sm:mb-4">
@@ -150,18 +161,10 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
               </span>
             )}
           </div>
-          {stateInfo && (
-            <span
-              className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium text-white flex-shrink-0"
-              style={{ backgroundColor: stateInfo.color }}
-            >
-              {stateInfo.label}
-            </span>
-          )}
         </div>
       </div>
 
-      {isMaintenance ? (
+      {unavailable ? (
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between gap-2 ">
             <span>CPU </span>
@@ -224,7 +227,7 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
       ) : (
         shouldShowProgressBars && (
           <div className="space-y-2 sm:space-y-3">
-            <ProgressBar
+            <ProgressBarMinimal
               label="CPU"
               value={
                 (node as any).cpuAssigned !== null &&
@@ -235,14 +238,12 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
               }
               percent={cpuUsage}
               color={getCpuGpuColorClass}
-              icon={
-                <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
-              }
+              backgroundColor={stateInfo?.colorLight}
             />
 
             {hasGpu && (
               <div>
-                <ProgressBar
+                <ProgressBarMinimal
                   label="GPU"
                   value={
                     gpuCount !== null
@@ -256,9 +257,7 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
                   }
                   percent={gpuUsage !== null ? gpuUsage : 0}
                   color={getCpuGpuColorClass}
-                  icon={
-                    <Icon icon="solar:gpu-bold" className="w-[14px] h-[14px]" />
-                  }
+                  backgroundColor={stateInfo?.colorLight}
                 />
               </div>
             )}
@@ -270,11 +269,16 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
               typeof node.memoryTotal === "number" &&
               typeof node.memoryUsed === "number" &&
               typeof node.memoryUsagePercent === "number" && (
-                <ProgressBar
+                <ProgressBarMinimal
                   label="RAM"
-                  value={`${Number(node.memoryUsed).toFixed(1)} / ${Number(node.memoryTotal).toFixed(1)} (GB)`}
+                  value={
+                    node.memoryTotal > 1000
+                      ? `${Number(node.memoryUsed/1024).toFixed(1)} / ${Number(node.memoryTotal/1024).toFixed(1)} T`
+                      : `${Number(node.memoryUsed).toFixed(0)} / ${Number(node.memoryTotal).toFixed(0)} G`
+                  }
                   percent={Number(node.memoryUsagePercent)}
                   color="#5D7085"
+                  backgroundColor={stateInfo?.colorLight}
                 />
               )}
 

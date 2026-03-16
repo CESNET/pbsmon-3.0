@@ -132,7 +132,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
   };
 
   const stateInfo = getStateInfo(node.pbs?.actualState);
-  const isMaintenance = node.pbs?.actualState === "maintenance";
+  const isEmptyMaintenance = node.pbs?.actualState === "maintenance" && cpuUsage === 0;
 
   // Extract additional data from node
   const nodeQueues = Array.isArray(node.pbs?.queues)
@@ -371,7 +371,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
 
         {/* Reserved Resources from PBS (can be null) */}
         {node.pbs &&
-          !isMaintenance &&
+          !isEmptyMaintenance &&
           (cpuUsage > 0 ||
             gpuUsage !== null ||
             node.pbs.memoryUsagePercent !== null) && (
@@ -445,7 +445,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
           )}
 
         {/* Show reserved resources section when in maintenance */}
-        {node.pbs && isMaintenance && (
+        {node.pbs && isEmptyMaintenance && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
