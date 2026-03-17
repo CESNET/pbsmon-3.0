@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useMachineDetail } from "@/hooks/useMachineDetail";
@@ -8,6 +9,18 @@ export function MachineDetailPage() {
   const { t } = useTranslation();
   const { machineId } = useParams<{ machineId: string }>();
   const { data, isLoading, error } = useMachineDetail(machineId || "");
+
+  // Set browser tab title to node name
+  useEffect(() => {
+    if (data && data.node) {
+      const nodeName = node.pbs ? node.pbs.name : node.name;
+      document.title = nodeName;
+    }
+
+    return () => {
+      document.title = 'PBSMON';
+    };
+  }, [data]);
 
   if (isLoading) {
     return (
