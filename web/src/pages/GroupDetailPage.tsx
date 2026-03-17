@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { useGroupDetail } from "@/hooks/useGroups";
 
@@ -12,6 +13,11 @@ export function GroupDetailPage() {
     error,
   } = useGroupDetail(decodedGroupName);
   const data = groupDetail?.data;
+  const navigate = useNavigate();
+
+  const handleUserClick = (user: string) => {
+    navigate(`/users/${encodeURIComponent(user)}`);
+  };
 
   if (isLoading) {
     return (
@@ -123,7 +129,11 @@ export function GroupDetailPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {data.members.map((member) => (
-                    <tr key={member.nickname}>
+                    <tr
+                      key={member.nickname}
+                      onClick={() => handleUserClick(member.nickname)}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {member.nickname}
                       </td>

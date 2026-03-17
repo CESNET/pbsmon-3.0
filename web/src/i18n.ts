@@ -257,6 +257,7 @@ i18n.use(initReactI18next).init({
           basicInfo: "Basic Information",
           organization: "Organization",
           publications: "Publications",
+          groups: "Groups",
           membershipExpiration: "Membership Expiration",
           tabs: {
             jobs: "Jobs",
@@ -719,6 +720,7 @@ i18n.use(initReactI18next).init({
           basicInfo: "Základní informace",
           organization: "Organizace",
           publications: "Publikace",
+          groups: "Skupiny",
           membershipExpiration: "Datum vypršení členství",
           tabs: {
             jobs: "Úlohy",

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import type { UserDetailDTO } from "@/lib/generated-api";
 
 interface UserBasicInfoProps {
@@ -7,6 +8,11 @@ interface UserBasicInfoProps {
 
 export function UserBasicInfo({ user }: UserBasicInfoProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const handleGroupDetail = (username: string) => {
+    navigate(`/groups/${username}`);
+  };
 
   return (
     <div className="px-6 py-4 border-b border-gray-200">
@@ -96,6 +102,25 @@ export function UserBasicInfo({ user }: UserBasicInfoProps) {
               >
                 {key}: {String(value)}
               </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Groups */}
+      {user.groups && user.groups.length > 0 && (
+        <div className="mt-4">
+          <div className="text-sm text-gray-500 mb-2">
+            {t("users.groups")}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            { user.groups.map((group) => (
+              <button
+                onClick={() => handleGroupDetail(group)}
+                className="px-3 py-1 text-sm font-medium text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded border border-primary-300 hover:border-primary-400"
+              >
+                { group }
+              </button>
             ))}
           </div>
         </div>

@@ -91,6 +91,15 @@ export class UserDetailDTO {
 
   @Expose()
   @ApiProperty({
+    description: 'The groups the user belongs to.',
+    type: [String],
+    nullable: true,
+    required: false,
+  })
+  groups?: string[] | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'User publications from Perun',
     type: 'object',
     additionalProperties: { type: 'string' },

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataCollectionService } from '@/modules/data-collection/data-collection.service';
+import { DataCollectionService, PerunData } from '@/modules/data-collection/data-collection.service';
 import { PbsJob } from '@/modules/data-collection/types/pbs.types';
 import { UserContext, UserRole } from '@/common/types/user-context.types';
 import {
@@ -403,6 +403,8 @@ export class UsersService {
       }
     }
 
+    const userGroups = this.getUserGroups(userContext, username)?.groups.map((g) => (g.name)) || [];
+
     // Build Perun users lookup map for O(1) access instead of O(n) find()
     const perunUsersMap = new Map<string, string>();
     const perunUserDataMap = new Map<
@@ -508,6 +510,7 @@ export class UsersService {
       username,
       nickname: nickname || null,
       organization: organization || null,
+      groups: userGroups || null,
       publications: publications || null,
       membershipExpiration: membershipExpiration || null,
       tasks,
@@ -916,11 +919,15 @@ export class UsersService {
     return result;
   }
 
+  getGroups(userContext: UserContext): GroupsListDTO {
+    return this.getUserGroups(userContext, null);
+  }
+
   /**
    * Get list of all groups
    * Admin sees all groups, non-admin sees only groups they are a member of
    */
-  getGroups(userContext: UserContext): GroupsListDTO {
+  getUserGroups(userContext: UserContext, username: string | null): GroupsListDTO {
     const perunData = this.dataCollectionService.getPerunData();
 
     if (!perunData?.etcGroups || perunData.etcGroups.length === 0) {
@@ -936,14 +943,28 @@ export class UsersService {
     for (const serverGroups of perunData.etcGroups) {
       for (const group of serverGroups.entries) {
         // For non-admin users, only include groups they are a member of
-        if (userContext.role !== UserRole.ADMIN) {
+        if (!username && userContext.role !== UserRole.ADMIN) {
           const isMember =
             group.members.includes(usernameBase) ||
             group.members.includes(userContext.username);
           if (!isMember) {
             continue;
           }
-        }
+        // If username specified, include groups the username is member of
+        // and the used context is permited.
+        } else if (username) {
+          const isMember =
+            group.members.includes(username) && (
+              userContext.role === UserRole.ADMIN ||
+              (
+              group.members.includes(usernameBase) ||
+              group.members.includes(userContext.username)
+              )
+            );
+          if (!isMember) {
+            continue;
+          }
+        } // else !username and role is admin -> get all groups
 
         if (!groupsMap.has(group.groupname)) {
           groupsMap.set(group.groupname, {
@@ -970,7 +991,7 @@ export class UsersService {
 
     // For non-admin users, filter out groups that contain all (or nearly all) users
     // These are system-wide groups like "meta" and "storage" that include everyone
-    if (userContext.role !== UserRole.ADMIN) {
+    if (username || userContext.role !== UserRole.ADMIN) {
       // Calculate total unique users in the system
       const allUsersSet = new Set<string>();
       if (perunData?.users?.users) {
