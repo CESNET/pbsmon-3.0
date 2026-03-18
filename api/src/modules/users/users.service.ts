@@ -412,6 +412,8 @@ export class UsersService {
       {
         name: string;
         org: string;
+        mail: string;
+        lang: string;
         publications: Record<string, string> | null;
         vos: Record<
           string,
@@ -431,6 +433,8 @@ export class UsersService {
           perunUserDataMap.set(perunUser.logname, {
             name: perunUser.name,
             org: perunUser.org,
+            mail: perunUser.mail,
+            lang: perunUser.lang,
             publications: perunUser.publications || null,
             vos: perunUser.vos || null,
           });
@@ -438,6 +442,8 @@ export class UsersService {
             perunUserDataMap.set(lognameBase, {
               name: perunUser.name,
               org: perunUser.org,
+              mail: perunUser.mail,
+              lang: perunUser.lang,
               publications: perunUser.publications || null,
               vos: perunUser.vos || null,
             });
@@ -455,6 +461,12 @@ export class UsersService {
     const nickname = perunUserData?.name || null;
     const organization = perunUserData?.org || null;
     const publications = perunUserData?.publications || null;
+    const mail = userContext.role === UserRole.ADMIN && perunUserData?.mail
+      ? perunUserData?.mail
+      : null;
+    const lang = userContext.role === UserRole.ADMIN && perunUserData?.lang
+      ? perunUserData?.lang
+      : null;
 
     // Extract earliest membership expiration date from VOS data
     let membershipExpiration: string | null = null;
@@ -510,6 +522,8 @@ export class UsersService {
       username,
       nickname: nickname || null,
       organization: organization || null,
+      mail: mail || null,
+      lang: lang || null,
       groups: userGroups || null,
       publications: publications || null,
       membershipExpiration: membershipExpiration || null,

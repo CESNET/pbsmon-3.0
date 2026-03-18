@@ -91,6 +91,20 @@ export class UserDetailDTO {
 
   @Expose()
   @ApiProperty({
+    description: 'User preffered e-mail',
+    nullable: true,
+  })
+  mail?: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'User preffered language',
+    nullable: true,
+  })
+  lang?: string | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'The groups the user belongs to.',
     type: [String],
     nullable: true,

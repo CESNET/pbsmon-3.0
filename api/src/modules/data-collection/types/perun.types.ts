@@ -59,6 +59,8 @@ export interface PerunUser {
   logname: string;
   name: string;
   org: string;
+  mail: string;
+  lang: string;
   publications: PerunUserPublications | null;
   vos: PerunUserVos;
 }

@@ -86,6 +86,30 @@ export function UserBasicInfo({ user }: UserBasicInfoProps) {
             </div>
           </div>
         )}
+        {user.mail && (
+          <div>
+            <div className="text-sm text-gray-500">
+              {t("users.mail")}
+            </div>
+            <div className="text-lg font-medium text-gray-900">
+              {typeof user.mail === "string"
+                ? user.mail
+                : String(user.mail)}
+            </div>
+          </div>
+        )}
+        {user.lang && (
+          <div>
+            <div className="text-sm text-gray-500">
+              {t("users.lang")}
+            </div>
+            <div className="text-lg font-medium text-gray-900">
+              {typeof user.lang === "string"
+                ? user.lang
+                : String(user.lang)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Publications */}
