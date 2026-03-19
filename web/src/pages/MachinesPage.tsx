@@ -1,19 +1,36 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import { useInfrastructure } from "@/hooks/useInfrastructure";
+import { useState, useCallback } from "react";
+import { useInfrastructure, useInfrastructureFilterables } from "@/hooks/useInfrastructure";
 import { OrganizationPreview } from "@/components/infrastructure/OrganizationPreview";
-import { MetacentrumTotal } from "@/components/infrastructure/MetacentrumTotal";
+import { MetacentrumOverview } from "@/components/infrastructure/MetacentrumOverview";
 import { QuickLinksSidebar } from "@/components/infrastructure/QuickLinksSidebar";
 import { MachineSearchBar } from "@/components/infrastructure/MachineSearchBar";
+import { MachinesHeader } from "@/components/infrastructure/MachinesHeader";
 
 export function MachinesPage() {
   const [machineSearch, setMachineSearch] = useState("");
+  const [machineFilters, setMachineFilters] = useState<[string, string | number][] | null>(null);
   const handleMachinePageChange = (query: string) => {
     setMachineSearch(query);
   }
+  const handleMachineFilters = (query: [string, string | number][] | null) => {
+    setMachineFilters(query);
+  }
+  const convertToQueryString = useCallback((data: [string, string | number][] | null, prefix: string) => {
+    if (!data) return null;
+    return data
+      .map(([key, value]) => {
+        const encodedKey = encodeURIComponent(`${prefix}[${key}]`);
+        const encodedValue = encodeURIComponent(String(value));
+        return `${encodedKey}=${encodedValue}`;
+      })
+      .join('&');
+  }, []);
   const { t, i18n } = useTranslation();
+  const { data: filterData, isLoading: filterIsLoading, error: filterError} = useInfrastructureFilterables();
   const { data, isLoading, error } = useInfrastructure({
-    search: machineSearch.trim() || undefined
+    search: machineSearch.trim() || undefined,
+    filters: convertToQueryString(machineFilters, 'filters') || undefined,
   });
 
   const currentLanguage = i18n.language as "cs" | "en";
@@ -27,9 +44,40 @@ export function MachinesPage() {
           </h1>
         </div>
       </header>
-      <div className="flex gap-6 p-6">
+
+      <div className="flex gap-6 p-6 pb-0">
+        <div className="flex-1">
+          {filterIsLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-gray-600">{t("common.loading")}</div>
+            </div>
+          )}
+
+          {filterError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="text-red-800">
+                {t("common.errorLoading")}{" "}
+                {filterError instanceof Error
+                  ? filterError.message
+                  : t("common.unknownError")}
+              </div>
+            </div>
+          )}
+
+          {filterData && (
+            <MachinesHeader
+              filterData={filterData.data}
+              machineFilters={machineFilters}
+              onFilterChange={handleMachineFilters}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="flex gap-6 p-6 pt-0">
         {/* Main Content */}
         <div className="flex-1">
+
           <MachineSearchBar
             searchQuery={machineSearch}
             onSearchChange={handleMachinePageChange}
@@ -56,7 +104,7 @@ export function MachinesPage() {
           {data && (
             <>
               {/* Metacentrum Total Info */}
-              {data.meta && <MetacentrumTotal meta={data.meta} />}
+              {data.meta && <MetacentrumOverview meta={data.meta} />}
 
               {/* Organizations */}
               {data.data.map((organization) => (

@@ -1,3 +1,4 @@
+import { InfrastructureFilterService } from "./filters/filter.service";
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataCollectionService } from '@/modules/data-collection/data-collection.service';
 import { UserContext, UserRole } from '@/common/types/user-context.types';
@@ -19,16 +20,180 @@ import {
   InfrastructureNodeDetailDTO,
 } from './dto/infrastructure-detail.dto';
 import { InfrastructureListMetaDto } from './dto/infrastructure-list-meta.dto';
+import { InfrastructureFiltersDTO } from './dto/infrastructure-filters.dto';
 import { PbsNode, PbsQueue } from '@/modules/data-collection/types/pbs.types';
 import { QueueListDTO } from '@/modules/queues/dto/queue-list.dto';
 import { PrometheusResponse } from '@/modules/data-collection/clients/prometheus.client';
 
+const resourcesComperable = ['ncpus', 'ngpus', 'gpu_mem', 'spec', 'ethernet_speed', 'infiniband_speed'];
+const resourcesFuzzy = ['mem', 'scratch_local', 'scratch_ssd', 'scratch_shared'];
+const resourcesGb = ['mem', 'gpu_mem', 'scratch_local', 'scratch_ssd', 'scratch_shared'];
+
 @Injectable()
 export class InfrastructureService {
-  constructor(private readonly dataCollectionService: DataCollectionService) {}
+  constructor(
+    private readonly dataCollectionService: DataCollectionService,
+    private readonly infrastructureFilterService: InfrastructureFilterService,
+  ) {}
+
+
+  getInfrastructureFilters(): InfrastructureFiltersDTO {
+    const perunData = this.dataCollectionService.getPerunData();
+
+    if (!perunData?.machines?.physical_machines) {
+      return {};
+    }
+
+    const data = perunData.machines.physical_machines.map((org) =>
+      this.mapOrganizationToList(org),
+    );
+
+    const states = Array.from(new Set<string>(
+      data.flatMap(org =>
+        org.clusters.flatMap(cluster =>
+          cluster.nodes.flatMap(node => node.actualState || null)
+        )
+      ).filter((item) => item !== null)
+    ));
+
+    const queues = Array.from(new Set<string>(
+      data.flatMap(org =>
+        org.clusters.flatMap(cluster =>
+          cluster.nodes.flatMap(node => node.queues || null)
+        )
+      ).filter((item) => item !== null).sort((a, b) => {
+        const getPriority = (val: string): number => {
+          // 2. Middle Priority: Starts with "q_" or "elixir_"
+          if (val.startsWith("q_") ||
+            val.startsWith("p2e_") ||
+            val.startsWith("elixir_")) return 2;
+          // 3. Lowest Priority: Starts with "M" or "R" followed by a digit
+          if (/^[MR]\d/.test(val)) return 3;
+          // 1. Highest Priority: Everything else
+          return 1;
+        };
+
+        const priorityA = getPriority(a);
+        const priorityB = getPriority(b);
+        // If priorities differ, sort by priority
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+        // If priorities are the same, sort alphabetically (case-insensitive)
+        return a.localeCompare(b, undefined, { sensitivity: 'base' });
+      })
+    ));
+
+    const ncpus = Array.from(new Set<number>(
+      data.flatMap(org =>
+        org.clusters.flatMap(cluster =>
+          cluster.nodes.flatMap(node => node.cpu || null)
+        )
+      ).filter((item) => item !== null).sort((a, b) => a - b)
+    ));
+
+    const ngpus = Array.from(new Set<number>(
+      data.flatMap(org =>
+        org.clusters.flatMap(cluster =>
+          cluster.nodes.flatMap(node => node.gpuCount || null)
+        )
+      ).filter((item) => item !== null).sort((a, b) => a - b)
+    ));
+
+    const clusters = Array.from(new Set<string>(
+      data.flatMap(org =>
+        org.clusters.flatMap(cluster => cluster.name || null)
+      ).filter((item) => item !== null).sort()
+    ));
+
+    const generateFuzzy = (minObj: Record<string, string>, maxObj: Record<string, string>, count: number = 5) => {
+      const result: Record<string, number[]> = {};
+
+      Object.keys(minObj).forEach((key) => {
+        const val1 = parseFloat(minObj[key]);
+        const val2 = parseFloat(maxObj[key]);
+
+        // Determine true start and end to handle ranges correctly
+        const start = Math.min(val1, val2);
+        const end = Math.max(val1, val2);
+        
+        const range = end - start;
+        const step = range / (count - 1);
+
+        // Generate 'count' number of steps
+        result[key] = Array.from({ length: count }, (_, i) => {
+          const val = start + (step * i);
+          // Round to 1 decimal place to keep it clean
+          return Math.round(val * 10) / 10;
+        });
+      });
+
+      return result;
+    };
+
+    const mins = {};
+    const maxes = {};
+
+    // Flatten and Transform
+    const resources = Array.from(new Set(
+      data.flatMap(org => 
+        org.clusters.flatMap(c => 
+          c.nodes.flatMap(n => 
+            Object.entries(n.resources || {}).flatMap(([key, value]) => {
+              
+              // If key is spec, find the closest match from our array
+              if (resourcesFuzzy.includes(key)) {
+                mins[key] = mins[key] ? (mins[key] < value ? mins[key] : value) : value;
+                maxes[key] = maxes[key] ? (maxes[key] > value ? maxes[key] : value) : value;
+                return [];
+              }
+
+              if (resourcesComperable.includes(key)) {
+                if (resourcesGb.includes(key)) {
+                  return [`${key}=${value}GB`, `${key}>=${value}GB`];
+                }
+                return [`${key}=${value}`, `${key}>=${value}`];
+              }
+
+              if (typeof value === 'number') {
+                if (resourcesGb.includes(key)) {
+                  return `${key}=${value}GB`;  
+                }
+                return `${key}=${value}`;
+              }
+
+              // Handle comma-separated strings
+              return value.split(',').map(v => `${key}=${v.trim()}`);
+            })
+          )
+        )
+      )
+    )).sort();
+
+    const fuzzyLimits = generateFuzzy(mins, maxes);
+
+    const fuzzyLimitStrings: string[] = Object.entries(fuzzyLimits).flatMap(([key, values]) => 
+      values.map(val => resourcesGb.includes(key) ? `${key}>=${val}GB` : `${key}>=${val}`)
+    );
+
+    const allResources = Array.from(new Set([
+      ...resources,
+      ...fuzzyLimitStrings
+    ])).sort();
+
+    return {
+      states: states || null,
+      queues: queues || null,
+      ncpus: ncpus || null,
+      ngpus: ngpus || null,
+      clusters: clusters || null,
+      resources: allResources,
+    };
+  }
 
   getInfrastructureList(
     search?: string,
+    filters?: [string, string | number][],
   ): {
     data: InfrastructureOrganizationListDTO[];
     meta: InfrastructureListMetaDto;
@@ -55,53 +220,18 @@ export class InfrastructureService {
       })),
     }));
 
-    const meta = this.calculateStatistics(sortedData);
+    // Apply filters using the new filter service
+    const filteredData = this.infrastructureFilterService.applyFilters(sortedData, filters);
+    const meta = this.calculateStatistics(filteredData);
 
-    // Apply search filter
+    // Apply search filter using the new filter service
     if (search && search.trim()) {
       const searchLower = search.toLowerCase().trim();
-
-      // Filter by search term
-      const filtered = sortedData
-        .map((org) => {
-          const clusters = org.clusters
-            .map((cluster) => {
-              // Filter nodes within cluster by node name
-              const nodes = cluster.nodes.filter((node) =>
-                node.name.toLowerCase().includes(searchLower) ||
-                node.actualState?.toLowerCase().includes(searchLower) ||
-                node.queueNames?.some((q) => q.toLowerCase().includes(searchLower))
-              );
-
-              if (nodes.length > 0) {
-                return {
-                  ...cluster,
-                  nodes,
-                  nodeCount: nodes.length,
-                } as InfrastructureClusterListDTO;
-              }
-
-              return null;
-            })
-            .filter(Boolean) as InfrastructureClusterListDTO[];
-
-          if (clusters.length > 0) {
-            return {
-              ...org,
-              clusters,
-              clusterCount: clusters.length,
-            } as InfrastructureOrganizationListDTO;
-          }
-
-          return null;
-        })
-        .filter(Boolean) as InfrastructureOrganizationListDTO[];
-
-      // Replace data with filtered result
-      return { data: filtered, meta };
+      const searched = this.infrastructureFilterService.applySearchFilter(filteredData, searchLower);
+      return { data: searched, meta };
     }
 
-    return { data: sortedData, meta };
+    return { data: filteredData, meta };
   }
 
   /**
@@ -706,6 +836,67 @@ export class InfrastructureService {
       queueNames = Array.from(queueNamesSet);
     }
 
+    const queues = this.getQueuesformPbs(queueNames, pbsNodeData.serverName);
+
+    const convertToGB = (input: string | number): number => {
+      if (typeof input === 'number') return input / Math.pow(1024, 3);
+
+      // 1. Normalize input: remove spaces and lowercase it
+      const cleanInput = input.toLowerCase().replace(/\s+/g, '');
+
+      // 2. Use regex to separate the numeric part from the unit part
+      // Matches digits (and decimals) + optional unit (b, kb, mb, gb, tb)
+      const match = cleanInput.match(/^(\d+(?:\.\d+)?)([a-z]*)$/);
+
+      if (!match) return 0;
+
+      const value = parseFloat(match[1]);
+      const unit = match[2] || 'b'; // Default to bytes if no unit provided
+
+      // 3. Map units to their power of 1024 relative to Bytes
+      const powers: Record<string, number> = {
+        'b':  0,
+        'kb': 1,
+        'mb': 2,
+        'gb': 3,
+        'tb': 4,
+        'pb': 5
+      };
+
+      if (!(unit in powers)) return value; // Return as-is if unit is unknown
+
+      // 4. Calculate: (Value * 1024^UnitPower) / 1024^3
+      // This shifts the value to Bytes, then scales it up to GB
+      const bytes = value * Math.pow(1024, powers[unit]);
+      const gb = bytes / Math.pow(1024, 3);
+
+      return Math.round(gb * 10) / 10;
+    };
+
+    const resources = Object.entries(pbsNodeData?.pbsNode?.attributes || {})
+      .reduce((acc, [key, value]) => {
+        const blacklisted = [
+        'resources_available.accelerator_memory',
+        'resources_available.hbmem',
+        'resources_available.naccelerators',
+        'resources_available.vmem',
+        'resources_available.host',
+        'resources_available.hpmem',
+        'resources_available.queue_list',
+        'resources_available.vnode'
+      ];
+    
+    if (key.startsWith('resources_available') && !blacklisted.includes(key)) {
+      const shortKey = key.split('.').pop() as string;
+      if (resourcesGb.includes(shortKey)) {
+        acc[shortKey] = convertToGB(value);
+      } else {
+        acc[shortKey] = isNaN(value as any) ? value as string : Number(value);
+      }
+    }
+    return acc;
+  }, {} as Record<string, string | number>);
+
     // Check if node is a cloud node and get cloud info
     const isCloud = this.isCloudNode(machine.name);
     const cloudInfo = isCloud ? this.getCloudNodeInfo(machine.name) : null;
@@ -726,6 +917,8 @@ export class InfrastructureService {
       memoryUsed: pbsState.memoryUsed,
       memoryUsagePercent: pbsState.memoryUsagePercent,
       queueNames,
+      queues,
+      resources,
       ostack: cloudInfo,
     };
   }
@@ -1424,6 +1617,32 @@ export class InfrastructureService {
       scratchSharedTotal,
       scratchShmAvailable,
     };
+  }
+
+  private getQueuesformPbs(
+    queueNames: string[] | null,
+    serverName: string | null,
+  ) : string[] | null {
+    if (!queueNames || !serverName) {
+      return null;
+    }
+
+    const pbsData = this.dataCollectionService.getPbsData();
+    const queuesData = pbsData?.servers[serverName].queues?.items;
+
+    if (!queuesData) {
+      return null;
+    }
+
+    const queues: string[] = queuesData.reduce((q, item) => {
+      if (queueNames.includes(item.attributes['default_chunk.queue_list']))
+        q.push(item.name);
+      if (queueNames.includes(item.name))
+        q.push(item.name);
+      return q;
+    }, [] as string[]);
+
+    return queues;
   }
 
   /**
