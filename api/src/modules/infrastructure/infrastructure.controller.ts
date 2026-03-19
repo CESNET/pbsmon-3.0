@@ -9,8 +9,10 @@ import { InfrastructureService } from './infrastructure.service';
 import { InfrastructureOrganizationListDTO } from './dto/infrastructure-list.dto';
 import { InfrastructureDetailDTO } from './dto/infrastructure-detail.dto';
 import { InfrastructureListMetaDto } from './dto/infrastructure-list-meta.dto';
+import { InfrastructureFiltersDTO } from './dto/infrastructure-filters.dto';
 import { UserContextDecorator } from '@/common/decorators/user-context.decorator';
 import { UserContext } from '@/common/types/user-context.types';
+import { ParseFiltersPipe } from '@/common/pipes/filters.pipe';
 
 @ApiTags('infrastructure')
 @Controller('infrastructure')
@@ -34,16 +36,36 @@ export class InfrastructureController {
     type: String,
     description: 'Search query (searches machines by name or queue)',
   })
+  @ApiQuery({
+    name: 'filters',
+    required: false,
+    type: String,
+    description: 'Object with attribute filters',
+  })
   getInfrastructure(
     @Query('search') search?: string,
+    @Query('filters', ParseFiltersPipe) filters: [string, string | number][] = [],
   ): ApiResponse<
     InfrastructureOrganizationListDTO[],
     InfrastructureListMetaDto
   > {
     const { data, meta } = this.infrastructureService.getInfrastructureList(
       search,
+      filters,
     );
     return new ApiResponse(data, meta);
+  }
+
+  @Get('filters')
+  @ApiOperation({
+    summary: 'Get list of infrastructure filters',
+    description: 'Returns infrastructure filters',
+  })
+  @ApiOkResponseModel(InfrastructureFiltersDTO, 'Infrastructure filters detail')
+  @ApiNotFoundResponse({ description: 'Infrastructure filters not found' })
+  getInfrastructureFilters(): ApiResponse<InfrastructureFiltersDTO> {
+    const data = this.infrastructureService.getInfrastructureFilters();
+    return new ApiResponse(data);
   }
 
   @Get('organizations/:id')

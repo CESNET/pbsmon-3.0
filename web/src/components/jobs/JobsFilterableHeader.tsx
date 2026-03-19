@@ -44,8 +44,6 @@ export function JobsFilterableHeader({
   onStateFilterChange,
 }: JobsFilterableHeaderProps) {
   const { t } = useTranslation();
-
-  console.log("Filterable states:", filterableStates);
   const stateOptions: { value: JobFilterableState; label: string }[] = [
     { value: "all", label: t("jobs.all") },
     ...(filterableStates

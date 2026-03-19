@@ -1,17 +1,17 @@
 import { useTranslation } from "react-i18next";
 import type { InfrastructureListMetaDto } from "@/lib/generated-api";
 
-interface MetacentrumTotalProps {
+interface MetacentrumOverviewProps {
   meta: InfrastructureListMetaDto;
 }
 
-export function MetacentrumTotal({ meta }: MetacentrumTotalProps) {
+export function MetacentrumOverview({ meta }: MetacentrumOverviewProps) {
   const { t } = useTranslation();
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
       <h2 className="text-xl font-bold text-primary-900 mb-4">
-        {t("machines.metacentrumTotal")}
+        {t("machines.metacentrumOverview")}
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>

@@ -118,12 +118,36 @@ export class InfrastructureNodeListDTO {
 
   @Expose()
   @ApiProperty({
-    description: 'Queue names assigned to this node (from PBS queue_list)',
+    description: 'Queue assigned to this node (from PBS queue_list)',
     type: [String],
     nullable: true,
     required: false,
   })
   queueNames?: string[] | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Queue names assigned to this node',
+    type: [String],
+    nullable: true,
+    required: false,
+  })
+  queues?: string[] | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Resources assigned to this node',
+    type: Object,
+    additionalProperties: {
+      oneOf: [
+        { type: 'string' },
+        { type: 'number' },
+      ],
+    },
+    nullable: true,
+    required: false,
+  })
+  resources?: Record<string, string | number> | null;
 
   @Expose()
   @ApiProperty({

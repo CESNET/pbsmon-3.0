@@ -61,7 +61,6 @@ export function QueuePbsMachinesTab({
   const { t } = useTranslation();
   const { data: infrastructureData, isLoading, error } = useInfrastructure();
 
-  console.log(infrastructureData);
   const machines = infrastructureData
     ? filterMachinesByQueue(infrastructureData, queueName, additionalAttributes)
     : [];
