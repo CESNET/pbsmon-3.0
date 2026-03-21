@@ -124,6 +124,7 @@ i18n.use(initReactI18next).init({
           next: "Next",
           notLoggedIn: "You are not logged in",
           redirectingToLogin: "Redirecting to login...",
+          logout: "Logout",
         },
         jobs: {
           status: "Status",
@@ -582,6 +583,7 @@ i18n.use(initReactI18next).init({
           next: "Další",
           notLoggedIn: "Nejste přihlášeni",
           redirectingToLogin: "Přesměrovávání na přihlášení...",
+          logout: "Odhlásit se",
         },
         jobs: {
           status: "Stav",

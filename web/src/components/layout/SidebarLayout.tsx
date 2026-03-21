@@ -124,6 +124,18 @@ export function SidebarLayout() {
     new Set(["resource-status"])
   );
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "GET",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+    window.location.href = 'https://login.e-infra.cz/oidc/endsession';
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-primary-600">
@@ -263,26 +275,25 @@ export function SidebarLayout() {
               className="w-[195px] h-[47px]"
             />
           </div>
-
-          <div className="pl-[30px] pr-4 py-4 border-b border-primary-700">
-            <a
-              href="https://profile.e-infra.cz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-[10px] hover:opacity-80 transition-opacity"
-            >
-              <div className="w-[30px] h-[30px] flex items-center justify-center">
-                <Icon
-                  icon="mdi:account"
-                  className="w-[30px] h-[30px] text-white"
-                />
-              </div>
-              <span className="text-sm">{currentUser?.username || "---"}</span>
-            </a>
-          </div>
-
           <nav>
             <ul className="space-y-0">
+              <li>
+                <a
+                  href="https://profile.e-infra.cz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] text-white hover:bg-primary-700 transition-colors"
+                >
+                  <Icon icon="mdi:account" className="w-6 h-6" />
+                  <span className="text-sm flex-1">
+                    {currentUser?.username || "---"}
+                  </span>
+                  <Icon
+                        icon="mdi:open-in-new"
+                        className="w-[11px] h-[11px] text-white"
+                      />
+                </a>
+              </li>
               {menuItems.map((item) => (
                 <li key={item.id}>
                   {item.isExpandable ? (
@@ -389,6 +400,17 @@ export function SidebarLayout() {
                   </a>
                 </li>
               ))}
+
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] w-full text-white hover:bg-primary-700 transition-colors bg-transparent border-none cursor-pointer"
+                >
+                  <Icon icon="mdi:logout" className="w-6 h-6" />
+                  <span>{t("common.logout")}</span>
+                </button>
+              </li>
+
             </ul>
           </div>
         </aside>
