@@ -15,7 +15,7 @@ int process_data_json(struct batch_status *bs,char* type, const char* output_dir
 int main(int argc, char **argv) {
     /*PBS variables*/
     int con;
-    struct batch_status *bs;
+    struct batch_status *bs_server, *bs_queue, *bs_node, *bs_job, *bs_resv, *bs_rsc, *bs_sched;
     /* my variables */
     char* server;
     const char* output_dir;
@@ -35,38 +35,39 @@ int main(int argc, char **argv) {
     printf("Connected to %s\n", server);
     printf("Getting server info\n");
     /* get server info */
-    bs = pbs_statserver(con, NULL, NULL);
-    process_data_json(bs,"servers", output_dir);
+    bs_server = pbs_statserver(con, NULL, NULL);
     printf("Getting queues info\n");
     /* get queues info */
-    bs = pbs_statque(con, "", NULL, NULL);
-    process_data_json(bs,"queues", output_dir);
+    bs_queue = pbs_statque(con, "", NULL, NULL);
     printf("Getting nodes info\n");
     /* get nodes info */
-    bs = pbs_statnode(con, "", NULL, NULL);
-    process_data_json(bs,"nodes", output_dir);
+    bs_node = pbs_statnode(con, "", NULL, NULL);
     printf("Getting jobs info\n");
     /* get jobs info: t - job arrays, x - finished jobs*/
-    bs = pbs_statjob(con, "", NULL, "tx");
-    process_data_json(bs,"jobs", output_dir);
+    bs_job = pbs_statjob(con, "", NULL, "tx");
     printf("Getting reservations info\n");
     /* get reservations info */
-    bs = pbs_statresv(con, NULL, NULL, NULL);
-    process_data_json(bs,"reservations", output_dir);
+    bs_resv = pbs_statresv(con, NULL, NULL, NULL);
     printf("Getting resources info\n");
     /* get resources info */
-    bs = pbs_statrsc(con, NULL, NULL, NULL);
-    process_data_json(bs,"resources", output_dir);
+    bs_rsc = pbs_statrsc(con, NULL, NULL, NULL);
     printf("Getting scheduler info\n");
     /* get scheduler info */
-    bs = pbs_statsched(con, NULL, NULL);
-    process_data_json(bs,"schedulers", output_dir);
+    bs_sched = pbs_statsched(con, NULL, NULL);
     /* get hook info */
     // printf("Getting hook info\n");
     // bs = pbs_stathook(con, NULL, NULL, NULL);
     // process_data_json(bs,"hooks");
     /* end connection */
     pbs_disconnect(con);
+
+    process_data_json(bs_server,"servers", output_dir);
+    process_data_json(bs_queue,"queues", output_dir);
+    process_data_json(bs_node,"nodes", output_dir);
+    process_data_json(bs_job,"jobs", output_dir);
+    process_data_json(bs_resv,"reservations", output_dir);
+    process_data_json(bs_rsc,"resources", output_dir);
+    process_data_json(bs_sched,"schedulers", output_dir);
     return 0;
 }
 
