@@ -64,11 +64,6 @@ const menuItems: MenuItem[] = [
       { id: "projects", path: "/projects", translationKey: "pages.projects" },
       { id: "queues", path: "/queues", translationKey: "pages.queues" },
       { id: "jobs", path: "/jobs", translationKey: "pages.jobs" },
-      {
-        id: "waiting-jobs",
-        path: "/waiting-jobs",
-        translationKey: "pages.waitingJobs",
-      },
       { id: "users", path: "/users", translationKey: "pages.users" },
       { id: "groups", path: "/groups", translationKey: "pages.groups" },
       /*  { id: "outages", path: "/outages", translationKey: "pages.outages" },
