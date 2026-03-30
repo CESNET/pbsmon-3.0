@@ -1,9 +1,9 @@
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
-import type { JobListDTO } from "@/lib/generated-api";
+import type { JobsSummaryDTO } from "@/lib/generated-api";
 
 interface WaitingJobsSummaryProps {
-  jobs: JobListDTO[];
+  summary: JobsSummaryDTO;
   onFilterByReason?: (reason: string) => void;
   activeFilter?: string | null;
 }
@@ -14,7 +14,7 @@ interface ReasonCount {
 }
 
 export function WaitingJobsSummary({
-  jobs,
+  summary,
   onFilterByReason,
   activeFilter,
 }: WaitingJobsSummaryProps) {
@@ -23,9 +23,10 @@ export function WaitingJobsSummary({
   // Group jobs by comment/reason and count them
   const reasonCounts = new Map<string, number>();
 
-  for (const job of jobs) {
-    const reason = typeof job.comment === "string" ? job.comment : "";
-    reasonCounts.set(reason, (reasonCounts.get(reason) || 0) + 1);
+  if (summary.waitingReasons) {
+    for (const reason of Object.keys(summary.waitingReasons)) {
+      reasonCounts.set(reason, summary.waitingReasons[reason]);
+    }
   }
 
   // Convert to array and sort by count (descending)

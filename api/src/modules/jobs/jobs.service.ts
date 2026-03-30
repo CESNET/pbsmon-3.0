@@ -10,6 +10,7 @@ import {
   JobMessageDTO,
 } from './dto/job-detail.dto';
 import { JobsListMetaDto } from './dto/jobs-list-meta.dto';
+import { JobsSummaryDTO } from './dto/jobs-summary.dto';
 import { getJobStateFromPbsState } from './helpers/job-state.helper';
 
 
@@ -209,6 +210,44 @@ export class JobsService {
         filterableStates: filterableStates,
         lastRunningCompletedBy: lastRunningCompletedBy,
       },
+    };
+  }
+
+  getJobsSummary(
+    userContext: UserContext,
+  ): JobsSummaryDTO {
+    const pbsData = this.dataCollectionService.getPbsData();
+    if (!pbsData?.servers) {
+      return {};
+    }
+
+    // Collect all jobs from all servers
+    const allJobs: PbsJob[] = [];
+    for (const serverData of Object.values(pbsData.servers)) {
+      if (serverData.jobs?.items) {
+        allJobs.push(...serverData.jobs.items);
+      }
+    }
+
+    // Transform to DTOs
+    let jobs = allJobs.map((job) => this.transformJobToDTO(job));
+
+    const waitingJobs = jobs.filter((job) => ['Q', 'W'].includes(job.state));
+
+    const waitingReasons = waitingJobs.reduce((counts, job) => {
+      const comment = typeof job.comment === "string" ? job.comment : "";
+      counts[comment] = (counts[comment] ?? 0) + 1;
+      return counts;
+    }, {} as Record<string, number>);
+
+    const stateCounts: Record<string, number> = jobs.reduce((counts, job) => {
+      counts[job.state] = (counts[job.state] ?? 0) + 1;
+      return counts;
+    }, {} as Record<string, number>);
+
+    return {
+      stateCounts,
+      waitingReasons,
     };
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useJobs } from "@/hooks/useJobs";
+import { useJobsSummary } from "@/hooks/useJobsSummary";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { JobsSearchBar } from "@/components/jobs/JobsSearchBar";
 import { JobsTable } from "@/components/jobs/JobsTable";
@@ -107,7 +108,7 @@ export function JobsPage() {
     sort: waitingJobsSort,
     order: waitingJobsOrder,
     search: waitingJobsSearch.trim() || undefined,
-    state: "Q", // Filter for queued jobs only
+    state: "Q|W", // Filter for queued jobs only
     comment: (typeof commentFilter === "string") ? commentFilter : undefined,
     enabled: activeTab === "waiting",
   });
@@ -129,15 +130,10 @@ export function JobsPage() {
     enabled: activeTab === "my" && !!currentUsername,
   });
 
-  // Fetch all waiting jobs for summary (no pagination, no search filter)
-  const { data: summaryData } = useJobs({
-    page: 1,
-    limit: 10000, // Large limit to get all jobs for summary
-    sort: "createdAt",
-    order: "desc",
-    state: "Q", // Filter for queued jobs only
+  const {
+    data: summaryData,
+  } = useJobsSummary({
     enabled: activeTab === "waiting",
-    // No search filter for summary - we want all jobs
   });
 
   // All Jobs handlers
@@ -370,9 +366,9 @@ export function JobsPage() {
 
           {waitingJobsData && waitingJobsData.data && (
             <>
-              {summaryData?.data?.jobs && (
+              {summaryData && (
                 <WaitingJobsSummary
-                  jobs={summaryData.data.jobs}
+                  summary={summaryData}
                   onFilterByReason={handleFilterByReason}
                   activeFilter={commentFilter}
                 />

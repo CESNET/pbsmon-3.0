@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useJobs } from "@/hooks/useJobs";
+import { useJobsSummary } from "@/hooks/useJobsSummary";
 import { JobsSearchBar } from "@/components/jobs/JobsSearchBar";
 import { WaitingJobsTable } from "@/components/jobs/WaitingJobsTable";
 import { WaitingJobsSummary } from "@/components/jobs/WaitingJobsSummary";
@@ -35,15 +36,9 @@ export function WaitingJobsPage() {
     comment: (typeof commentFilter === "string") ? commentFilter : undefined,
   });
 
-  // Fetch all waiting jobs for summary (no pagination, no search filter)
-  const { data: summaryData } = useJobs({
-    page: 1,
-    limit: 10000, // Large limit to get all jobs for summary
-    sort: "createdAt",
-    order: "desc",
-    state: "Q", // Filter for queued jobs only
-    // No search filter for summary - we want all jobs
-  });
+  const {
+    data: summaryData,
+  } = useJobsSummary();
 
   const handleSort = (column: SortColumn) => {
     if (sort === column) {
@@ -113,9 +108,9 @@ export function WaitingJobsPage() {
 
         {data && data.data && (
           <>
-            {summaryData?.data?.jobs && (
+            {summaryData && (
               <WaitingJobsSummary
-                jobs={summaryData.data.jobs}
+                summary={summaryData}
                 onFilterByReason={handleFilterByReason}
                 activeFilter={commentFilter}
               />
