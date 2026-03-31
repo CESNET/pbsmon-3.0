@@ -23,11 +23,15 @@ export class OidcService implements OnModuleInit {
     }
 
     try {
+      const redirectUris = Array.isArray(oidcConfig.redirectUri)
+        ? oidcConfig.redirectUri
+        : (oidcConfig.redirectUri ? [oidcConfig.redirectUri] : []);
+
       this.config = await client.discovery(
         new URL(oidcConfig.issuer),
         oidcConfig.clientId,
         {
-          redirect_uris: [oidcConfig.redirectUri || ''],
+          redirect_uris: redirectUris.length > 0 ? redirectUris : [''],
           response_types: ['code'],
         },
         client.ClientSecretPost(oidcConfig.clientSecret),
@@ -43,9 +47,12 @@ export class OidcService implements OnModuleInit {
 
   /**
    * Get the authorization URL for OIDC login with PKCE
+   * @param state Optional state parameter
+   * @param redirectUri Optional specific redirect URI to use. If not provided, uses the first configured URI
    */
   async getAuthorizationUrl(
     state?: string,
+    redirectUri?: string,
   ): Promise<{ url: string; state: string; codeVerifier: string } | null> {
     if (!this.config) {
       return null;
@@ -54,11 +61,13 @@ export class OidcService implements OnModuleInit {
     const authState = state || client.randomPKCECodeVerifier();
     const codeVerifier = client.randomPKCECodeVerifier();
     const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
-    const redirectUri =
-      this.configService.get<OidcConfig>('oidc')!.redirectUri || '';
+
+    // Use provided redirectUri, or get the first one from config
+    const configuredUris = this.configService.get<OidcConfig>('oidc')!.redirectUri || [];
+    const selectedRedirectUri = redirectUri || (Array.isArray(configuredUris) && configuredUris.length > 0 ? configuredUris[0] : '');
 
     const url = client.buildAuthorizationUrl(this.config, {
-      redirect_uri: redirectUri,
+      redirect_uri: selectedRedirectUri,
       scope: 'openid profile eduperson_entitlement',
       state: authState,
       code_challenge: codeChallenge,
@@ -112,6 +121,35 @@ export class OidcService implements OnModuleInit {
       this.logger.error('OIDC callback error', error);
       throw error;
     }
+  }
+
+  /**
+   * Find a matching redirect URI from configured URIs based on hostname
+   * @param hostname The hostname to match (e.g., "pbsmon.metacentrum.cz")
+   * @returns The matching redirect URI if found, otherwise returns the first configured URI
+   */
+  getRedirectUriForHost(hostname: string): string {
+    const configuredUris = this.configService.get<OidcConfig>('oidc')!.redirectUri || [];
+
+    if (!Array.isArray(configuredUris) || configuredUris.length === 0) {
+      return '';
+    }
+
+    // Try to find a URI that matches the given hostname
+    for (const uri of configuredUris) {
+      try {
+        const url = new URL(uri);
+        if (url.hostname === hostname) {
+          return uri;
+        }
+      } catch (e) {
+        // Invalid URL, skip
+        continue;
+      }
+    }
+
+    // If no match found, return the first URI
+    return configuredUris[0];
   }
 
   /**

@@ -1,4 +1,4 @@
-# pbsmon-2.0
+# pbsmon-3.0
 
 Metacentrum PBSMon - Monitoring and management system for PBS (Portable Batch System) clusters and OpenStack entities
 
@@ -13,7 +13,7 @@ Metacentrum PBSMon - Monitoring and management system for PBS (Portable Batch Sy
 
 ```bash
 git clone <repository-url>
-cd pbsmon-2.0
+cd pbsmon-3.0
 ```
 
 ### 2. Environment Configuration

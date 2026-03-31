@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsArray } from 'class-validator';
 
 export class OidcConfig {
   @IsOptional()
@@ -18,8 +18,9 @@ export class OidcConfig {
   issuer?: string;
 
   @IsOptional()
-  @IsString()
-  redirectUri?: string;
+  @IsArray()
+  @IsString({ each: true })
+  redirectUri?: string[];
 }
 
 export const getOidcConfig = (): OidcConfig => ({
@@ -27,5 +28,7 @@ export const getOidcConfig = (): OidcConfig => ({
   clientId: process.env.OIDC_CLIENT_ID,
   clientSecret: process.env.OIDC_CLIENT_SECRET,
   issuer: process.env.OIDC_ISSUER,
-  redirectUri: process.env.OIDC_REDIRECT_URI || '',
+  redirectUri: process.env.OIDC_REDIRECT_URI
+    ? process.env.OIDC_REDIRECT_URI.split(',').map(uri => uri.trim()).filter(Boolean)
+    : [],
 });

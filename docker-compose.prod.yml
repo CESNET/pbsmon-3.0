@@ -9,7 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - FRONTEND_URL=${FRONTEND_URL:-https://pbsmon.metacentrum.cz}
+      - FRONTEND_URL=${FRONTEND_URL:-https://my.metacentrum.cz}
       - PBS_DATA_PATH=/app/data/pbs
       - PERUN_DATA_PATH=/app/data/perun
       - ACCOUNTING_CONNECTION_STRING=${ACCOUNTING_CONNECTION_STRING:-}
@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        API_BASE_URL: ${API_BASE_URL:-https://pbsmon.metacentrum.cz/api}
+        API_BASE_URL: ${API_BASE_URL:-https://my.metacentrum.cz/api}
         API_AUTH_USERNAME: ${API_AUTH_USERNAME:-}
         API_AUTH_PASSWORD: ${API_AUTH_PASSWORD:-}
     container_name: pbsmon-web

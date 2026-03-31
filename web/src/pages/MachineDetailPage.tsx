@@ -18,7 +18,7 @@ export function MachineDetailPage() {
     }
 
     return () => {
-      document.title = 'PBSMON';
+      document.title = 'MetaCentrum';
     };
   }, [data]);
 

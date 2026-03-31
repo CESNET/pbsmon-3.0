@@ -40,7 +40,11 @@ export class AuthController {
       throw new UnauthorizedException('OIDC authentication not available');
     }
 
-    const authData = await this.oidcService.getAuthorizationUrl();
+    // Get the redirect URI matching the current request host
+    const requestHost = req.get('host') || '';
+    const redirectUri = this.oidcService.getRedirectUriForHost(requestHost);
+
+    const authData = await this.oidcService.getAuthorizationUrl(undefined, redirectUri);
     if (!authData) {
       throw new UnauthorizedException('Failed to generate authorization URL');
     }
@@ -48,6 +52,7 @@ export class AuthController {
     if (req.session) {
       (req.session as any).oidcState = authData.state;
       (req.session as any).oidcCodeVerifier = authData.codeVerifier;
+      (req.session as any).oidcRedirectUri = redirectUri;
     }
 
     this.logger.log('Redirecting to OIDC provider', { state: authData.state });
@@ -92,11 +97,21 @@ export class AuthController {
       const oidcConfig = this.configService.get<OidcConfig>('oidc')!;
       const configuredRedirectUri = oidcConfig.redirectUri;
 
-      if (!configuredRedirectUri) {
+      // Get stored redirect URI from session, or find matching one for current host
+      let selectedRedirectUri: string;
+      const session = req.session as any;
+      if (session?.oidcRedirectUri) {
+        selectedRedirectUri = session.oidcRedirectUri;
+      } else {
+        const requestHost = req.get('host') || '';
+        selectedRedirectUri = this.oidcService.getRedirectUriForHost(requestHost);
+      }
+
+      if (!selectedRedirectUri) {
         throw new BadRequestException('OIDC redirect URI not configured');
       }
 
-      const callbackUrl = new URL(configuredRedirectUri);
+      const callbackUrl = new URL(selectedRedirectUri);
       const requestUrl = new URL(
         req.originalUrl || req.url,
         `${req.protocol}://${req.get('host')}`,
@@ -137,6 +152,7 @@ export class AuthController {
 
         delete (req.session as any).oidcState;
         delete (req.session as any).oidcCodeVerifier;
+        delete (req.session as any).oidcRedirectUri;
       }
 
       const frontendUrl =

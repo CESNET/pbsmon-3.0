@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-# PBSMON 2.0 Deployment Script
+# PBSMON 3.0 Deployment Script
 # This script pulls the latest code and restarts Docker containers
 # Usage: ./deploy.sh [--skip-pull]
 # --skip-pull: Skip pulling the latest code from git
