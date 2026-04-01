@@ -96,11 +96,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 1G
+          cpus: "1.0"
+          memory: 5G
         reservations:
           cpus: "0.1"
-          memory: 128M
+          memory: 1G
     # Healthcheck - verify cron is running
     healthcheck:
       test: ["CMD", "pgrep", "-x", "cron"]
