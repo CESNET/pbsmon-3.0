@@ -718,35 +718,9 @@ export class JobsService {
           ? this.parseMemoryValue(attrs['Resource_List.scratch_volume'])
           : null;
 
-    // Build requested resources string
-    const requestedResourcesParts: string[] = [];
-    if (cpuReserved > 0) {
-      requestedResourcesParts.push(`ncpus=${cpuReserved}`);
-    }
-    if (memoryReserved > 0) {
-      requestedResourcesParts.push(`mem=${memoryReserved}gb`);
-    }
-    if (scratchReserved && scratchReserved > 0) {
-      const scratchType = attrs['Resource_List.scratch_local']
-        ? 'scratch_local'
-        : attrs['Resource_List.scratch_ssd']
-          ? 'scratch_ssd'
-          : 'scratch_volume';
-      requestedResourcesParts.push(`${scratchType}=${scratchReserved}gb`);
-    }
-    if (attrs['Resource_List.mpiprocs']) {
-      requestedResourcesParts.push(
-        `mpiprocs=${attrs['Resource_List.mpiprocs']}`,
-      );
-    }
-    if (attrs['Resource_List.ompthreads']) {
-      requestedResourcesParts.push(
-        `ompthreads=${attrs['Resource_List.ompthreads']}`,
-      );
-    }
     const requestedResources =
-      requestedResourcesParts.length > 0
-        ? `1:${requestedResourcesParts.join(':')}`
+      attrs['Resource_List.select']
+        ? attrs['Resource_List.select']
         : '';
 
     // Parse used resources (for running, exiting, and completed jobs: C, F, X)
