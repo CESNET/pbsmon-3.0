@@ -33,11 +33,11 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
   // Grid: ID (bigger), Name (smaller), User, Machine, CPU, GPU, RAM, Comment (flex-1), Created
   // Using fixed widths for all except Comment which uses flex-1
   const gridCols =
-    "grid-cols-[300px_150px_120px_150px_100px_100px_100px_1fr_180px]";
+    "grid-cols-[300px_150px_120px_100px_100px_100px_1fr_180px]";
 
   return (
     <div
-      className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50`}
+      className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 overflow-hidden`}
     >
       {/* ID Column */}
       <div className="text-left">
@@ -68,20 +68,6 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
           </Link>
         ) : (
           <span className="text-gray-900">{t("jobs.anonym")}</span>
-        )}
-      </div>
-
-      {/* Machine Column - Show preplanned machine */}
-      <div className="text-sm">
-        {job.node ? (
-          <Link
-            to={`/machines/${encodeURIComponent(String(job.node))}`}
-            className="text-primary-600 hover:text-primary-800 underline"
-          >
-            {String(job.node)}
-          </Link>
-        ) : (
-          <span className="text-gray-400">-</span>
         )}
       </div>
 
@@ -136,11 +122,9 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
       </div>
 
       {/* Comment Column - Most important, shows reason for waiting */}
-      <div className="text-sm text-gray-900">
+      <div className="text-sm text-gray-900 truncate min-w-0">
         {job.comment ? (
-          <div className="truncate" title={String(job.comment)}>
-            {String(job.comment)}
-          </div>
+          String(job.comment)
         ) : (
           <span className="text-gray-400">-</span>
         )}

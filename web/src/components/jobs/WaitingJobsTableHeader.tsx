@@ -27,7 +27,7 @@ export function WaitingJobsTableHeader({
   // Grid: ID (bigger), Name (smaller), User, Machine, CPU, GPU, RAM, Comment (flex-1), Created
   // Using fixed widths for all except Comment which uses flex-1
   const gridCols =
-    "grid-cols-[300px_150px_120px_150px_100px_100px_100px_1fr_180px]";
+    "grid-cols-[300px_150px_120px_100px_100px_100px_1fr_180px]";
 
   return (
     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
@@ -59,15 +59,6 @@ export function WaitingJobsTableHeader({
           onSort={onSort}
         >
           {t("jobs.username")}
-        </WaitingJobsSortableHeader>
-
-        <WaitingJobsSortableHeader
-          column="node"
-          currentSortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={onSort}
-        >
-          {t("jobs.machine")}
         </WaitingJobsSortableHeader>
 
         <WaitingJobsSortableHeader
