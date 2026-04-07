@@ -109,13 +109,23 @@ int process_data(struct batch_status *bs,char* type) {
 
 static void json_escape(const char *src, FILE *fp) {
     for (const char *p = src; *p; p++) {
-        switch (*p) {
+        unsigned char c = (unsigned char)*p;
+        switch (c) {
             case '\"': fputs("\\\"", fp); break;
             case '\\': fputs("\\\\", fp); break;
-            case '\n': fputs("\\n", fp); break;
-            case '\r': fputs("\\r", fp); break;
-            case '\t': fputs("\\t", fp); break;
-            default: fputc(*p, fp); break;
+            case '\b': fputs("\\b", fp);  break;
+            case '\f': fputs("\\f", fp);  break;
+            case '\n': fputs("\\n", fp);  break;
+            case '\r': fputs("\\r", fp);  break;
+            case '\t': fputs("\\t", fp);  break;
+            default:
+                // Handle control characters (0x00 to 0x1F)
+                if (c < 0x20) {
+                    fprintf(fp, "\\u%04x", c);
+                } else {
+                    fputc(c, fp);
+                }
+                break;
         }
     }
 }
