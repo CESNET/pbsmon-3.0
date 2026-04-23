@@ -57,7 +57,8 @@ export function UserDetailPage() {
     limit: jobsLimit,
     sort: jobsSort,
     order: jobsOrder,
-    search: userId || undefined, // Filter by username
+    owner: userId || undefined,
+    search: jobsSearch.trim() || undefined,
     state: stateFilter === "all" ? undefined : stateFilter,
     enabled: activeTab === "jobs" && !!userId,
   });
