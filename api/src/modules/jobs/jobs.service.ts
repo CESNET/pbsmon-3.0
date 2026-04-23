@@ -109,6 +109,7 @@ export class JobsService {
 
       return {
         ...job,
+        name: canSeeOwner ? job.name : 'Anonym',
         owner: canSeeOwner ? job.owner : 'Anonym',
         canSeeOwner,
       };
@@ -678,7 +679,9 @@ export class JobsService {
     }
 
     // Transform to detail DTO
-    const jobDetail = this.transformJobToDetailDTO(job, pbsData);
+    const jobDetail = canSeeOwner
+      ? this.transformJobToDetailDTO(job, pbsData)
+      : this.transformAnonymizedJobToDetailDTO(job, pbsData);
     return {
       ...jobDetail,
       owner: canSeeOwner ? jobDetail.owner : 'Anonym',
@@ -955,6 +958,102 @@ export class JobsService {
       subjobs,
       messages,
       rawAttributes: attrs, // Include all raw PBS attributes
+    };
+  }
+
+
+  /**
+   * Transform PBS Anonymized job to JobDetailDTO
+   */
+  private transformAnonymizedJobToDetailDTO(job: PbsJob, pbsData: PbsData): JobDetailDTO {
+    const attrs = job.attributes;
+
+    // Basic info
+    const owner = 'Anonym';
+    const username = 'Anonym';
+    const state = attrs['job_state'] || 'U';
+
+    // Parse resource values
+    const cpuReserved = this.parseResourceValue(
+      attrs['Resource_List.ncpus'] || '0',
+    );
+    const gpuReserved = this.parseResourceValue(
+      attrs['Resource_List.ngpus'] || '0',
+    );
+    const memoryReserved = this.parseMemoryValue(
+      attrs['Resource_List.mem'] || '0gb',
+    );
+    const walltimeReserved = attrs['Resource_List.walltime']
+      ? this.parseTimeToSeconds(attrs['Resource_List.walltime'])
+      : null;
+
+    // Get node name
+    let node: string | null = null;
+    if (attrs['exec_host']) {
+      const firstNode = attrs['exec_host'].split('/')[0];
+      node = firstNode || null;
+    } else if (attrs['exec_vnode']) {
+      const match = attrs['exec_vnode'].match(/\(([^:]+):/);
+      if (match) {
+        node = match[1];
+      }
+    }
+
+    // Find subjobs (array jobs)
+    const subjobs: SubjobDTO[] | null = this.findSubjobs(job, pbsData);
+
+    // Parse exit code
+    const exitCode = attrs['Exit_status']
+      ? parseInt(attrs['Exit_status'], 10)
+      : null;
+
+    // Get state info
+    const stateInfo = getJobStateFromPbsState(state, exitCode);
+
+    return {
+      id: job.name,
+      name: 'Anonym',
+      state,
+      stateName: stateInfo.name,
+      stateColor: stateInfo.color,
+      owner,
+      username,
+      canSeeOwner: true, // Will be overridden in getJobDetail based on user context
+      queue: attrs['queue'] || null,
+      server: attrs['server'] || null,
+      node,
+      requestedResources: '',
+      cpuReserved,
+      gpuReserved,
+      memoryReserved,
+      walltimeReserved,
+      scratchReserved: null,
+      cpuTimeUsed: null,
+      gpuTimeUsed: null,
+      memoryUsed: null,
+      runtime: null,
+      cpuUsagePercent: null,
+      cpuUsagePercentPerCpu: null,
+      gpuUsagePercent: null,
+      gpuUsagePercentPerGpu: null,
+      memoryUsagePercent: null,
+      createdAt: 0,
+      eligibleAt: null,
+      startedAt: null,
+      obitAt: null,
+      completedBy: null,
+      lastStateChangeAt: null,
+      kerberosTicketAt: null,
+      stdoutDirectory: null,
+      workingDirectory: null,
+      scratchDirectory: null,
+      comment: null,
+      exitCode,
+      allocatedResources: [],
+      environmentVariables: {},
+      subjobs,
+      messages: [],
+      rawAttributes: {}, // Include all raw PBS attributes
     };
   }
 
