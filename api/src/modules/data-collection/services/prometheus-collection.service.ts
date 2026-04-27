@@ -86,14 +86,38 @@ export class PrometheusCollectionService {
 
     for (const queryConfig of this.queries) {
       try {
+        const numAttempts = 5;
         this.logger.debug(`Querying: ${queryConfig.name}`);
-        const result = await this.prometheusClient.query(queryConfig.query);
-        collectedData[queryConfig.name] = result;
-        this.logger.debug(`Successfully collected: ${queryConfig.name}`);
+        for (let attempt = 1; attempt <= numAttempts; attempt++) {
+            const result = await this.prometheusClient.query(queryConfig.query);
+            if (result.status === 'success' && result.data.result.length > 0) {
+              collectedData[queryConfig.name] = result;
+              this.logger.debug(`Successfully collected: ${queryConfig.name}`);
+              break;
+            }
+            if (attempt === numAttempts) {
+              this.logger.warn(
+                `Failed to collect data for "${queryConfig.name}" after ${numAttempts} attempts.`,
+              );
+              break;
+            }
+            await new Promise(f => setTimeout(f, 200));
+        }
       } catch (error) {
         this.logger.warn(
           `Failed to collect data for "${queryConfig.name}": ${error instanceof Error ? error.message : String(error)}`,
         );
+      }
+    }
+
+    this.logger.log(
+      `PROMETHEUS data collected - ${Object.keys(collectedData).length}/${this.queries.length} queries successful`,
+    );
+
+    /* If some queries failed, we keep the previous data for those queries (if available) to avoid losing all data. */
+    for (const queryConfig of this.queries) {
+      if (!collectedData[queryConfig.name] && this.prometheusData[queryConfig.name]) {
+        collectedData[queryConfig.name] = this.prometheusData[queryConfig.name] as PrometheusResponse;
       }
     }
 
@@ -102,9 +126,6 @@ export class PrometheusCollectionService {
       ...collectedData,
     } as PrometheusCollectionData;
 
-    this.logger.log(
-      `PROMETHEUS data collected - ${Object.keys(collectedData).length}/${this.queries.length} queries successful`,
-    );
   }
 
   getData(): PrometheusCollectionData {
