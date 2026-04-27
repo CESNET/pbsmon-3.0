@@ -7,6 +7,7 @@ services:
     container_name: pbsmon-api
     restart: unless-stopped
     environment:
+      - TZ=Europe/Prague
       - NODE_ENV=production
       - PORT=3000
       - FRONTEND_URL=${FRONTEND_URL:-https://my.metacentrum.cz}
@@ -50,6 +51,8 @@ services:
         API_AUTH_PASSWORD: ${API_AUTH_PASSWORD:-}
     container_name: pbsmon-web
     restart: unless-stopped
+    environment:
+      - TZ=Europe/Prague
     depends_on:
       - api
     networks:
@@ -76,6 +79,7 @@ services:
     container_name: pbsmon-pbs-collector
     restart: unless-stopped
     environment:
+      - TZ=Europe/Prague
       - PBS_SERVER_NAME=${PBS_SERVER_NAME:-pbs-m1}
       - PBS_DATA_PATH=/app/data/pbs
       - KEYTAB_PATH=/pbsmon.keytab
@@ -115,6 +119,8 @@ services:
       dockerfile: Dockerfile
     container_name: pbsmon-nginx
     restart: unless-stopped
+    environment:
+      - TZ=Europe/Prague
     ports:
       - "80:80"
       - "443:443"
