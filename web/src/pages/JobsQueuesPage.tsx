@@ -7,6 +7,16 @@ import { QueueTreeNode } from "@/components/common/QueueTreeNode";
 
 type SortColumn = "name" | "priority" | "totalJobs" | "fairshare";
 
+type QueueType = "all" | "non-reservation" | "reservation";
+
+function filterQueueType(queues: QueueListDTO[], qType: QueueType): QueueListDTO[] {
+  if (qType == "non-reservation")
+    return queues.filter((q) => !q.hasReservation);
+  if (qType == "reservation")
+    return queues.filter((q) => q.hasReservation);
+  return queues;
+}
+
 function filterEnabledAndStartedQueues(queues: QueueListDTO[]): QueueListDTO[] {
   return queues
     .filter((queue) => queue.enabled && (queue.started || queue.hasReservation))
@@ -116,7 +126,17 @@ export function JobsQueuesPage() {
 
   const filteredQueues = useMemo(() => {
     if (!data) return [];
-    const filtered = filterEnabledAndStartedQueues(data.queues);
+    const filtered = filterEnabledAndStartedQueues(
+      filterQueueType(data.queues, "non-reservation")
+    );
+    return sortQueues(filtered, sort, order);
+  }, [data, sort, order]);
+
+  const filteredReservationQueues = useMemo(() => {
+    if (!data) return [];
+    const filtered = filterEnabledAndStartedQueues(
+      filterQueueType(data.queues, "reservation")
+    );
     return sortQueues(filtered, sort, order);
   }, [data, sort, order]);
 
@@ -220,6 +240,26 @@ export function JobsQueuesPage() {
                     queue={queue}
                     level={0}
                     isLast={index === filteredQueues.length - 1}
+                  />
+                ))
+              )}
+            </div>
+
+            {filteredReservationQueues.length === 0 ? null : (
+              <hr className="border-gray-200 dark:border-gray-700" />
+            )}
+            <div>
+              {filteredReservationQueues.length === 0 ? (
+                <div className="px-4 py-8 text-center text-gray-500">
+                  {t("queues.noQueuesFound")}
+                </div>
+              ) : (
+                filteredReservationQueues.map((queue, index) => (
+                  <QueueTreeNode
+                    key={queue.name}
+                    queue={queue}
+                    level={0}
+                    isLast={index === filteredReservationQueues.length - 1}
                   />
                 ))
               )}
