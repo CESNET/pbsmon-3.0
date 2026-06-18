@@ -136,12 +136,16 @@ export function JobsTableRow({
       {/* ID Column */}
       <div className="text-left">
         <div className="flex items-center gap-2">
-          <Link
-            to={`/jobs/${encodeURIComponent(job.id)}`}
-            className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
-          >
+          {job.canSeeOwner ? (
+            <Link
+              to={`/jobs/${encodeURIComponent(job.id)}`}
+              className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
+            >
+              <span>{job.id}</span>
+            </Link>
+          ) : (
             <span>{job.id}</span>
-          </Link>
+          )}
           {isParentJob && (
             <>
               <Icon

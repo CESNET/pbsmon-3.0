@@ -41,12 +41,16 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
     >
       {/* ID Column */}
       <div className="text-left">
-        <Link
-          to={`/jobs/${encodeURIComponent(job.id)}`}
-          className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
-        >
+        {job.canSeeOwner ? (
+          <Link
+            to={`/jobs/${encodeURIComponent(job.id)}`}
+            className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
+          >
+            <span>{job.id}</span>
+          </Link>
+        ) : (
           <span>{job.id}</span>
-        </Link>
+        )}
       </div>
 
       {/* Name Column */}
