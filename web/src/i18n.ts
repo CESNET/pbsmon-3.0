@@ -342,6 +342,7 @@ i18n.use(initReactI18next).init({
           noOutages: "No operational restrictions",
           attribute: "Attribute",
           value: "Value",
+          nodeStateLegend: "Node states",
           tabs: {
             tasks: "Tasks",
             queues: "Queues",
@@ -819,6 +820,7 @@ i18n.use(initReactI18next).init({
             systemInfo: "Systémové informace",
             outages: "Zaznamenaná omezení běžného provozu",
           },
+          nodeStateLegend: "Stavy uzlů",
           nodeState: {
             free: "Volný",
             partiallyUsed: "Částečně volný",
