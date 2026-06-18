@@ -133,6 +133,29 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
             {t("jobs.resourceUsage")}
           </h3>
           <div className="space-y-4">
+            {job.runtime && typeof job.runtime == "string" && (
+              <div>
+                {typeof job.walltimeReserved === "number" &&
+                (typeof job.startedAt == "number" || typeof job.startedAt == "bigint") &&
+                (typeof job.completedBy == "number" || typeof job.completedBy == "bigint") &&
+                job.walltimeReserved !== null ? (
+                  <ProgressBar
+                    label={t("jobs.walltime")}
+                    value={formatSecondsToTime(job.walltimeReserved)}
+                    percent={(parseTimeToSeconds(job.runtime)/(job.completedBy - job.startedAt) * 100)}
+                    color="#4b5563"
+                  />
+                ) : (
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">
+                        {t("jobs.walltime")}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {job.cpuTimeUsed && (
               <div>
                 {typeof job.cpuUsagePercentPerCpu === "number" &&
