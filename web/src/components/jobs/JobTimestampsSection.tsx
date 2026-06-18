@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { JobDetailDTO } from "@/lib/generated-api";
+import { Icon } from "@iconify/react";
 
 interface JobTimestampsSectionProps {
   job: JobDetailDTO;
@@ -54,7 +55,17 @@ export function JobTimestampsSection({ job }: JobTimestampsSectionProps) {
           <div>
             <div className="text-sm text-gray-500">{t("jobs.completedBy")}</div>
             <div className="text-sm text-gray-900">
-              {formatTimestamp(job.completedBy)}
+              {
+                <a
+                  href={"https://docs.metacentrum.cz/en/docs/computing/jobs/extend-walltime"}
+                  {...({
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  })}
+                >
+                  {formatTimestamp(job.completedBy)} <Icon icon="mdi:open-in-new" className="inline w-[11px] h-[11px] text-grey" />
+                </a>
+              }
             </div>
           </div>
         )}
