@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useImpersonation } from "@/contexts/ImpersonationContext";
 import { useUserDetail } from "@/hooks/useUserDetail";
 import { useUserAccounting } from "@/hooks/useUserAccounting";
 import { useJobs } from "@/hooks/useJobs";
@@ -28,6 +31,10 @@ export function UserDetailPage() {
   const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const { data, isLoading, error } = useUserDetail(userId || "");
+  const navigate = useNavigate();
+  const { data: currentUser } = useCurrentUser();
+  const { impersonate } = useImpersonation();
+  const isAdmin = currentUser?.role === "admin";
 
   // Fetch accounting data
   const {
@@ -72,6 +79,16 @@ export function UserDetailPage() {
     user: userId || undefined,
     enabled: activeTab === "queues" && !!userId,
   });
+
+  const handleImpersonate = (e: React.MouseEvent) => {
+    if (typeof userId == "string" && userId !== "") {
+      e.preventDefault();
+      e.stopPropagation();
+      impersonate(userId);
+      // Redirect admin to personal view page after impersonation
+      navigate("/personal-view");
+    }
+  };
 
   const handleJobsSort = (column: SortColumn) => {
     if (jobsSort === column) {
@@ -202,6 +219,16 @@ export function UserDetailPage() {
           <h1 className="text-2xl font-bold text-primary-900">
             {t("pages.userDetail")}
           </h1>
+
+          {/* Actions Column - Only for admins */}
+          {isAdmin && (
+            <button
+              onClick={handleImpersonate}
+              className="px-3 py-1 text-sm font-medium text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded border border-primary-300 hover:border-primary-400"
+            >
+              {t("users.impersonate")}
+            </button>
+          )}
         </div>
       </header>
       <div className="p-6">
