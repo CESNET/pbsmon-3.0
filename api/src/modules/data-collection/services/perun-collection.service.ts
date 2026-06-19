@@ -11,6 +11,7 @@ import {
   PerunEtcGroups,
   StorageSpaces,
   StorageSpace,
+  UserStorageQuota,
 } from '../types/perun.types';
 
 @Injectable()
@@ -121,12 +122,34 @@ export class PerunCollectionService {
         }
       }
 
+      // Load user storage quotas CSV
+      let userStorageQuotas: Record<string, UserStorageQuota[]> | null = null;
+      try {
+        const quotasPath = path.join(this.config.storageSpacesDataPath, 'quotas.csv');
+        const quotasContent = await fs.readFile(quotasPath, 'utf-8');
+        userStorageQuotas = this.parseUserStorageQuotas(quotasContent);
+        this.logger.debug(`Loaded user storage quotas from ${quotasPath}`);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('ENOENT')) {
+          this.logger.warn(
+            `User storage quotas file not found: ${path.join(this.config.storageSpacesDataPath, 'quotas.csv')}`,
+          );
+        } else {
+          this.logger.warn(
+            `Failed to load user storage quotas file: ${errorMessage}`,
+          );
+        }
+      }
+
       this.perunData = {
         timestamp: new Date().toISOString(),
         machines,
         users,
         etcGroups,
         storageSpaces,
+        userStorageQuotas,
       };
 
       this.logger.log(
@@ -268,5 +291,50 @@ export class PerunCollectionService {
     }
 
     return entries;
+  }
+
+  private parseUserStorageQuotas(content: string): Record<string, UserStorageQuota[]> {
+    const result: Record<string, UserStorageQuota[]> = {};
+    const lines = content.split('\n').filter((l) => l.trim());
+
+    // Skip header row
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 10) continue;
+
+      const username = parts[0].trim();
+      if (!username) continue;
+
+      const parseNullable = (val: string): string | null => {
+        const v = val.trim();
+        return v === '-' || v === '' ? null : v;
+      };
+
+      const parseNullableInt = (val: string): number | null => {
+        const v = val.trim();
+        if (v === '-' || v === '') return null;
+        const n = parseInt(v, 10);
+        return isNaN(n) ? null : n;
+      };
+
+      const quota: UserStorageQuota = {
+        directory: parts[1].trim(),
+        used: parts[2].trim(),
+        softQuota: parseNullable(parts[3]),
+        hardQuota: parseNullable(parts[4]),
+        grace: parseNullable(parts[5]),
+        filesUsed: parseNullableInt(parts[6]),
+        filesSoftLimit: parseNullableInt(parts[7]),
+        filesHardLimit: parseNullableInt(parts[8]),
+        filesGrace: parseNullable(parts[9]),
+      };
+
+      if (!result[username]) {
+        result[username] = [];
+      }
+      result[username].push(quota);
+    }
+
+    return result;
   }
 }

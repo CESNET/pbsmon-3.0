@@ -3,9 +3,9 @@ import { Cron } from '@nestjs/schedule';
 import { PerunCollectionService } from './services/perun-collection.service';
 import { PrometheusCollectionService } from './services/prometheus-collection.service';
 import { PbsCollectionService } from './services/pbs-collection.service';
-import { PerunData, EtcGroupEntry, StorageSpaces } from './types/perun.types';
+import { PerunData, EtcGroupEntry, StorageSpaces, UserStorageQuota } from './types/perun.types';
 
-export { PerunData, EtcGroupEntry, StorageSpaces };
+export { PerunData, EtcGroupEntry, StorageSpaces, UserStorageQuota };
 
 @Injectable()
 export class DataCollectionService implements OnModuleInit {
@@ -77,5 +77,11 @@ export class DataCollectionService implements OnModuleInit {
   getStorageSpaces(): StorageSpaces | null {
     const perunData = this.perunCollectionService.getData();
     return perunData?.storageSpaces || null;
+  }
+
+  getUserStorageQuotas(username: string): UserStorageQuota[] | null {
+    const perunData = this.perunCollectionService.getData();
+    if (!perunData?.userStorageQuotas) return null;
+    return perunData.userStorageQuotas[username] || null;
   }
 }

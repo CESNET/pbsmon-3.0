@@ -102,10 +102,23 @@ export interface StorageSpaces {
   formattedTotalFree: string;
 }
 
+export interface UserStorageQuota {
+  directory: string;
+  used: string;
+  softQuota: string | null;
+  hardQuota: string | null;
+  grace: string | null;
+  filesUsed: number | null;
+  filesSoftLimit: number | null;
+  filesHardLimit: number | null;
+  filesGrace: string | null;
+}
+
 export interface PerunData {
   timestamp: string;
   machines: PerunMachines | null;
   users: PerunUsers | null;
   etcGroups: PerunEtcGroups;
   storageSpaces: StorageSpaces | null;
+  userStorageQuotas: Record<string, UserStorageQuota[]> | null;
 }
