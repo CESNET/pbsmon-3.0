@@ -1,9 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { ProgressBar } from "@/components/common/ProgressBar";
 import type { StorageSpacesDTO } from "@/lib/generated-api";
+import { UserStorageQuotasSection } from "./UserStorageQuotasSection";
+import type { UserStorageQuotasData } from "@/hooks/useUserStorageQuotas";
 
 interface StorageSpacesContentProps {
   data: StorageSpacesDTO;
+  quotasData?: UserStorageQuotasData;
 }
 
 /**
@@ -33,11 +36,12 @@ function formatFreeSpace(freeTiB: number): string {
   return `${Math.round(freeTiB)} TiB`;
 }
 
-export function StorageSpacesContent({ data }: StorageSpacesContentProps) {
+export function StorageSpacesContent({ data, quotasData }: StorageSpacesContentProps) {
   const { t } = useTranslation();
 
   return (
     <div className="p-6 space-y-6">
+
       {/* Scratch Storage Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -110,6 +114,8 @@ export function StorageSpacesContent({ data }: StorageSpacesContentProps) {
           </div>
         </div>
       </div>
+
+      {quotasData && <UserStorageQuotasSection data={quotasData} />}
     </div>
   );
 }

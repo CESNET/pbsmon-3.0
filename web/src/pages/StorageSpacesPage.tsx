@@ -1,10 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useStorageSpaces } from "@/hooks/useStorageSpaces";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useUserStorageQuotas } from "@/hooks/useUserStorageQuotas";
 import { StorageSpacesContent } from "@/components/storage-spaces/StorageSpacesContent";
 
 export function StorageSpacesPage() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useStorageSpaces();
+  const { data: currentUser } = useCurrentUser();
+  const username = currentUser?.username?.split("@")[0];
+  const { data: quotasData } = useUserStorageQuotas(username);
 
   return (
     <>
@@ -29,15 +34,13 @@ export function StorageSpacesPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="text-red-800">
               {t("common.errorLoading")}{" "}
-              {error instanceof Error
-                ? error.message
-                : t("common.unknownError")}
+              {error instanceof Error ? error.message : t("common.unknownError")}
             </div>
           </div>
         </div>
       )}
 
-      {data && <StorageSpacesContent data={data} />}
+      {data && <StorageSpacesContent data={data} quotasData={quotasData ?? undefined} />}
     </>
   );
 }
