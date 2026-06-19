@@ -41,6 +41,7 @@ export function StorageSpacesContent({ data, quotasData }: StorageSpacesContentP
 
   return (
     <div className="p-6 space-y-6">
+      {quotasData && <UserStorageQuotasSection data={quotasData} />}
 
       {/* Scratch Storage Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -114,8 +115,6 @@ export function StorageSpacesContent({ data, quotasData }: StorageSpacesContentP
           </div>
         </div>
       </div>
-
-      {quotasData && <UserStorageQuotasSection data={quotasData} />}
     </div>
   );
 }
