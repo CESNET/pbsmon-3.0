@@ -41,7 +41,7 @@ export function QuickLinksSidebar({
 
   return (
     <aside className="hidden [@media(min-width:1650px)]:block w-72">
-      <div className="sticky top-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-[calc(100vh-140px)] flex flex-col">
+      <div className="sticky top-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-[calc(100vh)] flex flex-col">
         <h3 className="text-lg font-bold text-primary-900 mb-4 flex-shrink-0">
           {t("machines.quickLinks")}
         </h3>
