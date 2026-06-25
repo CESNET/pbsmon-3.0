@@ -97,6 +97,7 @@ i18n.use(initReactI18next).init({
           reservationAuthorizedUsers: "Authorized Users",
           reservationNodes: "Reserved Nodes",
           reservationNotFound: "Reservation not found",
+          reservationsTitle: "Reservations",
           queueReserved: "This queue is created for a reservation",
           queueReservedNotStarted:
             "This queue is created for a reservation but has not started yet",
@@ -575,6 +576,7 @@ i18n.use(initReactI18next).init({
           reservationAuthorizedUsers: "Autorizovaní uživatelé",
           reservationNodes: "Rezervované uzly",
           reservationNotFound: "Rezervace nenalezena",
+          reservationsTitle: "Rezervace",
           queueReserved: "Tato fronta je vytvořena pro rezervaci",
           queueReservedNotStarted:
             "Tato fronta je vytvořena pro rezervaci, ale ještě nebyla spuštěna",

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { QueueStateCountDTO } from './queue-detail.dto';
+import { QueueReservationDTO, QueueStateCountDTO } from './queue-detail.dto';
 
 /**
  * User information for ACL
@@ -145,6 +145,16 @@ export class QueueListDTO {
     required: false,
   })
   hasReservation?: boolean;
+
+  @Expose()
+  @Type(() => QueueReservationDTO)
+  @ApiProperty({
+    description: 'Reservation details if this queue is created for a reservation',
+    type: QueueReservationDTO,
+    nullable: true,
+    required: false,
+  })
+  reservation?: QueueReservationDTO | null;
 
   @Expose()
   @Type(() => QueueListDTO)

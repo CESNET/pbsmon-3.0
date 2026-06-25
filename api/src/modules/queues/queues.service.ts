@@ -435,6 +435,9 @@ export class QueuesService {
 
     // Check if queue has a reservation
     const hasReservation = this.checkQueueHasReservation(queue, serverName);
+    const reservation = hasReservation
+      ? this.parseReservation(queue, serverName ?? undefined, userContext)
+      : null;
 
     return {
       name: queue.name,
@@ -454,6 +457,7 @@ export class QueuesService {
       aclGroups,
       aclUsers,
       hasReservation,
+      reservation,
       children: children.length > 0 ? children : undefined,
     };
   }

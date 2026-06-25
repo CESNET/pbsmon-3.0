@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useQueues } from "@/hooks/useQueues";
 import type { QueueListDTO } from "@/lib/generated-api";
@@ -75,6 +76,15 @@ function sortQueues(
     }
     return queue;
   });
+}
+
+function formatResvDate(timestamp: number): string {
+  const date = new Date(timestamp * 1000);
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${dd}.${mm}.${date.getFullYear()} ${hh}:${min}`;
 }
 
 function QueuesSortableHeader({
@@ -244,25 +254,115 @@ export function JobsQueuesPage() {
                 ))
               )}
             </div>
-
-            {filteredReservationQueues.length === 0 ? null : (
-              <hr className="border-gray-200 dark:border-gray-700" />
-            )}
+          </div>
+        )}
+        {data && filteredReservationQueues.length > 0 && (
+          <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
+              <Icon icon="mdi:calendar-clock" className="w-5 h-5 text-purple-600" />
+              <h2 className="text-sm font-semibold text-gray-700">{t("queues.reservationsTitle")}</h2>
+            </div>
+            {/* Column headers */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 tracking-wide">
+                <div className="col-span-3">{t("queues.queueName")}</div>
+                <div className="col-span-2">{t("queues.reservationName")}</div>
+                <div className="col-span-1">{t("queues.reservationOwner")}</div>
+                <div className="col-span-1">{t("queues.status")}</div>
+                <div className="col-span-2">{t("queues.reservationStart")}</div>
+                <div className="col-span-2">{t("queues.reservationEnd")}</div>
+                <div className="col-span-1">{t("queues.reservationResources")}</div>
+              </div>
+            </div>
+            {/* Rows */}
             <div>
-              {filteredReservationQueues.length === 0 ? (
-                <div className="px-4 py-8 text-center text-gray-500">
-                  {t("queues.noQueuesFound")}
-                </div>
-              ) : (
-                filteredReservationQueues.map((queue, index) => (
-                  <QueueTreeNode
+              {filteredReservationQueues.map((queue) => {
+                const resv = queue.reservation;
+                const queueId = queue.server
+                  ? `${queue.name}@${queue.server}.metacentrum.cz`
+                  : queue.name;
+                return (
+                  <div
                     key={queue.name}
-                    queue={queue}
-                    level={0}
-                    isLast={index === filteredReservationQueues.length - 1}
-                  />
-                ))
-              )}
+                    className="grid grid-cols-12 gap-2 items-start py-3 px-4 border-b border-gray-100 hover:bg-gray-50"
+                  >
+                    {/* Queue Name */}
+                    <div className="col-span-3 text-sm">
+                      <Link
+                        to={`/queues/${queueId}`}
+                        className="font-medium text-gray-900 hover:text-primary-600 break-all"
+                      >
+                        {queueId}
+                      </Link>
+                      {queue.totalJobs !== undefined && queue.totalJobs !== null && (
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          {t("queues.total")} {String(queue.totalJobs)}
+                        </div>
+                      )}
+                    </div>
+                    {/* Reservation Name / Display Name */}
+                    <div className="col-span-2 text-sm text-gray-600">
+                      {resv ? (
+                        <>
+                          <div className="font-medium">
+                            {resv.displayName && typeof resv.displayName === "string" ? resv.displayName : "-"}
+                          </div>
+                        </>
+                      ) : "-"}
+                    </div>
+                    {/* Owner */}
+                    <div className="col-span-1 text-sm text-gray-600">
+                      {resv?.owner && typeof resv.owner === "string" ? (
+                        <Link
+                          to={`/users/${encodeURIComponent((resv.owner as string).split("@")[0])}`}
+                          className="text-primary-600 hover:text-primary-800"
+                        >
+                          {(resv.owner as string).split("@")[0]}
+                        </Link>
+                      ) : "-"}
+                    </div>
+                    {/* State */}
+                    <div className="col-span-1 text-sm">
+                      {resv?.isStarted ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                          {t("machines.reservationStarted")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                          {t("machines.reservationNotStarted")}
+                        </span>
+                      )}
+                    </div>
+                    {/* Start Time */}
+                    <div className="col-span-2 text-sm text-gray-600">
+                      {resv?.startTime && typeof resv.startTime === "number"
+                        ? formatResvDate(resv.startTime)
+                        : "-"}
+                    </div>
+                    {/* End Time */}
+                    <div className="col-span-2 text-sm text-gray-600">
+                      {resv?.endTime && typeof resv.endTime === "number"
+                        ? formatResvDate(resv.endTime)
+                        : "-"}
+                    </div>
+                    {/* Resources */}
+                    <div className="col-span-1 text-xs text-gray-600 space-y-0.5">
+                      {resv?.resourceNcpus != null && (
+                        <div>{t("queues.cpus")}: {String(resv.resourceNcpus)}</div>
+                      )}
+                      {resv?.resourceNgpus != null && (
+                        <div>{t("queues.gpus")}: {String(resv.resourceNgpus)}</div>
+                      )}
+                      {resv?.resourceNodect != null && (
+                        <div>{t("queues.nodes")}: {String(resv.resourceNodect)}</div>
+                      )}
+                      {resv?.resourceMem != null && (
+                        <div>{t("queues.memory")}: {String(resv.resourceMem)}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
