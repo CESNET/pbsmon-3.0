@@ -36,17 +36,89 @@ export class InfrastructureService {
     private readonly infrastructureFilterService: InfrastructureFilterService,
   ) {}
 
+  private pbsNodeMap = new Map<string, { pbsNode: PbsNode; serverName: string }>();
+  private prometheusHostnamesSet = new Set<string>();
+  private baseDataCache: InfrastructureOrganizationListDTO[] | null = null;
+  private baseDataPbsTimestamp: string | null = null;
+  private baseDataPerunTimestamp: string | null = null;
 
-  getInfrastructureFilters(): InfrastructureFiltersDTO {
+  private refreshCacheIfStale(): InfrastructureOrganizationListDTO[] {
+    const pbsData = this.dataCollectionService.getPbsData();
     const perunData = this.dataCollectionService.getPerunData();
+    const pbsTs = pbsData?.timestamp ?? null;
+    const perunTs = perunData?.timestamp ?? null;
 
-    if (!perunData?.machines?.physical_machines) {
-      return {};
+    if (
+      this.baseDataCache !== null &&
+      pbsTs === this.baseDataPbsTimestamp &&
+      perunTs === this.baseDataPerunTimestamp
+    ) {
+      return this.baseDataCache;
     }
 
-    const data = perunData.machines.physical_machines.map((org) =>
-      this.mapOrganizationToList(org),
-    );
+    // Rebuild PBS node lookup map
+    this.pbsNodeMap.clear();
+    if (pbsData?.servers) {
+      for (const [serverName, serverData] of Object.entries(pbsData.servers)) {
+        for (const node of serverData.nodes?.items ?? []) {
+          const entry = { pbsNode: node, serverName };
+          this.pbsNodeMap.set(node.name, entry);
+          const short = node.name.split('.')[0];
+          if (!this.pbsNodeMap.has(short)) this.pbsNodeMap.set(short, entry);
+          const host = node.attributes['resources_available.host'];
+          const vnode = node.attributes['resources_available.vnode'];
+          if (host && !this.pbsNodeMap.has(host)) this.pbsNodeMap.set(host, entry);
+          if (vnode && !this.pbsNodeMap.has(vnode)) this.pbsNodeMap.set(vnode, entry);
+          if (host) {
+            const hostShort = host.split('.')[0];
+            if (!this.pbsNodeMap.has(hostShort)) this.pbsNodeMap.set(hostShort, entry);
+          }
+        }
+      }
+    }
+
+    // Rebuild Prometheus hostnames set
+    this.prometheusHostnamesSet.clear();
+    try {
+      const prometheusData = this.dataCollectionService.getPrometheusData();
+      for (const queryName of ['CPU Info', 'Network Info', 'VM Count']) {
+        const response = prometheusData?.[queryName] as PrometheusResponse | undefined;
+        if (response?.data?.result) {
+          for (const item of response.data.result) {
+            const hostname = item.metric?.hostname;
+            if (hostname) this.prometheusHostnamesSet.add(hostname);
+          }
+        }
+      }
+    } catch {}
+
+    // Build and sort base organization data
+    if (!perunData?.machines?.physical_machines) {
+      this.baseDataCache = [];
+    } else {
+      const data = perunData.machines.physical_machines.map((org) =>
+        this.mapOrganizationToList(org),
+      );
+      this.baseDataCache = data.map((org) => ({
+        ...org,
+        clusters: org.clusters.map((cluster) => ({
+          ...cluster,
+          nodes: cluster.nodes.sort((a, b) => this.naturalSort(a.name, b.name)),
+        })),
+      }));
+    }
+
+    this.baseDataPbsTimestamp = pbsTs;
+    this.baseDataPerunTimestamp = perunTs;
+    return this.baseDataCache;
+  }
+
+  getInfrastructureFilters(): InfrastructureFiltersDTO {
+    const data = this.refreshCacheIfStale();
+
+    if (!data.length) {
+      return {};
+    }
 
     const states = Array.from(new Set<string>(
       data.flatMap(org =>
@@ -198,33 +270,11 @@ export class InfrastructureService {
     data: InfrastructureOrganizationListDTO[];
     meta: InfrastructureListMetaDto;
   } {
-    const perunData = this.dataCollectionService.getPerunData();
+    const sortedData = this.refreshCacheIfStale();
 
-    if (!perunData?.machines?.physical_machines) {
-      return {
-        data: [],
-        meta: this.createEmptyMeta(),
-      };
-    }
-
-    const data = perunData.machines.physical_machines.map((org) =>
-      this.mapOrganizationToList(org),
-    );
-
-    // Sort nodes within each cluster by name (natural sort)
-    const sortedData = data.map((org) => ({
-      ...org,
-      clusters: org.clusters.map((cluster) => ({
-        ...cluster,
-        nodes: cluster.nodes.sort((a, b) => this.naturalSort(a.name, b.name)),
-      })),
-    }));
-
-    // Apply filters using the new filter service
     const filteredData = this.infrastructureFilterService.applyFilters(sortedData, filters);
     const meta = this.calculateStatistics(filteredData);
 
-    // Apply search filter using the new filter service
     if (search && search.trim()) {
       const searchLower = search.toLowerCase().trim();
       const searched = this.infrastructureFilterService.applySearchFilter(filteredData, searchLower);
@@ -275,33 +325,8 @@ export class InfrastructureService {
     let usedNodes = 0;
     let unknownNodes = 0;
 
-    const pbsData = this.dataCollectionService.getPbsData();
-
-    // Build a lookup map once: every name/hostname/attribute key → PbsNode
-    const pbsNodeMap = new Map<string, PbsNode>();
-    if (pbsData?.servers) {
-      for (const serverData of Object.values(pbsData.servers)) {
-        for (const node of serverData.nodes?.items ?? []) {
-          // Index by exact name and short hostname
-          pbsNodeMap.set(node.name, node);
-          const short = node.name.split('.')[0];
-          if (!pbsNodeMap.has(short)) pbsNodeMap.set(short, node);
-
-          // Index by host/vnode attributes
-          const host = node.attributes['resources_available.host'];
-          const vnode = node.attributes['resources_available.vnode'];
-          if (host && !pbsNodeMap.has(host)) pbsNodeMap.set(host, node);
-          if (vnode && !pbsNodeMap.has(vnode)) pbsNodeMap.set(vnode, node);
-          if (host) {
-            const hostShort = host.split('.')[0];
-            if (!pbsNodeMap.has(hostShort)) pbsNodeMap.set(hostShort, node);
-          }
-        }
-      }
-    }
-
     const findPbsNode = (perunNodeName: string): PbsNode | undefined =>
-      pbsNodeMap.get(perunNodeName) ?? pbsNodeMap.get(perunNodeName.split('.')[0]);
+      (this.pbsNodeMap.get(perunNodeName) ?? this.pbsNodeMap.get(perunNodeName.split('.')[0]))?.pbsNode;
 
     let totalGpu = 0;
     let totalMemory = 0;
@@ -378,25 +403,6 @@ export class InfrastructureService {
       partiallyUsedNodes,
       usedNodes,
       unknownNodes,
-    };
-  }
-
-  /**
-   * Create empty meta for empty data
-   */
-  private createEmptyMeta(): InfrastructureListMetaDto {
-    return {
-      totalCount: 0,
-      totalOrganizations: 0,
-      totalClusters: 0,
-      totalNodes: 0,
-      totalCpu: 0,
-      totalGpu: 0,
-      totalMemory: 0,
-      freeNodes: 0,
-      partiallyUsedNodes: 0,
-      usedNodes: 0,
-      unknownNodes: 0,
     };
   }
 
@@ -673,38 +679,6 @@ export class InfrastructureService {
   }
 
   /**
-   * Get set of hostnames from Prometheus queries that contain hostname field
-   * These are the queries that are collected and contain hostname: CPU Info, Network Info, VM Count
-   */
-  private getPrometheusHostnames(): Set<string> {
-    const hostnames = new Set<string>();
-    try {
-      const prometheusData = this.dataCollectionService.getPrometheusData();
-
-      // Check queries that are collected and contain hostname field
-      const queriesWithHostname = ['CPU Info', 'Network Info', 'VM Count'];
-
-      for (const queryName of queriesWithHostname) {
-        const response = prometheusData?.[queryName] as
-          | PrometheusResponse
-          | undefined;
-
-        if (response?.data?.result) {
-          for (const item of response.data.result) {
-            const hostname = item.metric?.hostname;
-            if (hostname) {
-              hostnames.add(hostname);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      // Silently fail - if Prometheus data is not available, return empty set
-    }
-    return hostnames;
-  }
-
-  /**
    * Get cloud node information from Prometheus for a specific hostname
    */
   private getCloudNodeInfo(hostname: string): {
@@ -758,14 +732,8 @@ export class InfrastructureService {
     return info;
   }
 
-  /**
-   * Check if a node is a cloud node (OpenStack) by checking Prometheus hostname data
-   */
   private isCloudNode(nodeName: string): boolean {
-    const hostnames = this.getPrometheusHostnames();
-
-    // Check for exact match
-    return hostnames.has(nodeName);
+    return this.prometheusHostnamesSet.has(nodeName);
   }
 
   /**
@@ -1202,45 +1170,12 @@ export class InfrastructureService {
     pbsNode: PbsNode | null;
     serverName: string | null;
   } {
-    const pbsData = this.dataCollectionService.getPbsData();
-
-    if (!pbsData?.servers) {
-      return { pbsNode: null, serverName: null };
-    }
-
     const perunHostname = nodeName.split('.')[0];
-
-    for (const [serverName, serverData] of Object.entries(pbsData.servers)) {
-      if (serverData.nodes?.items) {
-        // Try exact match first
-        let pbsNode = serverData.nodes.items.find(
-          (node) => node.name === nodeName,
-        );
-        if (pbsNode) {
-          return { pbsNode, serverName };
-        }
-        // Try hostname match (PERUN FQDN vs PBS short name)
-        pbsNode = serverData.nodes.items.find(
-          (node) => node.name === perunHostname,
-        );
-        if (pbsNode) {
-          return { pbsNode, serverName };
-        }
-        // Try matching against PBS host attribute (full hostname)
-        pbsNode = serverData.nodes.items.find(
-          (node) =>
-            node.attributes['resources_available.host'] === nodeName ||
-            node.attributes['resources_available.vnode'] === nodeName ||
-            node.attributes['resources_available.host']?.split('.')[0] ===
-              perunHostname,
-        );
-        if (pbsNode) {
-          return { pbsNode, serverName };
-        }
-      }
-    }
-
-    return { pbsNode: null, serverName: null };
+    return (
+      this.pbsNodeMap.get(nodeName) ??
+      this.pbsNodeMap.get(perunHostname) ??
+      { pbsNode: null, serverName: null }
+    );
   }
 
   /**

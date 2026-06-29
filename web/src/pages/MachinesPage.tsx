@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useInfrastructure, useInfrastructureFilterables } from "@/hooks/useInfrastructure";
 import { OrganizationPreview } from "@/components/infrastructure/OrganizationPreview";
 import { MetacentrumOverview } from "@/components/infrastructure/MetacentrumOverview";
@@ -9,10 +9,15 @@ import { MachinesHeader } from "@/components/infrastructure/MachinesHeader";
 
 export function MachinesPage() {
   const [machineSearch, setMachineSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [machineFilters, setMachineFilters] = useState<[string, string | number][] | null>(null);
   const handleMachinePageChange = (query: string) => {
     setMachineSearch(query);
   }
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(machineSearch), 300);
+    return () => clearTimeout(timer);
+  }, [machineSearch]);
   const handleMachineFilters = (query: [string, string | number][] | null) => {
     setMachineFilters(query);
   }
@@ -29,7 +34,7 @@ export function MachinesPage() {
   const { t, i18n } = useTranslation();
   const { data: filterData, isLoading: filterIsLoading, error: filterError} = useInfrastructureFilterables();
   const { data, isLoading, error } = useInfrastructure({
-    search: machineSearch.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     filters: convertToQueryString(machineFilters, 'filters') || undefined,
   });
 

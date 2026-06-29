@@ -43,6 +43,7 @@ export function useInfrastructureFilterables() {
         await apiClient.infrastructure.infrastructureControllerGetInfrastructureFilters();
       return response;
     },
+    staleTime: 60_000,
   });
 }
 
@@ -65,5 +66,6 @@ export function useInfrastructure(params: UseInfrastructureParams = {}) {
         });
       return response;
     },
+    staleTime: 60_000,
   });
 }
