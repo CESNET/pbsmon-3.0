@@ -240,14 +240,6 @@ export const NodePreview = memo(function NodePreview({ node, clusterName }: Node
               percent={cpuUsage}
               color={getCpuGpuColorClass}
               backgroundColor={stateInfo?.colorLight}
-              tooltip={
-                (node as any).cpuAssigned !== null &&
-                (node as any).cpuAssigned !== undefined &&
-                typeof (node as any).cpuAssigned === "number" &&
-                (node as any).cpuAssigned > node.cpu
-                  ? t("machines.overcommitted")
-                  : undefined
-              }
             />
 
             {hasGpu && (
@@ -267,14 +259,6 @@ export const NodePreview = memo(function NodePreview({ node, clusterName }: Node
                   percent={gpuUsage !== null ? gpuUsage : 0}
                   color={getCpuGpuColorClass}
                   backgroundColor={stateInfo?.colorLight}
-                  tooltip={
-                    node.gpuAssigned &&
-                    typeof node.gpuAssigned === "number" &&
-                    gpuCount !== null &&
-                    node.gpuAssigned > gpuCount
-                      ? t("machines.overcommitted")
-                      : undefined
-                  }
                 />
               </div>
             )}
@@ -296,11 +280,6 @@ export const NodePreview = memo(function NodePreview({ node, clusterName }: Node
                   percent={Number(node.memoryUsagePercent)}
                   color="#5D7085"
                   backgroundColor={stateInfo?.colorLight}
-                  tooltip={
-                    Number(node.memoryUsed) > Number(node.memoryTotal)
-                      ? t("machines.overcommitted")
-                      : undefined
-                  }
                 />
               )}
 
