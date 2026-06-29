@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { MachinesFilterableHeader } from "./MachinesFilterableHeader";
 
@@ -7,7 +8,7 @@ interface MachinesHeaderProps {
   onFilterChange: (filter: [string, string | number][] | null) => void;
 }
 
-export function MachinesHeader({
+export const MachinesHeader = memo(function MachinesHeader({
   filterData,
   machineFilters,
   onFilterChange,
@@ -85,4 +86,4 @@ export function MachinesHeader({
       </div>
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import type { InfrastructureOrganizationListDTO } from "@/lib/generated-api";
@@ -8,7 +8,7 @@ interface QuickLinksSidebarProps {
   currentLanguage: "cs" | "en";
 }
 
-export function QuickLinksSidebar({
+export const QuickLinksSidebar = memo(function QuickLinksSidebar({
   organizations,
   currentLanguage,
 }: QuickLinksSidebarProps) {
@@ -96,4 +96,4 @@ export function QuickLinksSidebar({
       </div>
     </aside>
   );
-}
+});

@@ -11,16 +11,16 @@ export function MachinesPage() {
   const [machineSearch, setMachineSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [machineFilters, setMachineFilters] = useState<[string, string | number][] | null>(null);
-  const handleMachinePageChange = (query: string) => {
+  const handleMachinePageChange = useCallback((query: string) => {
     setMachineSearch(query);
-  }
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(machineSearch), 300);
     return () => clearTimeout(timer);
   }, [machineSearch]);
-  const handleMachineFilters = (query: [string, string | number][] | null) => {
+  const handleMachineFilters = useCallback((query: [string, string | number][] | null) => {
     setMachineFilters(query);
-  }
+  }, []);
   const convertToQueryString = useCallback((data: [string, string | number][] | null, prefix: string) => {
     if (!data) return null;
     return data

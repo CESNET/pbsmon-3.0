@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 
@@ -7,7 +8,7 @@ interface MachineSearchBarProps {
   totalMachines: number;
 }
 
-export function MachineSearchBar({
+export const MachineSearchBar = memo(function MachineSearchBar({
   searchQuery,
   onSearchChange,
   totalMachines,
@@ -44,4 +45,4 @@ export function MachineSearchBar({
       </div>
     </div>
   );
-}
+});
