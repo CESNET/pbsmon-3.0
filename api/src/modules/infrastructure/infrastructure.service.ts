@@ -277,47 +277,31 @@ export class InfrastructureService {
 
     const pbsData = this.dataCollectionService.getPbsData();
 
-    // Helper function to find PBS node by PERUN machine name
-    const findPbsNode = (perunNodeName: string): PbsNode | undefined => {
-      if (!pbsData?.servers) {
-        return undefined;
-      }
-
-      // PERUN machine names are FQDNs (e.g., "alfrid1.meta.zcu.cz")
-      // PBS node names are short hostnames (e.g., "alfrid1")
-      // Extract hostname from PERUN name for matching
-      const perunHostname = perunNodeName.split('.')[0];
-
+    // Build a lookup map once: every name/hostname/attribute key → PbsNode
+    const pbsNodeMap = new Map<string, PbsNode>();
+    if (pbsData?.servers) {
       for (const serverData of Object.values(pbsData.servers)) {
-        if (serverData.nodes?.items) {
-          let pbsNode = serverData.nodes.items.find(
-            (node) => node.name === perunNodeName,
-          );
-          if (pbsNode) {
-            return pbsNode;
-          }
+        for (const node of serverData.nodes?.items ?? []) {
+          // Index by exact name and short hostname
+          pbsNodeMap.set(node.name, node);
+          const short = node.name.split('.')[0];
+          if (!pbsNodeMap.has(short)) pbsNodeMap.set(short, node);
 
-          pbsNode = serverData.nodes.items.find(
-            (node) => node.name === perunHostname,
-          );
-          if (pbsNode) {
-            return pbsNode;
-          }
-
-          pbsNode = serverData.nodes.items.find(
-            (node) =>
-              node.attributes['resources_available.host'] === perunNodeName ||
-              node.attributes['resources_available.vnode'] === perunNodeName ||
-              node.attributes['resources_available.host']?.split('.')[0] ===
-                perunHostname,
-          );
-          if (pbsNode) {
-            return pbsNode;
+          // Index by host/vnode attributes
+          const host = node.attributes['resources_available.host'];
+          const vnode = node.attributes['resources_available.vnode'];
+          if (host && !pbsNodeMap.has(host)) pbsNodeMap.set(host, node);
+          if (vnode && !pbsNodeMap.has(vnode)) pbsNodeMap.set(vnode, node);
+          if (host) {
+            const hostShort = host.split('.')[0];
+            if (!pbsNodeMap.has(hostShort)) pbsNodeMap.set(hostShort, node);
           }
         }
       }
-      return undefined;
-    };
+    }
+
+    const findPbsNode = (perunNodeName: string): PbsNode | undefined =>
+      pbsNodeMap.get(perunNodeName) ?? pbsNodeMap.get(perunNodeName.split('.')[0]);
 
     let totalGpu = 0;
     let totalMemory = 0;
