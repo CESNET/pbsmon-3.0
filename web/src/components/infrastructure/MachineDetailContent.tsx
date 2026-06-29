@@ -121,6 +121,36 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
       : null;
   const hasGpu = gpuUsage !== null || (gpuCount !== null && gpuCount > 0);
 
+  const isCpuOvercommitted =
+    node.pbs !== null &&
+    node.pbs !== undefined &&
+    node.pbs.cpuAssigned !== null &&
+    node.pbs.cpuAssigned !== undefined &&
+    typeof node.pbs.cpuAssigned === "number" &&
+    node.pbs.cpuAssigned > node.cpu;
+
+  const isGpuOvercommitted =
+    node.pbs !== null &&
+    node.pbs !== undefined &&
+    node.pbs.gpuAssigned !== null &&
+    node.pbs.gpuAssigned !== undefined &&
+    typeof node.pbs.gpuAssigned === "number" &&
+    gpuCount !== null &&
+    node.pbs.gpuAssigned > gpuCount;
+
+  const isMemoryOvercommitted =
+    node.pbs !== null &&
+    node.pbs !== undefined &&
+    node.pbs.memoryUsed !== null &&
+    node.pbs.memoryUsed !== undefined &&
+    node.pbs.memoryTotal !== null &&
+    node.pbs.memoryTotal !== undefined &&
+    typeof node.pbs.memoryUsed === "number" &&
+    typeof node.pbs.memoryTotal === "number" &&
+    node.pbs.memoryUsed > node.pbs.memoryTotal;
+
+  const isOvercommitted = isCpuOvercommitted || isGpuOvercommitted || isMemoryOvercommitted;
+
   const getCpuGpuColorClass = (percent: number): string => {
     if (percent <= 10) {
       return "#5D7085";
@@ -440,6 +470,57 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
                       />
                     )}
                 </div>
+                {isOvercommitted && (
+                  <div className="mt-4 flex items-start gap-2 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-md p-3">
+                    <Icon
+                      icon="mdi:alert"
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                    />
+                    <div>
+                      <span className="font-medium">
+                        {t("machines.overcommittedReason")}
+                      </span>
+                      <ul className="mt-1 space-y-0.5 list-disc list-inside">
+                        {Array.isArray(node.pbs.reservations) &&
+                          Array.isArray(node.pbs.jobs) &&
+                          node.pbs.reservations.length > 0 && 
+                          node.pbs.jobs.length > 0 &&
+                          (
+                            <>
+                            <li>
+                              {t("machines.overcommittedReasonResJob")}
+                            </li>
+                            <li>
+                              {t("machines.reservation")}:{" "}
+                              {node.pbs.reservations
+                                .map((r: string) => r.split(".")[0])
+                                .join(", ")}
+                            </li>
+                            </>
+                          )}
+                        {isCpuOvercommitted && (
+                          <li>
+                            CPU: {node.pbs.cpuAssigned} /{" "}
+                            {node.cpu}
+                          </li>
+                        )}
+                        {isGpuOvercommitted && (
+                          <li>
+                            GPU: {node.pbs.gpuAssigned} /{" "}
+                            {gpuCount}
+                          </li>
+                        )}
+                        {isMemoryOvercommitted && (
+                          <li>
+                            RAM:{" "}
+                            {Number(node.pbs.memoryUsed).toFixed(1)} /{" "}
+                            {Number(node.pbs.memoryTotal).toFixed(1)} GB
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -239,6 +239,14 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
               percent={cpuUsage}
               color={getCpuGpuColorClass}
               backgroundColor={stateInfo?.colorLight}
+              tooltip={
+                (node as any).cpuAssigned !== null &&
+                (node as any).cpuAssigned !== undefined &&
+                typeof (node as any).cpuAssigned === "number" &&
+                (node as any).cpuAssigned > node.cpu
+                  ? t("machines.overcommitted")
+                  : undefined
+              }
             />
 
             {hasGpu && (
@@ -258,6 +266,14 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
                   percent={gpuUsage !== null ? gpuUsage : 0}
                   color={getCpuGpuColorClass}
                   backgroundColor={stateInfo?.colorLight}
+                  tooltip={
+                    node.gpuAssigned &&
+                    typeof node.gpuAssigned === "number" &&
+                    gpuCount !== null &&
+                    node.gpuAssigned > gpuCount
+                      ? t("machines.overcommitted")
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -279,6 +295,11 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
                   percent={Number(node.memoryUsagePercent)}
                   color="#5D7085"
                   backgroundColor={stateInfo?.colorLight}
+                  tooltip={
+                    Number(node.memoryUsed) > Number(node.memoryTotal)
+                      ? t("machines.overcommitted")
+                      : undefined
+                  }
                 />
               )}
 

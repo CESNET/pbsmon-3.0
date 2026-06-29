@@ -1,9 +1,13 @@
+import { Tooltip } from "react-tooltip";
+
 interface ProgressBarMinimalProps {
   percent: number;
   label: string;
   value: number | string;
   color: string | ((percent: number) => string);
   backgroundColor?: string;
+  tooltip?: string;
+  tooltipId?: string;
 }
 
 export function ProgressBarMinimal({
@@ -12,6 +16,8 @@ export function ProgressBarMinimal({
   value,
   color,
   backgroundColor,
+  tooltip,
+  tooltipId,
 }: ProgressBarMinimalProps) {
   // Clamp percent between 0 and 100
   const clampedPercent = Math.max(0, Math.min(100, percent));
@@ -22,6 +28,7 @@ export function ProgressBarMinimal({
   const text = `${label} ${value}`;
   const fillWidth = `${clampedPercent}%`;
   const showTextInCenter = clampedPercent < 60;
+  const resolvedTooltipId = tooltipId ?? `progress-bar-minimal-${label}`;
 
   return (
     <div className="w-full">
@@ -30,6 +37,7 @@ export function ProgressBarMinimal({
       <div
         className={`relative w-full h-[21px] border rounded-[4px] overflow-hidden`}
         style={{ borderColor: colorHex, backgroundColor: backgroundColorHex}}
+        {...(tooltip ? { "data-tooltip-id": resolvedTooltipId, "data-tooltip-content": tooltip } : {})}
       >
         {/* Filled portion */}
         <div
@@ -61,6 +69,7 @@ export function ProgressBarMinimal({
           </span>
         )}
       </div>
+      {tooltip && <Tooltip id={resolvedTooltipId} />}
     </div>
   );
 }

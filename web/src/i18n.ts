@@ -395,6 +395,9 @@ i18n.use(initReactI18next).init({
           reservationQueue: "Queue",
           reservationStarted: "Started",
           reservationNotStarted: "Not Started",
+          overcommitted: "Overcommitted, see the reason on node detail. Click to view details.",
+          overcommittedReason: "This node is overcommitted:",
+          overcommittedReasonResJob: "There are reservations and running jobs whose combined resource requirements exceed the node's capacity.",
         },
         storageSpaces: {
           scratchStorage: {
@@ -881,6 +884,9 @@ i18n.use(initReactI18next).init({
           reservationQueue: "Fronta",
           reservationStarted: "Spuštěno",
           reservationNotStarted: "Nespuštěno",
+          overcommitted: "Přetíženo, detail k dispozici po kliknuti na dlaždici.",
+          overcommittedReason: "Tento uzel je přetížen:",
+          overcommittedReasonResJob: "Probíhají rezervace a běží úlohy, jejichž kombinované požadavky na prostředky překračují kapacitu uzlu.",
         },
         storageSpaces: {
           scratchStorage: {
