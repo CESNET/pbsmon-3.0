@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "@iconify/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -118,6 +118,11 @@ export function SidebarLayout() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
     new Set(["resource-status"])
   );
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -236,33 +241,59 @@ export function SidebarLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-primary-600">
       {/* Top Navbar */}
-      <nav className="h-[45px] bg-[#424441] border-b-[10px] border-secondary flex items-center justify-end px-4 gap-2">
+      <nav className="h-[45px] bg-[#424441] border-b-[10px] border-secondary flex items-center px-4 gap-2">
         <button
-          onClick={() => i18n.changeLanguage("cs")}
-          className={`p-1.5 rounded transition-opacity ${
-            i18n.language === "cs"
-              ? "opacity-100"
-              : "opacity-50 hover:opacity-75"
-          }`}
-          title={t("language.czech")}
+          onClick={() => setIsMobileMenuOpen((v) => !v)}
+          className="md:hidden text-white p-1 mr-1"
+          aria-label={t("common.toggleMenu")}
         >
-          <Icon icon="flag:cz-4x3" className="w-6 h-4" />
+          <Icon
+            icon={isMobileMenuOpen ? "mdi:close" : "mdi:menu"}
+            className="w-6 h-6"
+          />
         </button>
-        <button
-          onClick={() => i18n.changeLanguage("en")}
-          className={`p-1.5 rounded transition-opacity ${
-            i18n.language === "en"
-              ? "opacity-100"
-              : "opacity-50 hover:opacity-75"
-          }`}
-          title={t("language.english")}
-        >
-          <Icon icon="flag:gb-4x3" className="w-6 h-4" />
-        </button>
+        <div className="ml-auto flex gap-2">
+          <button
+            onClick={() => i18n.changeLanguage("cs")}
+            className={`p-1.5 rounded transition-opacity ${
+              i18n.language === "cs"
+                ? "opacity-100"
+                : "opacity-50 hover:opacity-75"
+            }`}
+            title={t("language.czech")}
+          >
+            <Icon icon="flag:cz-4x3" className="w-6 h-4" />
+          </button>
+          <button
+            onClick={() => i18n.changeLanguage("en")}
+            className={`p-1.5 rounded transition-opacity ${
+              i18n.language === "en"
+                ? "opacity-100"
+                : "opacity-50 hover:opacity-75"
+            }`}
+            title={t("language.english")}
+          >
+            <Icon icon="flag:gb-4x3" className="w-6 h-4" />
+          </button>
+        </div>
       </nav>
 
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       <div className="flex flex-1">
-        <aside className="w-64 bg-primary-600 text-white flex flex-col shadow-[1px_1px_5px_rgba(0,0,0,0.25),inset_0_0_8px_rgba(0,0,0,0.25)]">
+        <aside
+          className={[
+            "w-64 bg-primary-600 text-white flex flex-col shadow-[1px_1px_5px_rgba(0,0,0,0.25),inset_0_0_8px_rgba(0,0,0,0.25)]",
+            "fixed inset-y-0 left-0 z-50 transition-transform duration-300",
+            "md:static md:inset-auto md:translate-x-0",
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+          ].join(" ")}
+        >
           <div className="pl-[29px] pr-4 pt-10 pb-6 border-b border-primary-700">
             <img
               src="/images/logo-white.svg"
@@ -277,6 +308,7 @@ export function SidebarLayout() {
                   href="https://profile.e-infra.cz"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] text-white hover:bg-primary-700 transition-colors"
                 >
                   <Icon icon="mdi:account" className="w-6 h-6" />
@@ -324,6 +356,7 @@ export function SidebarLayout() {
                               <li key={subItem.id}>
                                 <NavLink
                                   to={subItem.path}
+                                  onClick={() => setIsMobileMenuOpen(false)}
                                   className={[
                                     "flex items-center h-[48px] pl-[53px] pr-4 relative transition-colors",
                                     isActive
@@ -352,6 +385,7 @@ export function SidebarLayout() {
                   ) : (
                     <NavLink
                       to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={({ isActive }) =>
                         [
                           "flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] transition-colors",
@@ -410,9 +444,8 @@ export function SidebarLayout() {
           </div>
         </aside>
         <main
-          className="flex-1 bg-gray-light"
+          className="flex-1 bg-gray-light md:max-w-[calc(100vw-16rem)]"
           style={{
-            maxWidth: "calc(100vw - var(--spacing) * 64)",
             paddingBottom: impersonatedUsername ? "60px" : "0",
           }}
         >

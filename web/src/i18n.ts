@@ -126,6 +126,7 @@ i18n.use(initReactI18next).init({
           notLoggedIn: "You are not logged in",
           redirectingToLogin: "Redirecting to login...",
           logout: "Logout",
+          toggleMenu: "Toggle menu",
         },
         jobs: {
           status: "Status",
@@ -607,6 +608,7 @@ i18n.use(initReactI18next).init({
           notLoggedIn: "Nejste přihlášeni",
           redirectingToLogin: "Přesměrovávání na přihlášení...",
           logout: "Odhlásit se",
+          toggleMenu: "Přepnout menu",
         },
         jobs: {
           status: "Stav",
