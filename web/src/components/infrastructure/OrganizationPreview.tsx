@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import type { InfrastructureOrganizationListDTO } from "@/lib/generated-api";
 import { ClusterPreview } from "./ClusterPreview";
@@ -7,7 +8,7 @@ interface OrganizationPreviewProps {
   currentLanguage: "cs" | "en";
 }
 
-export function OrganizationPreview({
+export const OrganizationPreview = memo(function OrganizationPreview({
   organization,
   currentLanguage,
 }: OrganizationPreviewProps) {
@@ -40,4 +41,4 @@ export function OrganizationPreview({
       ))}
     </div>
   );
-}
+});

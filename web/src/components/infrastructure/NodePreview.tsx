@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { InfrastructureNodeListDTO } from "@/lib/generated-api";
 import { ProgressBarMinimal } from "@/components/common/ProgressBarMinimal";
 import { Icon } from "@iconify/react";
@@ -9,7 +10,7 @@ interface NodePreviewProps {
   clusterName: string;
 }
 
-export function NodePreview({ node, clusterName }: NodePreviewProps) {
+export const NodePreview = memo(function NodePreview({ node, clusterName }: NodePreviewProps) {
   const { t } = useTranslation();
 
   const getShortNodeName = (nodeName: string, clusterName: string): string => {
@@ -339,4 +340,4 @@ export function NodePreview({ node, clusterName }: NodePreviewProps) {
       )}
     </Link>
   );
-}
+});

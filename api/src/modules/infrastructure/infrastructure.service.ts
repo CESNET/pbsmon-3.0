@@ -791,8 +791,8 @@ export class InfrastructureService {
     machine: PerunMachine,
     clusterId: string,
   ): InfrastructureNodeListDTO {
-    const pbsState = this.getNodeStateFromPbs(machine.name);
     const pbsNodeData = this.getPbsNodeData(machine.name);
+    const pbsState = this.getNodeStateFromPbs(machine.name, pbsNodeData);
 
     // Extract queue names from PBS node attributes
     let queueNames: string[] | null = null;
@@ -949,8 +949,8 @@ export class InfrastructureService {
     organization?: PerunPhysicalMachine,
     userContext?: UserContext,
   ): InfrastructureNodeDetailDTO {
-    const pbsState = this.getNodeStateFromPbs(machine.name);
     const pbsNodeData = this.getPbsNodeData(machine.name);
+    const pbsState = this.getNodeStateFromPbs(machine.name, pbsNodeData);
 
     // Parse jobs from node's jobs attribute
     const jobs: string[] = [];
@@ -1373,7 +1373,7 @@ export class InfrastructureService {
   /**
    * Get node state from PBS data
    */
-  private getNodeStateFromPbs(nodeName: string): {
+  private getNodeStateFromPbs(nodeName: string, pbsNodeData: { pbsNode: PbsNode | null; serverName: string | null;} | null): {
     state: NodeState | null;
     cpuUsage: number | null;
     cpuAssigned: number | null;
@@ -1395,7 +1395,7 @@ export class InfrastructureService {
     scratchSharedTotal: number | null;
     scratchShmAvailable: boolean | null;
   } {
-    const { pbsNode } = this.getPbsNodeData(nodeName);
+    const { pbsNode } = pbsNodeData ? pbsNodeData : this.getPbsNodeData(nodeName);
 
     if (!pbsNode) {
       return {

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { InfrastructureClusterListDTO } from "@/lib/generated-api";
@@ -7,7 +8,7 @@ interface ClusterPreviewProps {
   cluster: InfrastructureClusterListDTO;
 }
 
-export function ClusterPreview({ cluster }: ClusterPreviewProps) {
+export const ClusterPreview = memo(function ClusterPreview({ cluster }: ClusterPreviewProps) {
   const { t } = useTranslation();
 
   if (cluster.nodes.length === 0) {
@@ -37,4 +38,4 @@ export function ClusterPreview({ cluster }: ClusterPreviewProps) {
       </div>
     </div>
   );
-}
+});
