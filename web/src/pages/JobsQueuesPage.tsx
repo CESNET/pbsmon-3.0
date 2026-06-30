@@ -6,17 +6,7 @@ import { useQueues } from "@/hooks/useQueues";
 import type { QueueListDTO } from "@/lib/generated-api";
 import { QueueTreeNode } from "@/components/common/QueueTreeNode";
 
-type SortColumn = "name" | "priority" | "totalJobs" | "fairshare";
-
-type QueueType = "all" | "non-reservation" | "reservation";
-
-function filterQueueType(queues: QueueListDTO[], qType: QueueType): QueueListDTO[] {
-  if (qType == "non-reservation")
-    return queues.filter((q) => !q.hasReservation);
-  if (qType == "reservation")
-    return queues.filter((q) => q.hasReservation);
-  return queues;
-}
+type SortColumn = "name" | "priority" | "totalJobs" | "fairshare" | "reservationName" | "reservationOwner" | "reservationStart" | "reservationEnd";
 
 function filterEnabledAndStartedQueues(queues: QueueListDTO[]): QueueListDTO[] {
   return queues
@@ -39,9 +29,10 @@ function sortQueues(
     let comparison = 0;
 
     switch (sortColumn) {
-      case "name":
+      case "name": {
         comparison = (a.name || "").localeCompare(b.name || "");
         break;
+      }
       case "priority": {
         const priorityA: number =
           typeof a.priority === "number" ? a.priority : 0;
@@ -56,11 +47,36 @@ function sortQueues(
         comparison = jobsB - jobsA; // More jobs first
         break;
       }
-      case "fairshare":
+      case "fairshare": {
         const fairshareA = a.fairshare || "";
         const fairshareB = b.fairshare || "";
         comparison = fairshareA.localeCompare(fairshareB);
         break;
+      }
+      case "reservationName": {
+        comparison = (a.reservation?.name || "").localeCompare(b.reservation?.name || "");
+        break;
+      }
+      case "reservationOwner": {
+        comparison = (a.reservation?.owner || "").localeCompare(b.reservation?.owner || "");
+        break;
+      }
+      case "reservationStart": {
+        const startA: number = typeof a.reservation?.startTime === "number"
+          ? a.reservation?.startTime : 0;
+        const startB: number = typeof b.reservation?.startTime === "number"
+          ? b.reservation?.startTime : 0;
+        comparison = startA - startB;
+        break;
+      }
+      case "reservationEnd": {
+        const startA: number = typeof a.reservation?.endTime === "number"
+          ? a.reservation?.endTime : 0;
+        const startB: number = typeof b.reservation?.endTime === "number"
+          ? b.reservation?.endTime : 0;
+        comparison = startA - startB;
+        break;
+      }
     }
 
     return sortOrder === "asc" ? comparison : -comparison;
@@ -132,23 +148,27 @@ export function JobsQueuesPage() {
   const { t } = useTranslation();
   const [sort, setSort] = useState<SortColumn>("priority");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
-  const { data, isLoading, error } = useQueues();
+  const { data, isLoading, error } = useQueues({ qType: "non-reservation" });
+
+  const [resSort, setResSort] = useState<SortColumn>("reservationStart");
+  const [resOrder, setResOrder] = useState<"asc" | "desc">("asc");
+  const { data: resData, isLoading: resIsLoading, error: resError } = useQueues({ qType: "reservation" });
 
   const filteredQueues = useMemo(() => {
     if (!data) return [];
     const filtered = filterEnabledAndStartedQueues(
-      filterQueueType(data.queues, "non-reservation")
+      data.queues
     );
     return sortQueues(filtered, sort, order);
   }, [data, sort, order]);
 
   const filteredReservationQueues = useMemo(() => {
-    if (!data) return [];
+    if (!resData) return [];
     const filtered = filterEnabledAndStartedQueues(
-      filterQueueType(data.queues, "reservation")
+      resData.queues
     );
-    return sortQueues(filtered, sort, order);
-  }, [data, sort, order]);
+    return sortQueues(filtered, resSort, resOrder);
+  }, [resData, resSort, resOrder]);
 
   const handleSort = (column: SortColumn) => {
     if (sort === column) {
@@ -158,6 +178,17 @@ export function JobsQueuesPage() {
       // Set new column with default order
       setSort(column);
       setOrder("desc");
+    }
+  };
+
+  const handleResSort = (column: SortColumn) => {
+    if (resSort === column) {
+      // Toggle order if same column
+      setResOrder(resOrder === "asc" ? "desc" : "asc");
+    } else {
+      // Set new column with default order
+      setResSort(column);
+      setResOrder("desc");
     }
   };
 
@@ -171,13 +202,13 @@ export function JobsQueuesPage() {
         </div>
       </header>
       <div className="p-6">
-        {isLoading && (
+        {(isLoading || resIsLoading) && (
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-600">{t("queues.loading")}</div>
           </div>
         )}
 
-        {error && (
+        {(error || resError) && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="text-red-800">
               {t("queues.errorLoading")}{" "}
@@ -256,7 +287,7 @@ export function JobsQueuesPage() {
             </div>
           </div>
         )}
-        {data && filteredReservationQueues.length > 0 && (
+        {resData && filteredReservationQueues.length > 0 && (
           <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
               <Icon icon="mdi:calendar-clock" className="w-5 h-5 text-purple-600" />
@@ -265,12 +296,57 @@ export function JobsQueuesPage() {
             {/* Column headers */}
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
               <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 tracking-wide">
-                <div className="col-span-3">{t("queues.queueName")}</div>
-                <div className="col-span-2">{t("queues.reservationName")}</div>
-                <div className="col-span-1">{t("queues.reservationOwner")}</div>
+                <div className="col-span-3">
+                  <QueuesSortableHeader
+                    column="name"
+                    currentSortColumn={resSort}
+                    sortDirection={resOrder}
+                    onSort={handleResSort}
+                  >
+                    {t("queues.queueName")}
+                  </QueuesSortableHeader>
+                </div>
+                <div className="col-span-2">
+                  <QueuesSortableHeader
+                    column="reservationName"
+                    currentSortColumn={resSort}
+                    sortDirection={resOrder}
+                    onSort={handleResSort}
+                  >
+                    {t("queues.reservationName")}
+                  </QueuesSortableHeader>
+                </div>
+                <div className="col-span-1">
+                  <QueuesSortableHeader
+                    column="reservationOwner"
+                    currentSortColumn={resSort}
+                    sortDirection={resOrder}
+                    onSort={handleResSort}
+                  >
+                    {t("queues.reservationOwner")}
+                  </QueuesSortableHeader>
+                </div>
                 <div className="col-span-1">{t("queues.status")}</div>
-                <div className="col-span-2">{t("queues.reservationStart")}</div>
-                <div className="col-span-2">{t("queues.reservationEnd")}</div>
+                <div className="col-span-2">
+                  <QueuesSortableHeader
+                    column="reservationStart"
+                    currentSortColumn={resSort}
+                    sortDirection={resOrder}
+                    onSort={handleResSort}
+                  >
+                    {t("queues.reservationStart")}
+                  </QueuesSortableHeader>
+                </div>
+                <div className="col-span-2">
+                  <QueuesSortableHeader
+                    column="reservationEnd"
+                    currentSortColumn={resSort}
+                    sortDirection={resOrder}
+                    onSort={handleResSort}
+                  >
+                    {t("queues.reservationEnd")}
+                  </QueuesSortableHeader>
+                </div>
                 <div className="col-span-1">{t("queues.reservationResources")}</div>
               </div>
             </div>

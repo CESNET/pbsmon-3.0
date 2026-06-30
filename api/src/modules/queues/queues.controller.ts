@@ -39,13 +39,20 @@ export class QueuesController {
     description:
       'Check queue access for a specific user (username). If not provided, uses the current user context. Admin users can check access for any user.',
   })
+  @ApiQuery({
+    name: 'qType',
+    required: false,
+    description:
+      'Filter queues by type (e.g., "reservation", "non-reservation"). If not provided, returns all queue types.',
+  })
   @ApiOkResponseModel(QueuesListDTO, 'Hierarchical list of queues')
   getQueues(
     @UserContextDecorator() userContext: UserContext,
     @Query('server') server?: string,
     @Query('user') user?: string,
+    @Query('qType') qType?: string,
   ): ApiResponse<QueuesListDTO> {
-    const data = this.queuesService.getQueuesList(userContext, server, user);
+    const data = this.queuesService.getQueuesList(userContext, server, user, qType);
     return new ApiResponse(data, {
       totalCount: this.countQueues(data.queues),
     });

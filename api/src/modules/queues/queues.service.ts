@@ -37,6 +37,7 @@ export class QueuesService {
     userContext: UserContext,
     serverName?: string,
     targetUsername?: string,
+    qType?: string,
   ): QueuesListDTO {
     const pbsData = this.dataCollectionService.getPbsData();
 
@@ -59,6 +60,7 @@ export class QueuesService {
         serverName,
         undefined,
         targetUsername,
+        qType,
       );
     }
 
@@ -85,6 +87,7 @@ export class QueuesService {
       undefined,
       queueToServerMap,
       targetUsername,
+      qType,
     );
   }
 
@@ -97,6 +100,7 @@ export class QueuesService {
     serverName?: string,
     queueToServerMap?: Map<string, string>,
     targetUsername?: string,
+    qType?: string,
   ): QueuesListDTO {
     // Build queue map and parent-child relationships
     const queueMap = new Map<string, PbsQueue>();
@@ -191,7 +195,10 @@ export class QueuesService {
     // Build tree for each root queue and filter out null results
     const rootQueueDTOs = rootQueues
       .map((queue) => buildQueueTree(queue))
-      .filter((q): q is QueueListDTO => q !== null);
+      .filter((q): q is QueueListDTO => q !== null)
+      .filter((q) => !qType ||
+        q.hasReservation && qType == 'reservation' ||
+        !q.hasReservation && qType == 'non-reservation');
 
     // Sort root queues: Route queues first, then by priority (higher first), then by name
     rootQueueDTOs.sort((a, b) => {
