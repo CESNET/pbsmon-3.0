@@ -229,7 +229,7 @@ export const qsubConfig: QsubFieldConfig[] = [
     type: 'memory',
     label: { en: 'RAM Memory', cs: 'RAM paměť' },
     required: false,
-    default: { amount: 400, unit: 'mb' },
+    default: { amount: 1, unit: 'gb' },
     category: 'basic',
     filterFunction: (node, value) => {
       if (!value || !value.amount) return true;
