@@ -138,7 +138,7 @@ export function QsubResults({
     },
     {
       id: "immediate",
-      label: currentLang === "cs" ? `Okamžitě dostupné (${immediatelyAvailableCount})` : `Immediately Available (${immediatelyAvailableCount})`,
+      label: currentLang === "cs" ? `Okamžitě dostupné uzly (${immediatelyAvailableCount})` : `Immediately Available Nodes(${immediatelyAvailableCount})`,
       content: (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
