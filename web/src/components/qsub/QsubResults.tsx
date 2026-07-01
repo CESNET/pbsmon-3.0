@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import { NodePreview } from "@/components/infrastructure/NodePreview";
 import type { InfrastructureNodeListDTO } from "@/lib/generated-api";
+import { Tabs } from "@/components/common/Tabs";
+import { MachineLegend } from "@/components/infrastructure/MachineLegend";
 
 export interface QualifiedNode extends InfrastructureNodeListDTO {
   canRunImmediately: boolean;
@@ -26,6 +28,9 @@ export function QsubResults({
   const { i18n } = useTranslation();
   const currentLang = (i18n.language || "en").split("-")[0] as "en" | "cs";
   const [showToast, setShowToast] = useState(false);
+  const [activeTab, setActiveTab] = useState<"qualified" | "immediate">(
+    immediatelyAvailableCount > 0 ? "immediate" : "qualified"
+  );
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -52,6 +57,144 @@ export function QsubResults({
     },
     {} as Record<string, QualifiedNode[]>
   );
+
+  // Group nodes by cluster for display
+  const nodesByClusterImmeditely = qualifiedNodes
+    .filter((node) => node.canRunImmediately)
+    .reduce(
+    (acc, node) => {
+      // Extract cluster name from node name (assuming format: node.cluster.domain)
+      const parts = node.name.split(".");
+      const clusterName =
+        parts.length > 1 ? parts.slice(1).join(".") : "unknown";
+
+      if (!acc[clusterName]) {
+        acc[clusterName] = [];
+      }
+      acc[clusterName].push(node);
+      return acc;
+    },
+    {} as Record<string, QualifiedNode[]>
+  );
+
+  const tabs = [
+    {
+      id: "qualified",
+      label: currentLang === "cs" ? `Kvalifikované uzly (${totalCount})` : `Qualified Nodes (${totalCount})`,
+      content: (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            {currentLang === "cs"
+              ? `Kvalifikované uzly (${totalCount})`
+              : `Qualified Nodes (${totalCount})`}
+          </h2>
+
+          {qualifiedNodes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              {currentLang === "cs"
+                ? "Žádné uzly nesplňují zadaná kritéria"
+                : "No nodes match the specified criteria"}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(nodesByCluster).map(([clusterName, nodes]) => (
+                <div key={clusterName}>
+                  <h3 className="text-md font-medium text-gray-700 mb-3">
+                    {clusterName}
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    {nodes.map((node) => (
+                      <div
+                        key={node.name}
+                        className={`relative ${
+                          node.canRunImmediately
+                            ? "rounded-lg border-2 border-green-500"
+                            : ""
+                        }`}
+                      >
+                        <NodePreview
+                          node={node as InfrastructureNodeListDTO}
+                          clusterName={clusterName}
+                        />
+                        {node.canRunImmediately && (
+                          <div className="absolute top-0 right-0 z-10">
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center">
+                              <Icon
+                                icon="solar:check-circle-bold"
+                                className="w-3 h-3 sm:w-4 sm:h-4 text-green-600"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "immediate",
+      label: currentLang === "cs" ? `Okamžitě dostupné (${immediatelyAvailableCount})` : `Immediately Available (${immediatelyAvailableCount})`,
+      content: (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            {currentLang === "cs"
+              ? `Okamžitě dostupné uzly (${immediatelyAvailableCount})`
+              : `Immediately Available Nodes (${immediatelyAvailableCount})`}
+          </h2>
+
+          {immediatelyAvailableCount === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              {currentLang === "cs"
+                ? "Žádné uzly nejsou okamžitě dostupné"
+                : "No nodes immediately available"}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(nodesByClusterImmeditely).map(([clusterName, nodes]) => (
+                <div key={clusterName}>
+                  <h3 className="text-md font-medium text-gray-700 mb-3">
+                    {clusterName}
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    {nodes.map((node) => (
+                      <div
+                        key={node.name}
+                        className={`relative ${
+                          node.canRunImmediately
+                            ? "rounded-lg border-2 border-green-500"
+                            : ""
+                        }`}
+                      >
+                        <NodePreview
+                          node={node as InfrastructureNodeListDTO}
+                          clusterName={clusterName}
+                        />
+                        {node.canRunImmediately && (
+                          <div className="absolute top-0 right-0 z-10">
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center">
+                              <Icon
+                                icon="solar:check-circle-bold"
+                                className="w-3 h-3 sm:w-4 sm:h-4 text-green-600"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ),
+    }
+  ];
 
   return (
     <div className="space-y-6">
@@ -132,58 +275,19 @@ export function QsubResults({
         </div>
       </div>
 
-      {/* Qualified Nodes */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          {currentLang === "cs"
-            ? `Kvalifikované uzly (${totalCount})`
-            : `Qualified Nodes (${totalCount})`}
-        </h2>
+      {/* State Legend */}
+      {<MachineLegend />}
 
-        {qualifiedNodes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            {currentLang === "cs"
-              ? "Žádné uzly nesplňují zadaná kritéria"
-              : "No nodes match the specified criteria"}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.entries(nodesByCluster).map(([clusterName, nodes]) => (
-              <div key={clusterName}>
-                <h3 className="text-md font-medium text-gray-700 mb-3">
-                  {clusterName}
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                  {nodes.map((node) => (
-                    <div
-                      key={node.name}
-                      className={`relative ${
-                        node.canRunImmediately
-                          ? "rounded-lg border-2 border-green-500"
-                          : ""
-                      }`}
-                    >
-                      <NodePreview
-                        node={node as InfrastructureNodeListDTO}
-                        clusterName={clusterName}
-                      />
-                      {node.canRunImmediately && (
-                        <div className="absolute top-0 right-0 z-10">
-                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center">
-                            <Icon
-                              icon="solar:check-circle-bold"
-                              className="w-3 h-3 sm:w-4 sm:h-4 text-green-600"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4">
+          <Tabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) =>
+              setActiveTab(tabId as "qualified" | "immediate")
+            }
+          />
+        </div>
       </div>
     </div>
   );
