@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useQueues } from "@/hooks/useQueues";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { QueueListDTO } from "@/lib/generated-api";
 import { QueueTreeNode } from "@/components/common/QueueTreeNode";
 
@@ -38,6 +39,12 @@ function filterQueuesByNode(
 export function MachinePbsQueuesTab({ nodeQueues }: MachinePbsQueuesTabProps) {
   const { t } = useTranslation();
   const { data: queuesData, isLoading, error } = useQueues();
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
 
   const nodeQueueNames = new Set(nodeQueues.map((q) => q.name).filter(Boolean));
 
@@ -47,7 +54,7 @@ export function MachinePbsQueuesTab({ nodeQueues }: MachinePbsQueuesTabProps) {
 
   if (isLoading) {
     return (
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="text-gray-500">{t("queues.loading")}</div>
       </div>
     );
@@ -55,7 +62,7 @@ export function MachinePbsQueuesTab({ nodeQueues }: MachinePbsQueuesTabProps) {
 
   if (error) {
     return (
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="text-red-600">
           {t("queues.errorLoading")}{" "}
           {error instanceof Error ? error.message : t("queues.unknownError")}
@@ -66,7 +73,7 @@ export function MachinePbsQueuesTab({ nodeQueues }: MachinePbsQueuesTabProps) {
 
   if (filteredQueues.length === 0) {
     return (
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="text-gray-500">{t("machines.noQueues")}</div>
       </div>
     );
@@ -75,12 +82,12 @@ export function MachinePbsQueuesTab({ nodeQueues }: MachinePbsQueuesTabProps) {
   return (
     <div>
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
-          <div className="col-span-3">{t("queues.queueName")}</div>
+        <div className={`grid ${isCompact ? "grid-cols-[1fr_60px]" : "grid-cols-12"} gap-2 text-sm font-medium text-gray-700`}>
+          <div className={`col-span-1 ${isCompact ? "" : "col-span-3"}`}>{t("queues.queueName")}</div>
           <div className="col-span-1">{t("queues.priority")}</div>
-          <div className="col-span-2">{t("queues.timeLimits")}</div>
-          <div className="col-span-5">{t("queues.jobs")}</div>
-          <div className="col-span-1">{t("queues.fairshare")}</div>
+          {!isCompact && <div className="col-span-2">{t("queues.timeLimits")}</div>}
+          {!isCompact && <div className="col-span-5">{t("queues.jobs")}</div>}
+          {!isCompact && <div className="col-span-1">{t("queues.fairshare")}</div>}
         </div>
       </div>
 

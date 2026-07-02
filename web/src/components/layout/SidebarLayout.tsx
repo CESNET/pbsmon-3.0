@@ -289,7 +289,7 @@ export function SidebarLayout() {
         <aside
           className={[
             "w-64 bg-primary-600 text-white flex flex-col shadow-[1px_1px_5px_rgba(0,0,0,0.25),inset_0_0_8px_rgba(0,0,0,0.25)]",
-            "fixed inset-y-0 left-0 z-50 transition-transform duration-300",
+            "fixed inset-y-0 left-0 z-50 transition-transform duration-300 overflow-y-auto",
             "md:static md:inset-auto md:translate-x-0",
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}

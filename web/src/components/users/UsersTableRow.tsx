@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { UserListDTO } from "@/lib/generated-api";
 
 interface UsersTableRowProps {
@@ -19,6 +20,13 @@ export function UsersTableRow({
   onImpersonate,
 }: UsersTableRowProps) {
   const { t } = useTranslation();
+
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
 
   const handleImpersonate = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -130,7 +138,11 @@ export function UsersTableRow({
   };
 
   return (
-    <div className="flex gap-4 items-center py-2 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 min-w-max">
+    <div
+      className={`flex gap-2 items-center py-2 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 ${
+        isCompact ? "flex-wrap min-w-full" : "flex-nowrap gap-4 min-w-max"
+      }`}
+    >
       {/* Username Column */}
       <div className="w-40">
         <Link
@@ -142,13 +154,15 @@ export function UsersTableRow({
       </div>
 
       {/* Nickname Column */}
-      <div className="w-48 text-sm text-gray-600">
-        {typeof user.nickname === "string"
-          ? user.nickname
-          : user.nickname
-            ? String(user.nickname)
-            : "-"}
-      </div>
+      {!isCompact && (
+        <div className="w-48 text-sm text-gray-600">
+          {typeof user.nickname === "string"
+            ? user.nickname
+            : user.nickname
+              ? String(user.nickname)
+              : "-"}
+        </div>
+      )}
 
       {/* Fairshare Columns - one per server */}
       {fairshareServers.map((server) => {
@@ -169,56 +183,60 @@ export function UsersTableRow({
       })}
 
       {/* Tasks Column - Same format as queues */}
-      <div className="pl-4 w-60 text-sm text-gray-600">
-        {(() => {
-          const totalTasks = user.totalTasks || 0;
+      {!isCompact && (
+        <div className="pl-4 w-60 text-sm text-gray-600">
+          {(() => {
+            const totalTasks = user.totalTasks || 0;
 
-          // No jobs at all
-          if (totalTasks === 0) {
+            // No jobs at all
+            if (totalTasks === 0) {
+              return (
+                <span className="text-gray-400 italic">{t("users.noJobs")}</span>
+              );
+            }
+
             return (
-              <span className="text-gray-400 italic">{t("users.noJobs")}</span>
+              <>
+                <div className="flex gap-2 flex-wrap">
+                  <div>
+                    <span className="text-gray-500">{t("queues.queued")}</span>
+                    <span className="font-medium ml-2">{user.queuedTasks}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t("queues.running")}</span>
+                    <span className="font-medium text-blue-600 ml-2">
+                      {user.runningTasks}
+                    </span>
+                  </div>{" "}
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <div>
+                    <span className="text-gray-500">{t("queues.done")}</span>
+                    <span className="font-medium text-green-600 ml-2">
+                      {user.doneTasks}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">{t("queues.total")}</span>
+                    <span className="font-medium ml-2">{user.totalTasks}</span>
+                  </div>
+                </div>
+              </>
             );
-          }
-
-          return (
-            <>
-              <div className="flex gap-2 flex-wrap">
-                <div>
-                  <span className="text-gray-500">{t("queues.queued")}</span>
-                  <span className="font-medium ml-2">{user.queuedTasks}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">{t("queues.running")}</span>
-                  <span className="font-medium text-blue-600 ml-2">
-                    {user.runningTasks}
-                  </span>
-                </div>{" "}
-              </div>
-
-              <div className="flex gap-2 flex-wrap">
-                <div>
-                  <span className="text-gray-500">{t("queues.done")}</span>
-                  <span className="font-medium text-green-600 ml-2">
-                    {user.doneTasks}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">{t("queues.total")}</span>
-                  <span className="font-medium ml-2">{user.totalTasks}</span>
-                </div>
-              </div>
-            </>
-          );
-        })()}
-      </div>
+          })()}
+        </div>
+      )}
 
       {/* Resource Usage Column - CPU and GPU */}
-      <div className="pl-4 flex-1 text-sm text-gray-600">
-        {renderResourceUsage()}
-      </div>
+      {!isCompact && (
+        <div className="pl-4 flex-1 text-sm text-gray-600">
+          {renderResourceUsage()}
+        </div>
+      )}
 
       {/* Actions Column - Only for admins */}
-      {isAdmin && (
+      {!isCompact && isAdmin && (
         <div className="w-32">
           <button
             onClick={handleImpersonate}

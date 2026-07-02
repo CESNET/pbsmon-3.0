@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { JobsSortableHeader } from "./JobsSortableHeader";
 import { JobsFilterableHeader, type JobFilterableState } from "./JobsFilterableHeader";
 
@@ -36,22 +37,33 @@ export function JobsTableHeader({
 }: JobsTableHeaderProps) {
   const { t } = useTranslation();
 
-  // Calculate grid columns based on which columns are hidden
-  let gridCols: string;
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
+
+  // Calculate grid columns based on which columns are hidden.
+  // In compact view only Status/ID/Created stay visible, so the compact
+  // template always has 3 tracks regardless of the props.
+  const mobileGridCols = "grid-cols-[72px_1fr_88px]";
+  let desktopGridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    gridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
   } else if (hideMachineColumn) {
-    gridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
   } else if (hideUserColumn) {
-    gridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
   } else {
-    gridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
   }
+  const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (
     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
       <div
-        className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700`}
+        className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700 overflow-hidden`}
       >
         <JobsFilterableHeader
           filterableStates={filterableStates}
@@ -69,63 +81,83 @@ export function JobsTableHeader({
           {t("jobs.id")}
         </JobsSortableHeader>
 
-        <JobsSortableHeader
-          column="name"
-          currentSortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={onSort}
-        >
-          {t("jobs.name")}
-        </JobsSortableHeader>
-
-        {!hideUserColumn && (
-          <JobsSortableHeader
-            column="owner"
-            currentSortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={onSort}
-          >
-            {t("jobs.username")}
-          </JobsSortableHeader>
+        {!isCompact && (
+          <div>
+            <JobsSortableHeader
+              column="name"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.name")}
+            </JobsSortableHeader>
+          </div>
         )}
 
-        {!hideMachineColumn && (
-          <JobsSortableHeader
-            column="node"
-            currentSortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={onSort}
-          >
-            {t("jobs.machine")}
-          </JobsSortableHeader>
+        {!isCompact && !hideUserColumn && (
+          <div>
+            <JobsSortableHeader
+              column="owner"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.username")}
+            </JobsSortableHeader>
+          </div>
         )}
 
-        <JobsSortableHeader
-          column="cpuReserved"
-          currentSortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={onSort}
-        >
-          {t("jobs.cpuReserved")}
-        </JobsSortableHeader>
+        {!isCompact && !hideMachineColumn && (
+          <div>
+            <JobsSortableHeader
+              column="node"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.machine")}
+            </JobsSortableHeader>
+          </div>
+        )}
 
-        <JobsSortableHeader
-          column="gpuReserved"
-          currentSortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={onSort}
-        >
-          {t("jobs.gpuReserved")}
-        </JobsSortableHeader>
+        {!isCompact && (
+          <div>
+            <JobsSortableHeader
+              column="cpuReserved"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.cpuReserved")}
+            </JobsSortableHeader>
+          </div>
+        )}
 
-        <JobsSortableHeader
-          column="memoryReserved"
-          currentSortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={onSort}
-        >
-          {t("jobs.ram")}
-        </JobsSortableHeader>
+        {!isCompact && (
+          <div>
+            <JobsSortableHeader
+              column="gpuReserved"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.gpuReserved")}
+            </JobsSortableHeader>
+          </div>
+        )}
+
+        {!isCompact && (
+          <div>
+            <JobsSortableHeader
+              column="memoryReserved"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.ram")}
+            </JobsSortableHeader>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <JobsSortableHeader

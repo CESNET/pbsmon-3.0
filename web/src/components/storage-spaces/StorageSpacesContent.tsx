@@ -40,12 +40,12 @@ export function StorageSpacesContent({ data, quotasData }: StorageSpacesContentP
   const { t } = useTranslation();
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {quotasData && <UserStorageQuotasSection data={quotasData} />}
 
       {/* Scratch Storage Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
           {t("storageSpaces.scratchStorage.title")}
         </h2>
         <p className="text-gray-700 mb-2">
@@ -58,17 +58,17 @@ export function StorageSpacesContent({ data, quotasData }: StorageSpacesContentP
 
       {/* Disk Arrays Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="px-4 sm:px-6 py-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
             {t("storageSpaces.diskArrays.title")}
           </h2>
         </div>
 
-        <p className="text-gray-700 px-6 py-4 pt-1">
+        <p className="text-gray-700 px-4 sm:px-6 py-4 pt-1">
           {t("storageSpaces.diskArrays.description")}
         </p>
 
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-4 sm:px-6 py-4 space-y-4">
           {data.storageSpaces.map((space) => {
             const freeSpaceFormatted = formatFreeSpace(space.freeTiB);
             const label = `${space.directory} - ${t("storageSpaces.table.freeSpace")}: ${freeSpaceFormatted}`;
@@ -86,8 +86,8 @@ export function StorageSpacesContent({ data, quotasData }: StorageSpacesContentP
         </div>
 
         {/* Totals */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <div className="grid grid-cols-3 gap-4 text-sm">
+        <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
             <div>
               <span className="text-gray-600">
                 {t("storageSpaces.totals.total")}

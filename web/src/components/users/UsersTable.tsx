@@ -28,7 +28,7 @@ export function UsersTable({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
       <UsersTableHeader
         fairshareServers={fairshareServers}
         sortColumn={sortColumn}

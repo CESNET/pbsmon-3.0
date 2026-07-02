@@ -5,7 +5,7 @@ export const MachineLegend = function MachineLegend({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
       <h2 className="text-sm font-semibold text-gray-700 mb-3">
         {t("machines.nodeStateLegend")}
       </h2>

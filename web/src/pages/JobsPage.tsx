@@ -10,6 +10,7 @@ import { WaitingJobsTable } from "@/components/jobs/WaitingJobsTable";
 import { WaitingJobsSummary } from "@/components/jobs/WaitingJobsSummary";
 import { Pagination } from "@/components/common/Pagination";
 import { Tabs } from "@/components/common/Tabs";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
@@ -40,6 +41,12 @@ export function JobsPage() {
   const [activeTab, setActiveTab] = useState<"all" | "waiting" | "my">(
     tabParam === "waiting" ? "waiting" : tabParam === "my" ? "my" : "all"
   );
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise still
+  // show the Waiting Jobs tab on a screen too short to comfortably use it.
+  const isMobile = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
 
   // Update URL when tab changes
   useEffect(() => {
@@ -51,6 +58,14 @@ export function JobsPage() {
       setSearchParams({}, { replace: true });
     }
   }, [activeTab, setSearchParams]);
+
+  // Waiting Jobs isn't shown on phones (its wide comment/reason column
+  // doesn't work well on narrow screens) - bounce away from it if needed.
+  useEffect(() => {
+    if (isMobile && activeTab === "waiting") {
+      setActiveTab("all");
+    }
+  }, [isMobile, activeTab]);
 
   // All Jobs tab state
   const [allJobsPage, setAllJobsPage] = useState(1);
@@ -392,20 +407,22 @@ export function JobsPage() {
     },
   ];
 
+  const visibleTabs = isMobile ? tabs.filter((tab) => tab.id !== "waiting") : tabs;
+
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary-900">
             {t("pages.jobs")}
           </h1>
         </div>
       </header>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4">
+          <div className="px-4 sm:px-6 py-4">
             <Tabs
-              tabs={tabs}
+              tabs={visibleTabs}
               activeTab={activeTab}
               onTabChange={(tabId) =>
                 setActiveTab(tabId as "all" | "waiting" | "my")

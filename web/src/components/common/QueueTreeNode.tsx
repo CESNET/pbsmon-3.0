@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { Tooltip } from "react-tooltip";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { QueueListDTO } from "@/lib/generated-api";
 
 interface QueueTreeNodeProps {
@@ -13,6 +14,13 @@ interface QueueTreeNodeProps {
 export function QueueTreeNode({ queue, level, isLast }: QueueTreeNodeProps) {
   const { t } = useTranslation();
   const hasChildren = queue.children && queue.children.length > 0;
+
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
 
   const queueId = queue.server
     ? `${queue.name}@${queue.server}.metacentrum.cz`
@@ -37,7 +45,7 @@ export function QueueTreeNode({ queue, level, isLast }: QueueTreeNodeProps) {
   return (
     <>
       <div
-        className={`grid grid-cols-12 gap-2 items-center py-2 px-0 border-b border-gray-100 relative ${bgColorClass}`}
+        className={`grid ${isCompact ? "grid-cols-[1fr_60px]" : "grid-cols-12"} gap-2 items-center py-2 px-0 border-b border-gray-100 relative ${bgColorClass}`}
       >
         {level > 0 && (
           <>
@@ -56,7 +64,7 @@ export function QueueTreeNode({ queue, level, isLast }: QueueTreeNodeProps) {
         )}
 
         <div
-          className="col-span-3 flex items-center gap-2 min-w-0"
+          className={`col-span-1 ${isCompact ? "" : "col-span-3"} flex items-center gap-2 min-w-0`}
           style={{ paddingLeft: `${indentWidth}px` }}
         >
           <div className="w-5 flex-shrink-0" />
@@ -196,63 +204,69 @@ export function QueueTreeNode({ queue, level, isLast }: QueueTreeNodeProps) {
         </div>
 
         {/* Time Limits Column */}
-        <div className="col-span-2 text-sm text-gray-600">
-          {queue.minWalltime || queue.maxWalltime ? (
-            <span>
-              {queue.minWalltime && queue.maxWalltime
-                ? `${queue.minWalltime} - ${queue.maxWalltime}`
-                : queue.minWalltime
-                  ? `${t("queues.min")}: ${queue.minWalltime}`
-                  : `${t("queues.max")}: ${queue.maxWalltime}`}
-            </span>
-          ) : (
-            "-"
-          )}
-        </div>
+        {!isCompact && (
+          <div className="col-span-2 text-sm text-gray-600">
+            {queue.minWalltime || queue.maxWalltime ? (
+              <span>
+                {queue.minWalltime && queue.maxWalltime
+                  ? `${queue.minWalltime} - ${queue.maxWalltime}`
+                  : queue.minWalltime
+                    ? `${t("queues.min")}: ${queue.minWalltime}`
+                    : `${t("queues.max")}: ${queue.maxWalltime}`}
+              </span>
+            ) : (
+              "-"
+            )}
+          </div>
+        )}
 
         {/* Jobs Breakdown Column */}
-        <div className="col-span-5 text-sm text-gray-600 pe-12">
-          <div className="flex gap-2 flex-wrap lg:justify-between">
-            <div>
-              <span className="text-gray-500">{t("queues.queued")}</span>
-              <span className="font-medium ml-2">{queuedJobs}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">{t("queues.running")}</span>
-              <span className="font-medium text-blue-600 ml-2">
-                {runningJobs}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">{t("queues.held")}</span>
-              <span className="font-medium text-red-600 ml-2">
-                {heldJobs}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">{t("queues.total")}</span>
-              <span className="font-medium ml-2">{String(totalJobs)}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">{t("queues.maxForUser")}:</span>
-              <span className="ml-2">
-                {queue.maximumForUser !== null &&
-                queue.maximumForUser !== undefined
-                  ? String(queue.maximumForUser)
-                  : "-"}
-              </span>
+        {!isCompact && (
+          <div className="col-span-5 text-sm text-gray-600 pe-12">
+            <div className="flex gap-2 flex-wrap lg:justify-between">
+              <div>
+                <span className="text-gray-500">{t("queues.queued")}</span>
+                <span className="font-medium ml-2">{queuedJobs}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">{t("queues.running")}</span>
+                <span className="font-medium text-blue-600 ml-2">
+                  {runningJobs}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">{t("queues.held")}</span>
+                <span className="font-medium text-red-600 ml-2">
+                  {heldJobs}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">{t("queues.total")}</span>
+                <span className="font-medium ml-2">{String(totalJobs)}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">{t("queues.maxForUser")}:</span>
+                <span className="ml-2">
+                  {queue.maximumForUser !== null &&
+                  queue.maximumForUser !== undefined
+                    ? String(queue.maximumForUser)
+                    : "-"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Fairshare Column */}
-        <div className="col-span-1 text-sm text-gray-600">
-          {typeof queue.fairshare === "string"
-            ? queue.fairshare
-            : queue.fairshare
-              ? String(queue.fairshare)
-              : ""}
-        </div>
+        {!isCompact && (
+          <div className="col-span-1 text-sm text-gray-600">
+            {typeof queue.fairshare === "string"
+              ? queue.fairshare
+              : queue.fairshare
+                ? String(queue.fairshare)
+                : ""}
+          </div>
+        )}
       </div>
 
       {/* Children - Always expanded */}

@@ -64,14 +64,14 @@ export function JobsFilterableHeader({
   ];
 
   return (
-        <div className="flex items-center">
+        <div className="flex items-center min-w-0 w-full">
           <select
             value={stateFilter || "all"}
             onChange={(e) => {
               const newFilter = e.target.value as JobFilterableState;
               onStateFilterChange?.(newFilter);
             }}
-            className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+            className="w-full min-w-0 text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
           >
             {stateOptions.map((option) => (
               <option key={option.value} value={option.value}>

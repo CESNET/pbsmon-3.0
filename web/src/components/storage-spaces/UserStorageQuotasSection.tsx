@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { UserStorageQuotasData } from "@/hooks/useUserStorageQuotas";
 
 interface UserStorageQuotasSectionProps {
@@ -24,9 +25,16 @@ export function UserStorageQuotasSection({
 }: UserStorageQuotasSectionProps) {
   const { t } = useTranslation();
 
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
+
   if (!data.quotas || data.quotas.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           {t("storageSpaces.userQuotas.title")}
         </h2>
@@ -39,7 +47,7 @@ export function UserStorageQuotasSection({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
         <h2 className="text-xl font-semibold text-gray-900">
           {t("storageSpaces.userQuotas.title")}
         </h2>
@@ -58,24 +66,34 @@ export function UserStorageQuotasSection({
               <th className="text-right px-4 py-3 font-medium text-gray-600">
                 {t("storageSpaces.userQuotas.used")}
               </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">
-                {t("storageSpaces.userQuotas.softQuota")}
-              </th>
+              {!isCompact && (
+                <th className="text-right px-4 py-3 font-medium text-gray-600">
+                  {t("storageSpaces.userQuotas.softQuota")}
+                </th>
+              )}
               <th className="text-right px-4 py-3 font-medium text-gray-600">
                 {t("storageSpaces.userQuotas.hardQuota")}
               </th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600">
-                {t("storageSpaces.userQuotas.grace")}
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">
-                {t("storageSpaces.userQuotas.filesUsed")}
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">
-                {t("storageSpaces.userQuotas.filesLimit")}
-              </th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600">
-                {t("storageSpaces.userQuotas.filesGrace")}
-              </th>
+              {!isCompact && (
+                <th className="text-center px-4 py-3 font-medium text-gray-600">
+                  {t("storageSpaces.userQuotas.grace")}
+                </th>
+              )}
+              {!isCompact && (
+                <th className="text-right px-4 py-3 font-medium text-gray-600">
+                  {t("storageSpaces.userQuotas.filesUsed")}
+                </th>
+              )}
+              {!isCompact && (
+                <th className="text-right px-4 py-3 font-medium text-gray-600">
+                  {t("storageSpaces.userQuotas.filesLimit")}
+                </th>
+              )}
+              {!isCompact && (
+                <th className="text-center px-4 py-3 font-medium text-gray-600">
+                  {t("storageSpaces.userQuotas.filesGrace")}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -88,32 +106,42 @@ export function UserStorageQuotasSection({
                     : "bg-gray-50/50 border-b border-gray-100"
                 }
               >
-                <td className="px-4 py-3 font-mono text-xs text-gray-700 max-w-xs truncate">
+                <td className="px-4 py-3 font-mono text-xs text-gray-700 max-w-[10rem] sm:max-w-xs truncate">
                   {quota.directory}
                 </td>
                 <td className="px-4 py-3 text-right text-gray-800">
                   {quota.used}
                 </td>
-                <td className="px-4 py-3 text-right text-gray-500">
-                  {formatQuota(quota.softQuota)}
-                </td>
+                {!isCompact && (
+                  <td className="px-4 py-3 text-right text-gray-500">
+                    {formatQuota(quota.softQuota)}
+                  </td>
+                )}
                 <td className="px-4 py-3 text-right text-gray-500">
                   {formatQuota(quota.hardQuota)}
                 </td>
-                <td className="px-4 py-3 text-center text-gray-500">
-                  {formatGrace(quota.grace)}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-800">
-                  {formatNumber(quota.filesUsed)}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-500">
-                  {quota.filesSoftLimit !== null || quota.filesHardLimit !== null
-                    ? `${formatNumber(quota.filesSoftLimit)} / ${formatNumber(quota.filesHardLimit)}`
-                    : "—"}
-                </td>
-                <td className="px-4 py-3 text-center text-gray-500">
-                  {formatGrace(quota.filesGrace)}
-                </td>
+                {!isCompact && (
+                  <td className="px-4 py-3 text-center text-gray-500">
+                    {formatGrace(quota.grace)}
+                  </td>
+                )}
+                {!isCompact && (
+                  <td className="px-4 py-3 text-right text-gray-800">
+                    {formatNumber(quota.filesUsed)}
+                  </td>
+                )}
+                {!isCompact && (
+                  <td className="px-4 py-3 text-right text-gray-500">
+                    {quota.filesSoftLimit !== null || quota.filesHardLimit !== null
+                      ? `${formatNumber(quota.filesSoftLimit)} / ${formatNumber(quota.filesHardLimit)}`
+                      : "—"}
+                  </td>
+                )}
+                {!isCompact && (
+                  <td className="px-4 py-3 text-center text-gray-500">
+                    {formatGrace(quota.filesGrace)}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

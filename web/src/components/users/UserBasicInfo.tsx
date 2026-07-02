@@ -15,14 +15,14 @@ export function UserBasicInfo({ user }: UserBasicInfoProps) {
   };
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200">
+    <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t("users.basicInfo")}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <div className="text-sm text-gray-500">{t("users.username")}</div>
-          <div className="text-lg font-medium text-gray-900">
+          <div className="text-lg font-medium text-gray-900 break-all">
             {user.username}
           </div>
         </div>
@@ -91,7 +91,7 @@ export function UserBasicInfo({ user }: UserBasicInfoProps) {
             <div className="text-sm text-gray-500">
               {t("users.mail")}
             </div>
-            <div className="text-lg font-medium text-gray-900">
+            <div className="text-lg font-medium text-gray-900 break-all">
               {typeof user.mail === "string"
                 ? user.mail
                 : String(user.mail)}

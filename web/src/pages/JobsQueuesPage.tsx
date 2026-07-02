@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useQueues } from "@/hooks/useQueues";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { QueueListDTO } from "@/lib/generated-api";
 import { QueueTreeNode } from "@/components/common/QueueTreeNode";
 
@@ -192,16 +193,23 @@ export function JobsQueuesPage() {
     }
   };
 
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
+
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary-900">
             {t("pages.queues")}
           </h1>
         </div>
       </header>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {(isLoading || resIsLoading) && (
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-600">{t("queues.loading")}</div>
@@ -223,8 +231,8 @@ export function JobsQueuesPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {/* Table Header */}
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
-                <div className="col-span-3">
+              <div className={`grid ${isCompact ? "grid-cols-[1fr_60px]" : "grid-cols-12"} gap-2 text-sm font-medium text-gray-700`}>
+                <div className={`col-span-1 ${isCompact ? "" : "col-span-3"}`}>
                   <QueuesSortableHeader
                     column="name"
                     currentSortColumn={sort}
@@ -244,27 +252,33 @@ export function JobsQueuesPage() {
                     {t("queues.priority")}
                   </QueuesSortableHeader>
                 </div>
-                <div className="col-span-2">{t("queues.timeLimits")}</div>
-                <div className="col-span-5">
-                  <QueuesSortableHeader
-                    column="totalJobs"
-                    currentSortColumn={sort}
-                    sortDirection={order}
-                    onSort={handleSort}
-                  >
-                    {t("queues.jobs")}
-                  </QueuesSortableHeader>
-                </div>
-                <div className="col-span-1">
-                  <QueuesSortableHeader
-                    column="fairshare"
-                    currentSortColumn={sort}
-                    sortDirection={order}
-                    onSort={handleSort}
-                  >
-                    {t("queues.fairshare")}
-                  </QueuesSortableHeader>
-                </div>
+                {!isCompact && (
+                  <div className="col-span-2">{t("queues.timeLimits")}</div>
+                )}
+                {!isCompact && (
+                  <div className="col-span-5">
+                    <QueuesSortableHeader
+                      column="totalJobs"
+                      currentSortColumn={sort}
+                      sortDirection={order}
+                      onSort={handleSort}
+                    >
+                      {t("queues.jobs")}
+                    </QueuesSortableHeader>
+                  </div>
+                )}
+                {!isCompact && (
+                  <div className="col-span-1">
+                    <QueuesSortableHeader
+                      column="fairshare"
+                      currentSortColumn={sort}
+                      sortDirection={order}
+                      onSort={handleSort}
+                    >
+                      {t("queues.fairshare")}
+                    </QueuesSortableHeader>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -295,8 +309,8 @@ export function JobsQueuesPage() {
             </div>
             {/* Column headers */}
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 tracking-wide">
-                <div className="col-span-3">
+              <div className={`grid ${isCompact ? "grid-cols-2" : "grid-cols-12"} gap-2 text-xs font-medium text-gray-500 tracking-wide`}>
+                <div className={`col-span-1 ${isCompact ? "" : "col-span-3"}`}>
                   <QueuesSortableHeader
                     column="name"
                     currentSortColumn={resSort}
@@ -306,7 +320,7 @@ export function JobsQueuesPage() {
                     {t("queues.queueName")}
                   </QueuesSortableHeader>
                 </div>
-                <div className="col-span-2">
+                <div className={`col-span-1 ${isCompact ? "" : "col-span-2"}`}>
                   <QueuesSortableHeader
                     column="reservationName"
                     currentSortColumn={resSort}
@@ -316,38 +330,48 @@ export function JobsQueuesPage() {
                     {t("queues.reservationName")}
                   </QueuesSortableHeader>
                 </div>
-                <div className="col-span-1">
-                  <QueuesSortableHeader
-                    column="reservationOwner"
-                    currentSortColumn={resSort}
-                    sortDirection={resOrder}
-                    onSort={handleResSort}
-                  >
-                    {t("queues.reservationOwner")}
-                  </QueuesSortableHeader>
-                </div>
-                <div className="col-span-1">{t("queues.status")}</div>
-                <div className="col-span-2">
-                  <QueuesSortableHeader
-                    column="reservationStart"
-                    currentSortColumn={resSort}
-                    sortDirection={resOrder}
-                    onSort={handleResSort}
-                  >
-                    {t("queues.reservationStart")}
-                  </QueuesSortableHeader>
-                </div>
-                <div className="col-span-2">
-                  <QueuesSortableHeader
-                    column="reservationEnd"
-                    currentSortColumn={resSort}
-                    sortDirection={resOrder}
-                    onSort={handleResSort}
-                  >
-                    {t("queues.reservationEnd")}
-                  </QueuesSortableHeader>
-                </div>
-                <div className="col-span-1">{t("queues.reservationResources")}</div>
+                {!isCompact && (
+                  <div className="col-span-1">
+                    <QueuesSortableHeader
+                      column="reservationOwner"
+                      currentSortColumn={resSort}
+                      sortDirection={resOrder}
+                      onSort={handleResSort}
+                    >
+                      {t("queues.reservationOwner")}
+                    </QueuesSortableHeader>
+                  </div>
+                )}
+                {!isCompact && (
+                  <div className="col-span-1">{t("queues.status")}</div>
+                )}
+                {!isCompact && (
+                  <div className="col-span-2">
+                    <QueuesSortableHeader
+                      column="reservationStart"
+                      currentSortColumn={resSort}
+                      sortDirection={resOrder}
+                      onSort={handleResSort}
+                    >
+                      {t("queues.reservationStart")}
+                    </QueuesSortableHeader>
+                  </div>
+                )}
+                {!isCompact && (
+                  <div className="col-span-2">
+                    <QueuesSortableHeader
+                      column="reservationEnd"
+                      currentSortColumn={resSort}
+                      sortDirection={resOrder}
+                      onSort={handleResSort}
+                    >
+                      {t("queues.reservationEnd")}
+                    </QueuesSortableHeader>
+                  </div>
+                )}
+                {!isCompact && (
+                  <div className="col-span-1">{t("queues.reservationResources")}</div>
+                )}
               </div>
             </div>
             {/* Rows */}
@@ -360,10 +384,10 @@ export function JobsQueuesPage() {
                 return (
                   <div
                     key={queue.name}
-                    className="grid grid-cols-12 gap-2 items-start py-3 px-4 border-b border-gray-100 hover:bg-gray-50"
+                    className={`grid ${isCompact ? "grid-cols-2" : "grid-cols-12"} gap-2 items-start py-3 px-4 border-b border-gray-100 hover:bg-gray-50`}
                   >
                     {/* Queue Name */}
-                    <div className="col-span-3 text-sm">
+                    <div className={`col-span-1 ${isCompact ? "" : "col-span-3"} text-sm min-w-0`}>
                       <Link
                         to={`/queues/${queueId}`}
                         className="font-medium text-gray-900 hover:text-primary-600 break-all"
@@ -377,65 +401,69 @@ export function JobsQueuesPage() {
                       )}
                     </div>
                     {/* Reservation Name / Display Name */}
-                    <div className="col-span-2 text-sm text-gray-600">
+                    <div className={`col-span-1 ${isCompact ? "" : "col-span-2"} text-sm text-gray-600 min-w-0`}>
                       {resv ? (
                         <>
-                          <div className="font-medium">
+                          <div className="font-medium break-words">
                             {resv.displayName && typeof resv.displayName === "string" ? resv.displayName : "-"}
                           </div>
                         </>
                       ) : "-"}
                     </div>
-                    {/* Owner */}
-                    <div className="col-span-1 text-sm text-gray-600">
-                      {resv?.owner && typeof resv.owner === "string" ? (
-                        <Link
-                          to={`/users/${encodeURIComponent((resv.owner as string).split("@")[0])}`}
-                          className="text-primary-600 hover:text-primary-800"
-                        >
-                          {(resv.owner as string).split("@")[0]}
-                        </Link>
-                      ) : "-"}
-                    </div>
-                    {/* State */}
-                    <div className="col-span-1 text-sm">
-                      {resv?.isStarted ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                          {t("machines.reservationStarted")}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                          {t("machines.reservationNotStarted")}
-                        </span>
-                      )}
-                    </div>
-                    {/* Start Time */}
-                    <div className="col-span-2 text-sm text-gray-600">
-                      {resv?.startTime && typeof resv.startTime === "number"
-                        ? formatResvDate(resv.startTime)
-                        : "-"}
-                    </div>
-                    {/* End Time */}
-                    <div className="col-span-2 text-sm text-gray-600">
-                      {resv?.endTime && typeof resv.endTime === "number"
-                        ? formatResvDate(resv.endTime)
-                        : "-"}
-                    </div>
-                    {/* Resources */}
-                    <div className="col-span-1 text-xs text-gray-600 space-y-0.5">
-                      {resv?.resourceNcpus != null && (
-                        <div>{t("queues.cpus")}: {String(resv.resourceNcpus)}</div>
-                      )}
-                      {resv?.resourceNgpus != null && (
-                        <div>{t("queues.gpus")}: {String(resv.resourceNgpus)}</div>
-                      )}
-                      {resv?.resourceNodect != null && (
-                        <div>{t("queues.nodes")}: {String(resv.resourceNodect)}</div>
-                      )}
-                      {resv?.resourceMem != null && (
-                        <div>{t("queues.memory")}: {String(resv.resourceMem)}</div>
-                      )}
-                    </div>
+                    {!isCompact && (
+                      <>
+                        {/* Owner */}
+                        <div className="col-span-1 text-sm text-gray-600">
+                          {resv?.owner && typeof resv.owner === "string" ? (
+                            <Link
+                              to={`/users/${encodeURIComponent((resv.owner as string).split("@")[0])}`}
+                              className="text-primary-600 hover:text-primary-800"
+                            >
+                              {(resv.owner as string).split("@")[0]}
+                            </Link>
+                          ) : "-"}
+                        </div>
+                        {/* State */}
+                        <div className="col-span-1 text-sm">
+                          {resv?.isStarted ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                              {t("machines.reservationStarted")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              {t("machines.reservationNotStarted")}
+                            </span>
+                          )}
+                        </div>
+                        {/* Start Time */}
+                        <div className="col-span-2 text-sm text-gray-600">
+                          {resv?.startTime && typeof resv.startTime === "number"
+                            ? formatResvDate(resv.startTime)
+                            : "-"}
+                        </div>
+                        {/* End Time */}
+                        <div className="col-span-2 text-sm text-gray-600">
+                          {resv?.endTime && typeof resv.endTime === "number"
+                            ? formatResvDate(resv.endTime)
+                            : "-"}
+                        </div>
+                        {/* Resources */}
+                        <div className="col-span-1 text-xs text-gray-600 space-y-0.5">
+                          {resv?.resourceNcpus != null && (
+                            <div>{t("queues.cpus")}: {String(resv.resourceNcpus)}</div>
+                          )}
+                          {resv?.resourceNgpus != null && (
+                            <div>{t("queues.gpus")}: {String(resv.resourceNgpus)}</div>
+                          )}
+                          {resv?.resourceNodect != null && (
+                            <div>{t("queues.nodes")}: {String(resv.resourceNodect)}</div>
+                          )}
+                          {resv?.resourceMem != null && (
+                            <div>{t("queues.memory")}: {String(resv.resourceMem)}</div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })}

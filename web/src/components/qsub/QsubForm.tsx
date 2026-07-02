@@ -503,7 +503,7 @@ export function QsubForm({ onSubmit }: QsubFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* All Settings in One Panel */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           {currentLang === "cs" ? "Nastavení" : "Settings"}
         </h2>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { ProgressBar } from "@/components/common/ProgressBar";
@@ -34,6 +35,7 @@ interface MachineDetailContentProps {
 export function MachineDetailContent({ node }: MachineDetailContentProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("tasks");
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   const [jobsPage, setJobsPage] = useState(1);
   const [jobsLimit] = useState(20);
@@ -237,6 +239,18 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
       ]
     : [];
 
+  // System Info and Operational Restrictions aren't shown on phones -
+  // bounce away from them if the viewport shrinks while active.
+  const visibleTabs = isMobile
+    ? tabs.filter((tab) => tab.id !== "system" && tab.id !== "outages")
+    : tabs;
+
+  useEffect(() => {
+    if (isMobile && (activeTab === "system" || activeTab === "outages")) {
+      setActiveTab("tasks");
+    }
+  }, [isMobile, activeTab]);
+
   // Extract comments for error banner
   const comment = node.pbs?.comment || null;
   const commentAux = node.pbs?.commentAux || null;
@@ -244,14 +258,14 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary-900 break-words">
             {t("pages.machineDetail")}: {node.name}
           </h1>
         </div>
       </header>
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Error Banner - Show comments at the top */}
         {hasComments && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -276,11 +290,11 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
         )}
         {/* Basic Information from PERUN (always present) */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               {t("machines.basicInformation")}
             </h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-gray-500">
                   {t("machines.nodeName")}
@@ -406,7 +420,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
             gpuUsage !== null ||
             node.pbs.memoryUsagePercent !== null) && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   {t("machines.reservedResources")}
                 </h2>
@@ -528,7 +542,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
         {/* Show reserved resources section when in maintenance */}
         {node.pbs && isEmptyMaintenance && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4">
+            <div className="px-4 sm:px-6 py-4">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 {t("machines.reservedResources")}
               </h2>
@@ -553,17 +567,17 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
             node.pbs.scratchSharedTotal !== null ||
             node.pbs.scratchShmAvailable === true) && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   {t("machines.scratchSpace") || "Scratch Space"}
                 </h2>
               </div>
-              <div className="px-6 py-4 space-y-4">
+              <div className="px-4 sm:px-6 py-4 space-y-4">
                 {/* Scratch Local */}
                 {node.pbs.scratchLocalTotal !== null &&
                   node.pbs.scratchLocalTotal > 0 && (
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
                         <div className="text-sm font-medium text-gray-700">
                           {t("machines.scratchLocal") || "Scratch Local"}
                         </div>
@@ -596,7 +610,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
                 {node.pbs.scratchSsdTotal !== null &&
                   node.pbs.scratchSsdTotal > 0 && (
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
                         <div className="text-sm font-medium text-gray-700">
                           {t("machines.scratchSsd") || "Scratch SSD"}
                         </div>
@@ -629,7 +643,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
                 {node.pbs.scratchSharedTotal !== null &&
                   node.pbs.scratchSharedTotal > 0 && (
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
                         <div className="text-sm font-medium text-gray-700">
                           {t("machines.scratchShared") || "Scratch Shared"}
                         </div>
@@ -643,7 +657,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
                 {/* Scratch SHM */}
                 {node.pbs.scratchShmAvailable === true && (
                   <div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
                       <div className="text-sm font-medium text-gray-700">
                         {t("machines.scratchShm") || "Scratch SHM"}
                       </div>
@@ -660,9 +674,9 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
         {/* Tabs Section - Only show if PBS data exists */}
         {node.pbs && tabs.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4">
+            <div className="px-4 sm:px-6 py-4">
               <Tabs
-                tabs={tabs}
+                tabs={visibleTabs}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
               />

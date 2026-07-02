@@ -39,8 +39,8 @@ export function WaitingJobsSummary({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-      <h2 className="text-xl font-bold text-primary-900 mb-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+      <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-4">
         {t("jobs.waitingJobsSummary")}
       </h2>
       <div className="space-y-2">
@@ -49,11 +49,11 @@ export function WaitingJobsSummary({
           return (
             <div
               key={index}
-              className={`flex items-start gap-4 py-2 border-b border-gray-100 last:border-b-0 ${
+              className={`flex flex-wrap sm:flex-nowrap items-start gap-2 sm:gap-4 py-2 border-b border-gray-100 last:border-b-0 ${
                 isActive ? "bg-primary-50" : ""
               }`}
             >
-              <div className="font-semibold text-gray-900 min-w-[80px] text-right">
+              <div className="font-semibold text-gray-900 min-w-[50px] sm:min-w-[80px] text-right">
                 {count}x
               </div>
               <div className="text-gray-700 flex-1 min-w-0 break-words">

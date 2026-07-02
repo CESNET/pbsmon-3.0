@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { JobListDTO } from "@/lib/generated-api";
 
 interface WaitingJobsTableRowProps {
@@ -11,6 +12,16 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
   const { t } = useTranslation();
 
   const username = job.username || job.owner?.split("@")[0];
+
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
+
+  // In compact view, show just the numeric job number to save space; full ID otherwise
+  const shortJobId = job.id.match(/^\d+/)?.[0] || job.id;
 
   // Format date (DD.MM.YYYY)
   const formatDate = (timestamp: number) => {
@@ -31,99 +42,121 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
   };
 
   // Grid: ID (bigger), Name (smaller), User, Machine, CPU, GPU, RAM, Comment (flex-1), Created
-  // Using fixed widths for all except Comment which uses flex-1
-  const gridCols =
+  // Using fixed widths for all except Comment which uses flex-1.
+  // In compact view only ID, the waiting reason (most important) and Created stay visible.
+  const mobileGridCols = "grid-cols-[0.9fr_1.5fr_88px]";
+  const desktopGridCols =
     "grid-cols-[300px_150px_120px_100px_100px_100px_1fr_180px]";
+  const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (
     <div
       className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 overflow-hidden`}
     >
       {/* ID Column */}
-      <div className="text-left">
+      <div className="text-left min-w-0">
         {job.canSeeOwner ? (
           <Link
             to={`/jobs/${encodeURIComponent(job.id)}`}
             className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
+            title={job.id}
           >
-            <span>{job.id}</span>
+            {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
           </Link>
         ) : (
-          <span>{job.id}</span>
+          <span title={job.id}>
+            {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
+          </span>
+        )}
+        {/* Name shown here only in compact view; the dedicated Name column takes over otherwise */}
+        {isCompact && (
+          <div className="text-sm text-gray-900 truncate mt-0.5">
+            {String(job.name || "")}
+          </div>
         )}
       </div>
 
       {/* Name Column */}
-      <div
-        className="text-sm text-gray-900 truncate"
-        title={String(job.name || "")}
-      >
-        {String(job.name || "")}
-      </div>
+      {!isCompact && (
+        <div
+          className="text-sm text-gray-900 truncate"
+          title={String(job.name || "")}
+        >
+          {String(job.name || "")}
+        </div>
+      )}
 
       {/* Username Column - Show username if canSeeOwner, anonymized otherwise */}
-      <div className="text-sm">
-        {job.canSeeOwner && username ? (
-          <Link
-            to={`/users/${encodeURIComponent(username)}`}
-            className="text-gray-900 hover:text-primary-600 underline cursor-pointer"
-          >
-            {String(username)}
-          </Link>
-        ) : (
-          <span className="text-gray-900">{t("jobs.anonym")}</span>
-        )}
-      </div>
+      {!isCompact && (
+        <div className="text-sm">
+          {job.canSeeOwner && username ? (
+            <Link
+              to={`/users/${encodeURIComponent(username)}`}
+              className="text-gray-900 hover:text-primary-600 underline cursor-pointer"
+            >
+              {String(username)}
+            </Link>
+          ) : (
+            <span className="text-gray-900">{t("jobs.anonym")}</span>
+          )}
+        </div>
+      )}
 
       {/* CPU Column */}
-      <div className="text-sm">
-        <div className="flex items-center gap-1">
-          <span className="text-gray-900">
-            {typeof job.cpuReserved === "number"
-              ? job.cpuReserved
-              : Number(job.cpuReserved) || 0}
-          </span>
-          <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
+      {!isCompact && (
+        <div className="text-sm">
+          <div className="flex items-center gap-1">
+            <span className="text-gray-900">
+              {typeof job.cpuReserved === "number"
+                ? job.cpuReserved
+                : Number(job.cpuReserved) || 0}
+            </span>
+            <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* GPU Column */}
-      <div className="text-sm">
-        {(() => {
-          const gpuReserved =
-            typeof job.gpuReserved === "number"
-              ? job.gpuReserved
-              : Number(job.gpuReserved) || 0;
+      {!isCompact && (
+        <div className="text-sm">
+          {(() => {
+            const gpuReserved =
+              typeof job.gpuReserved === "number"
+                ? job.gpuReserved
+                : Number(job.gpuReserved) || 0;
 
-          // Show "no GPU" in gray if gpuReserved is 0
-          if (gpuReserved === 0) {
+            // Show "no GPU" in gray if gpuReserved is 0
+            if (gpuReserved === 0) {
+              return (
+                <div className="text-gray-400 text-sm">{t("jobs.noGpu")}</div>
+              );
+            }
+
+            // Show gpu count
             return (
-              <div className="text-gray-400 text-sm">{t("jobs.noGpu")}</div>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-900">{gpuReserved}</span>
+                <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
+              </div>
             );
-          }
-
-          // Show gpu count
-          return (
-            <div className="flex items-center gap-1">
-              <span className="text-gray-900">{gpuReserved}</span>
-              <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
-            </div>
-          );
-        })()}
-      </div>
+          })()}
+        </div>
+      )}
 
       {/* RAM Column */}
-      <div className="text-sm">
-        <div className="flex items-center gap-1">
-          <span className="text-gray-900">
-            {typeof job.memoryReserved === "number"
-              ? job.memoryReserved
-              : Number(job.memoryReserved) || 0}{" "}
-            {t("jobs.gb")}
-          </span>
-          <Icon icon="ph:memory" className="w-[14px] h-[14px]" />
+      {!isCompact && (
+        <div className="text-sm">
+          <div className="flex items-center gap-1">
+            <span className="text-gray-900">
+              {typeof job.memoryReserved === "number"
+                ? job.memoryReserved
+                : Number(job.memoryReserved) || 0}{" "}
+              {t("jobs.gb")}
+            </span>
+            <Icon icon="ph:memory" className="w-[14px] h-[14px]" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Comment Column - Most important, shows reason for waiting */}
       <div className="text-sm text-gray-900 truncate min-w-0">

@@ -13,14 +13,14 @@ export function QsubAssemblerPage() {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary-900">
             {t("pages.qsubAssembler")}
           </h1>
         </div>
       </header>
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <QsubForm onSubmit={handleSubmit} />
 
         {previewMutation.isPending && (

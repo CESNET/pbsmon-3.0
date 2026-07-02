@@ -23,11 +23,11 @@ export const OrganizationPreview = memo(function OrganizationPreview({
   return (
     <div
       id={`org-${organization.id}`}
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6"
+      className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6"
     >
       {/* Organization Header */}
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-primary-900 mb-2">
+        <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-2">
           {organization.name[currentLanguage]}
           <span className="ml-2 text-sm font-normal text-gray-600">
             ({totalCpu} {t("machines.totalCpu")})

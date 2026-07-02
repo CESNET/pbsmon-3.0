@@ -29,8 +29,8 @@ export function WaitingJobsTable({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-full">
-      <div className="w-full">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-full overflow-x-auto">
+      <div className="min-w-full sm:min-w-max">
         <WaitingJobsTableHeader
           sortColumn={sortColumn}
           sortDirection={sortDirection}

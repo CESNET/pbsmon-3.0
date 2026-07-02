@@ -88,7 +88,7 @@ export function UserFairshareSection({
   };
 
   return (
-    <div className="px-6 py-4">
+    <div className="px-4 sm:px-6 py-4">
       <div className="flex items-center gap-2 mb-4">
         <h2 className="text-lg font-semibold text-gray-900">
           {t("users.fairsharePerServer")}
@@ -121,10 +121,10 @@ export function UserFairshareSection({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("users.server")}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("users.fairsharePriority")}
                 </th>
               </tr>
@@ -163,10 +163,10 @@ export function UserFairshareSection({
 
                 return (
                   <tr key={item.server} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-normal sm:whitespace-nowrap break-words text-sm font-medium text-gray-900">
                       {item.server}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-normal sm:whitespace-nowrap text-sm text-gray-600">
                       {usersBefore !== null ? (
                         <div className="flex items-center gap-2">
                           {getRankingIcon(rankingValue, totalUsers)}

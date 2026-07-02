@@ -17,16 +17,16 @@ export const MachinesHeader = memo(function MachinesHeader({
 
   // Calculate grid columns based on which columns are hidden
   let gridCols: string;
-  gridCols = "grid-cols-[1fr_1fr_1fr_1fr]";
+  gridCols = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
 
   const numResources = machineFilters?.filter(([key]) =>
     key === 'resources'
   ).length;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
       <div
-        className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700`}
+        className={`grid ${gridCols} gap-3 sm:gap-2 text-sm font-medium text-gray-700`}
       >
         <MachinesFilterableHeader
           name="states"

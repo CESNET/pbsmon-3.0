@@ -79,7 +79,7 @@ export function JobMessagesSection({ messages }: JobMessagesSectionProps) {
   };
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200">
+    <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t("jobs.messages")}
       </h2>

@@ -61,7 +61,7 @@ export function UserAccountingSection({
 
   if (isLoading) {
     return (
-      <div className="px-6 py-4 border-t border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-t border-gray-200">
         <div className="text-gray-500">{t("common.loading")}</div>
       </div>
     );
@@ -69,7 +69,7 @@ export function UserAccountingSection({
 
   if (error) {
     return (
-      <div className="px-6 py-4 border-t border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-t border-gray-200">
         <div className="text-red-600 text-sm">
           {t("common.errorLoading")}: {error.message}
         </div>
@@ -79,7 +79,7 @@ export function UserAccountingSection({
 
   if (!accountingData) {
     return (
-      <div className="px-6 py-4 border-t border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-t border-gray-200">
         <div className="text-gray-500 text-sm">
           {t("users.accounting.notAvailable")}
         </div>
@@ -123,13 +123,13 @@ export function UserAccountingSection({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("users.accounting.year")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("users.accounting.jobs")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("users.accounting.cpuTime")}
                   </th>
                 </tr>
@@ -137,13 +137,13 @@ export function UserAccountingSection({
               <tbody className="bg-white divide-y divide-gray-200">
                 {accountingData.usages.map((usage) => (
                   <tr key={usage.year} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                       {usage.year}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-sm text-gray-600">
                       {formatLargeNumber(usage.jobCount)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-normal sm:whitespace-nowrap text-sm text-gray-600">
                       {formatCpuTime(usage.cpuTime, t)}
                     </td>
                   </tr>

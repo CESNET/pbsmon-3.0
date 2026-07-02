@@ -20,7 +20,7 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
   );
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200">
+    <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t("jobs.basicInfo")}
       </h2>
@@ -46,7 +46,7 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
         </div>
         <div>
           <div className="text-sm text-gray-500">{t("jobs.jobName")}</div>
-          <div className="text-lg font-medium text-gray-900">{job.name}</div>
+          <div className="text-lg font-medium text-gray-900 break-all">{job.name}</div>
         </div>
         <div>
           <div className="text-sm text-gray-500">{t("jobs.stateLabel")}</div>
@@ -125,7 +125,7 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
       {job.comment && (
         <div className="mt-4">
           <div className="text-sm text-gray-500 mb-1">{t("jobs.comment")}</div>
-          <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded">
+          <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded whitespace-pre-wrap break-all">
             {String(job.comment)}
           </div>
         </div>

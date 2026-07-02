@@ -139,6 +139,7 @@ i18n.use(initReactI18next).init({
           ram: "RAM",
           created: "Created",
           searchPlaceholder: "Search by job ID, name, owner, or machine...",
+          searchPlaceholderShort: "Search jobs...",
           totalJobs: "Total {{count}} jobs",
           totalJobsCompletedBy: "Total {{count}} jobs, completed by {{completedBy}}",
           noJobsFound: "No jobs found",
@@ -622,6 +623,7 @@ i18n.use(initReactI18next).init({
           created: "Vytvořené",
           searchPlaceholder:
             "Hledat podle ID úlohy, názvu, vlastníka nebo stroje...",
+          searchPlaceholderShort: "Hledat úlohy...",
           totalJobs: "Celkem {{count}} úloh",
           totalJobsCompletedBy: "Celkem {{count}} úloh, skončí do {{completedBy}}",
           noJobsFound: "Nebyly nalezeny žádné úlohy",

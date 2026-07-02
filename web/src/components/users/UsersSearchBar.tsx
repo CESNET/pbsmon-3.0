@@ -15,8 +15,8 @@ export function UsersSearchBar({
   const { t } = useTranslation();
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-4">
-      <div className="relative max-w-md flex-1">
+    <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+      <div className="relative w-full sm:max-w-md sm:flex-1">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Icon icon="mdi:magnify" className="h-5 w-5 text-gray-400" />
         </div>

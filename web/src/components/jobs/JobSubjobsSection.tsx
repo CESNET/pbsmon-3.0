@@ -14,7 +14,7 @@ export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
   }
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200">
+    <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t("jobs.subjobs")} ({subjobs.length})
       </h2>
@@ -28,22 +28,22 @@ export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.stateLabel")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.node")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.cpu")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.memory")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.cpuTimeUsed")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.runtime")}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t("jobs.exitCode")}
               </th>
             </tr>
@@ -77,7 +77,7 @@ export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
                     )}
                   </span>
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {subjob.node ? (
                     <Link
                       to={`/machines/${String(subjob.node)}`}
@@ -89,10 +89,10 @@ export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
                     "-"
                   )}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {Number(subjob.cpuReserved)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {Number(subjob.memoryReserved).toFixed(2)} GB
                   {typeof subjob.memoryUsed === "number" &&
                     subjob.memoryUsed !== null && (
@@ -101,13 +101,13 @@ export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
                       </span>
                     )}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {String(subjob.cpuTimeUsed || "-")}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {String(subjob.runtime || "-")}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {typeof subjob.exitCode === "number" &&
                   subjob.exitCode !== null &&
                   subjob.exitCode !== undefined ? (

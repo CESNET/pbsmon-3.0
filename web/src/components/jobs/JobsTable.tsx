@@ -42,7 +42,7 @@ export function JobsTable({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-      <div className="min-w-max">
+      <div className="min-w-full sm:min-w-max">
         <JobsTableHeader
           sortColumn={sortColumn}
           sortDirection={sortDirection}

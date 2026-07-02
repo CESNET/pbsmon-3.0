@@ -96,21 +96,21 @@ export function ClusterDetailContent({ cluster }: ClusterDetailContentProps) {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary-900 break-words">
             {t("pages.clusterDetail")}: {cluster.name}
           </h1>
         </div>
       </header>
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Basic Information */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               {t("machines.basicInformation")}
             </h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-gray-500">
                   {t("machines.clusterName")}
@@ -160,7 +160,7 @@ export function ClusterDetailContent({ cluster }: ClusterDetailContentProps) {
           getLocalized(cluster.owner) ||
           (cluster.vos && cluster.vos.length > 0)) && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 {t("machines.specifications")}
               </h2>
@@ -265,7 +265,7 @@ export function ClusterDetailContent({ cluster }: ClusterDetailContentProps) {
 
         {/* Cluster Statistics */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               {t("machines.clusterStatistics")}
             </h2>
@@ -347,13 +347,13 @@ export function ClusterDetailContent({ cluster }: ClusterDetailContentProps) {
         {/* Nodes Grid */}
         {cluster.machines && cluster.machines.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 {t("machines.nodes")} ({cluster.machines.length})
               </h2>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                 {cluster.machines.map((node) => {
                   // Transform detail DTO to list DTO format for NodePreview
                   const transformedNode = {

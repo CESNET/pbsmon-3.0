@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Link } from "react-router-dom";
 import { Tabs } from "@/components/common/Tabs";
 import { QueueTreeNode } from "@/components/common/QueueTreeNode";
@@ -32,6 +33,13 @@ export function QueueDetailContent({
 }: QueueDetailContentProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("jobs");
+  const isMobile = useMediaQuery("(max-width: 639px)");
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
 
   const [jobsPage, setJobsPage] = useState(1);
   const [jobsLimit] = useState(20);
@@ -147,6 +155,18 @@ export function QueueDetailContent({
       ),
     },
   ];
+
+  // System Info isn't shown on phones - bounce away from it if the
+  // viewport shrinks while active.
+  const visibleTabs = isMobile
+    ? tabs.filter((tab) => tab.id !== "system")
+    : tabs;
+
+  useEffect(() => {
+    if (isMobile && activeTab === "system") {
+      setActiveTab("jobs");
+    }
+  }, [isMobile, activeTab]);
 
   const queuedJobs = queue.stateCount?.queued ?? 0;
   const runningJobs = queue.stateCount?.running ?? 0;
@@ -674,12 +694,12 @@ export function QueueDetailContent({
           </div>
           <div>
             <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-700">
-                <div className="col-span-3">{t("queues.queueName")}</div>
+              <div className={`grid ${isCompact ? "grid-cols-[1fr_60px]" : "grid-cols-12"} gap-2 text-sm font-medium text-gray-700`}>
+                <div className={`col-span-1 ${isCompact ? "" : "col-span-3"}`}>{t("queues.queueName")}</div>
                 <div className="col-span-1">{t("queues.priority")}</div>
-                <div className="col-span-2">{t("queues.timeLimits")}</div>
-                <div className="col-span-5">{t("queues.jobs")}</div>
-                <div className="col-span-1">{t("queues.fairshare")}</div>
+                {!isCompact && <div className="col-span-2">{t("queues.timeLimits")}</div>}
+                {!isCompact && <div className="col-span-5">{t("queues.jobs")}</div>}
+                {!isCompact && <div className="col-span-1">{t("queues.fairshare")}</div>}
               </div>
             </div>
             <div>
@@ -739,8 +759,8 @@ export function QueueDetailContent({
 
       {/* Tabs Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4">
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="px-4 sm:px-6 py-4">
+          <Tabs tabs={visibleTabs} activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
       </div>
     </div>

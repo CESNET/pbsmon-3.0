@@ -70,7 +70,7 @@ export function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-6">
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}

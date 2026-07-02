@@ -67,7 +67,7 @@ export function QueuePbsMachinesTab({
 
   if (isLoading) {
     return (
-      <div className="px-6 py-4">
+      <div>
         <div className="text-gray-500">{t("common.loading")}</div>
       </div>
     );
@@ -75,7 +75,7 @@ export function QueuePbsMachinesTab({
 
   if (error) {
     return (
-      <div className="px-6 py-4">
+      <div>
         <div className="text-red-600">
           {t("common.errorLoading")}{" "}
           {error instanceof Error ? error.message : t("common.unknownError")}
@@ -86,7 +86,7 @@ export function QueuePbsMachinesTab({
 
   if (machines.length === 0) {
     return (
-      <div className="px-6 py-4">
+      <div>
         <div className="text-gray-500">{t("queues.noMachines")}</div>
       </div>
     );
@@ -117,10 +117,10 @@ export function QueuePbsMachinesTab({
   }, 0);
 
   return (
-    <div className="px-6 py-4 space-y-6">
+    <div className="space-y-6">
       {/* Statistics */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <h2 className="text-xl font-bold text-primary-900 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+        <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-4">
           {t("queues.machineStatistics")}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -162,7 +162,7 @@ export function QueuePbsMachinesTab({
                 {clusterName}
               </h3>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {clusterMachines.map((machine) => (
                 <NodePreview
                   key={machine.node.name}

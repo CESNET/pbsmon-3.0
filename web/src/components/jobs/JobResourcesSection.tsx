@@ -58,7 +58,7 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
   };
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200">
+    <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">
         {t("jobs.resources")}
       </h2>
@@ -68,7 +68,7 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
         <h3 className="text-sm font-medium text-gray-700 mb-3">
           {t("jobs.requestedResources")}
         </h3>
-        <div className="bg-gray-50 p-3 rounded font-mono text-sm">
+        <div className="bg-gray-50 p-3 rounded font-mono text-sm break-all">
           {job.requestedResources || t("jobs.noResourcesRequested")}
         </div>
       </div>
@@ -281,13 +281,13 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("jobs.cpu")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("jobs.gpu")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("jobs.ram")}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("jobs.scratch")}
                   </th>
                 </tr>
@@ -306,17 +306,17 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {resource.cpu}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {resource.gpu === 0 ? (
                         <span className="text-gray-400">{t("jobs.noGpu")}</span>
                       ) : (
                         resource.gpu
                       )}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {resource.ram.toFixed(2)} GB
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {resource.scratch
                         ? `${resource.scratch.toFixed(2)} GB (${resource.scratchType || "local"})`
                         : "-"}

@@ -70,14 +70,14 @@ export function ProjectsPage() {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary-900">
             {t("pages.projects")}
           </h1>
         </div>
       </header>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-600">{t("common.loading")}</div>

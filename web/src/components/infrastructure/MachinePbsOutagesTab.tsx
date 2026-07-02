@@ -73,7 +73,7 @@ export function MachinePbsOutagesTab({ nodeName }: MachinePbsOutagesTabProps) {
 
   if (isLoading) {
     return (
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="text-gray-500">{t("common.loading")}</div>
       </div>
     );
@@ -81,7 +81,7 @@ export function MachinePbsOutagesTab({ nodeName }: MachinePbsOutagesTabProps) {
 
   if (error) {
     return (
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="text-red-600">
           {t("common.errorLoading")}{" "}
           {error instanceof Error ? error.message : t("common.unknownError")}
@@ -92,7 +92,7 @@ export function MachinePbsOutagesTab({ nodeName }: MachinePbsOutagesTabProps) {
 
   if (!outages || outages.length === 0) {
     return (
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <div className="text-gray-500">{t("machines.noOutages")}</div>
       </div>
     );
@@ -104,16 +104,16 @@ export function MachinePbsOutagesTab({ nodeName }: MachinePbsOutagesTabProps) {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Start Time
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 End Time
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Comment
               </th>
             </tr>
@@ -121,16 +121,16 @@ export function MachinePbsOutagesTab({ nodeName }: MachinePbsOutagesTabProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {outages.map((outage: OutageRecordDTO, index: number) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-sm text-gray-900">
                   {outage.type || "-"}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
+                <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
                   {formatDateTime(outage.startTime)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
+                <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
                   {formatDateTime(outage.endTime)}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-900">
+                <td className="px-3 sm:px-4 py-2 sm:py-3 text-sm text-gray-900">
                   {formatComment(outage.comment)}
                 </td>
               </tr>

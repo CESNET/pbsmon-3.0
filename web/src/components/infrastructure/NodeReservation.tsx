@@ -17,13 +17,13 @@ export function NodeReservation({
     return (
       <>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-2 mb-4">
               {t("machines.reservation")}
             </div>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-600">{t("common.loading")}</div>
           </div>
@@ -36,13 +36,13 @@ export function NodeReservation({
     return (
       <>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-2 mb-4">
               {t("machines.reservation")}
             </div>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="text-red-800">
               {t("common.errorLoading")}{" "}
@@ -60,13 +60,13 @@ export function NodeReservation({
     return (
       <>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-2 mb-4">
               {t("machines.reservation")}
             </div>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="text-center text-gray-500 py-12">
             {t("queues.reservationNotFound")}
           </div>
@@ -79,8 +79,8 @@ export function NodeReservation({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
           <Icon
             icon={
               reservation.isStarted
@@ -109,7 +109,7 @@ export function NodeReservation({
           </div>
         </div>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {reservation.displayName &&
               typeof reservation.displayName === "string" && (
                 <div>

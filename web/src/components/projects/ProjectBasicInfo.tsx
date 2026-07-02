@@ -18,9 +18,12 @@ export function ProjectBasicInfo({ project }: ProjectBasicInfoProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <div className="text-sm text-gray-500">{t("projects.name")}</div>
-          <div className="flex items-center gap-2">
-            <Icon icon="mdi:folder" className="w-5 h-5 text-gray-400" />
-            <div className="text-lg font-medium text-gray-900">
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon icon="mdi:folder" className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div
+              className="flex-1 min-w-0 break-all text-lg font-medium text-gray-900"
+              title={project.name}
+            >
               {project.name}
             </div>
             {project.isPersonal && (
@@ -91,7 +94,7 @@ export function ProjectBasicInfo({ project }: ProjectBasicInfoProps) {
           <div className="text-sm text-gray-500 mb-1">
             {t("projects.description")}
           </div>
-          <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded whitespace-pre-wrap">
+          <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded whitespace-pre-wrap break-all">
             {typeof project.description === "string"
               ? project.description
               : JSON.stringify(project.description)}

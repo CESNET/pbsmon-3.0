@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { JobListDTO } from "@/lib/generated-api";
 import { ProgressBar } from "@/components/common/ProgressBar";
 
@@ -39,6 +40,9 @@ export function JobsTableRow({
   // Parent jobs have IDs like "14699148[].pbs-m1.metacentrum.cz"
   const isParentJob = /\[\]/.test(job.id);
   const parentJobTooltipId = `parent-job-${job.id}`;
+
+  // In compact view, show just the numeric job number to save space; full ID otherwise
+  const shortJobId = job.id.match(/^\d+/)?.[0] || job.id;
 
   // Format date (DD.MM.YYYY)
   const formatDate = (timestamp: number) => {
@@ -103,21 +107,32 @@ export function JobsTableRow({
     return formatSecondsToTime(gpuTimeSeconds);
   };
 
-  // Calculate grid columns based on which columns are hidden
-  let gridCols: string;
+  // Compact view covers narrow-width phones (portrait) as well as short-height
+  // phones in landscape, where a width-only breakpoint would otherwise show
+  // the full desktop column set on a screen too short to comfortably use it.
+  const isCompact = useMediaQuery(
+    "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
+  );
+
+  // Calculate grid columns based on which columns are hidden.
+  // In compact view only Status/ID/Created stay visible, so the compact
+  // template always has 3 tracks regardless of the props.
+  const mobileGridCols = "grid-cols-[72px_1fr_88px]";
+  let desktopGridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    gridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
   } else if (hideMachineColumn) {
-    gridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
   } else if (hideUserColumn) {
-    gridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
   } else {
-    gridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
   }
+  const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (
     <div
-      className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50`}
+      className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 overflow-hidden`}
     >
       {/* Status Column */}
       <div>
@@ -134,23 +149,26 @@ export function JobsTableRow({
       </div>
 
       {/* ID Column */}
-      <div className="text-left">
+      <div className="text-left min-w-0">
         <div className="flex items-center gap-2">
           {job.canSeeOwner ? (
             <Link
               to={`/jobs/${encodeURIComponent(job.id)}`}
               className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
+              title={job.id}
             >
-              <span>{job.id}</span>
+              {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
             </Link>
           ) : (
-            <span>{job.id}</span>
+            <span title={job.id}>
+              {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
+            </span>
           )}
           {isParentJob && (
             <>
               <Icon
                 icon="ph:tree-view-fill"
-                className="w-4 h-4 text-primary-600"
+                className="w-4 h-4 text-primary-600 flex-shrink-0"
                 data-tooltip-id={parentJobTooltipId}
                 data-tooltip-content={t("jobs.parentJobTooltip")}
               />
@@ -158,6 +176,12 @@ export function JobsTableRow({
             </>
           )}
         </div>
+        {/* Name shown here only in compact view; the dedicated Name column takes over otherwise */}
+        {isCompact && (
+          <div className="text-sm text-gray-900 truncate mt-0.5">
+            {String(job.name || "")}
+          </div>
+        )}
         {(jobState === "R" ||
           jobState === "C" ||
           jobState === "F" ||
@@ -171,15 +195,17 @@ export function JobsTableRow({
       </div>
 
       {/* Name Column */}
-      <div
-        className="text-sm text-gray-900 truncate"
-        title={String(job.name || "")}
-      >
-        {String(job.name || "")}
-      </div>
+      {!isCompact && (
+        <div
+          className="text-sm text-gray-900 truncate"
+          title={String(job.name || "")}
+        >
+          {String(job.name || "")}
+        </div>
+      )}
 
       {/* Username Column - Show username if canSeeOwner, anonymized otherwise */}
-      {!hideUserColumn && (
+      {!isCompact && !hideUserColumn && (
         <div className="text-sm">
           {job.canSeeOwner && username ? (
             <Link
@@ -195,7 +221,7 @@ export function JobsTableRow({
       )}
 
       {/* Machine Column */}
-      {!hideMachineColumn && (
+      {!isCompact && !hideMachineColumn && (
         <div className="text-sm">
           {job.node ? (
             <span>{String(job.node)}</span>
@@ -206,39 +232,54 @@ export function JobsTableRow({
       )}
 
       {/* CPU Column */}
-      <div className="text-sm">
-        {(jobState === "R" ||
-          jobState === "C" ||
-          jobState === "F" ||
-          jobState === "X") &&
-        typeof job.cpuUsagePercentPerCpu === "number" &&
-        job.cpuUsagePercentPerCpu !== null &&
-        job.cpuUsagePercentPerCpu !== undefined ? (
-          <div className="mb-1">
-            <ProgressBar
-              label={`CPU:`}
-              value={
-                typeof job.cpuReserved === "number"
-                  ? job.cpuReserved
-                  : Number(job.cpuReserved) || 0
-              }
-              percent={job.cpuUsagePercentPerCpu}
-              color={(percent) => (percent < 50 ? "#ef4444" : "#4b5563")}
-              icon={
+      {!isCompact && (
+        <div className="text-sm">
+          {(jobState === "R" ||
+            jobState === "C" ||
+            jobState === "F" ||
+            jobState === "X") &&
+          typeof job.cpuUsagePercentPerCpu === "number" &&
+          job.cpuUsagePercentPerCpu !== null &&
+          job.cpuUsagePercentPerCpu !== undefined ? (
+            <div className="mb-1">
+              <ProgressBar
+                label={`CPU:`}
+                value={
+                  typeof job.cpuReserved === "number"
+                    ? job.cpuReserved
+                    : Number(job.cpuReserved) || 0
+                }
+                percent={job.cpuUsagePercentPerCpu}
+                color={(percent) => (percent < 50 ? "#ef4444" : "#4b5563")}
+                icon={
+                  <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
+                }
+              />
+              {job.cpuTimeUsed && (
+                <div className="text-gray-600 flex justify-between">
+                  <span>{t("jobs.cpuTime")}:</span>
+                  <span>{formatTimeString(String(job.cpuTimeUsed))}</span>
+                </div>
+              )}
+            </div>
+          ) : job.cpuTimeUsed ? (
+            // Show CPU time even if CPU percent is not available (for completed jobs)
+            <div>
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-gray-900">
+                  {typeof job.cpuReserved === "number"
+                    ? job.cpuReserved
+                    : Number(job.cpuReserved) || 0}
+                </span>
                 <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
-              }
-            />
-            {job.cpuTimeUsed && (
+              </div>
               <div className="text-gray-600 flex justify-between">
                 <span>{t("jobs.cpuTime")}:</span>
                 <span>{formatTimeString(String(job.cpuTimeUsed))}</span>
               </div>
-            )}
-          </div>
-        ) : job.cpuTimeUsed ? (
-          // Show CPU time even if CPU percent is not available (for completed jobs)
-          <div>
-            <div className="flex items-center gap-1 mb-1">
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
               <span className="text-gray-900">
                 {typeof job.cpuReserved === "number"
                   ? job.cpuReserved
@@ -246,127 +287,118 @@ export function JobsTableRow({
               </span>
               <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
             </div>
-            <div className="text-gray-600 flex justify-between">
-              <span>{t("jobs.cpuTime")}:</span>
-              <span>{formatTimeString(String(job.cpuTimeUsed))}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1">
-            <span className="text-gray-900">
-              {typeof job.cpuReserved === "number"
-                ? job.cpuReserved
-                : Number(job.cpuReserved) || 0}
-            </span>
-            <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* GPU Column */}
-      <div className="text-sm">
-        {(() => {
-          const gpuReserved =
-            typeof job.gpuReserved === "number"
-              ? job.gpuReserved
-              : Number(job.gpuReserved) || 0;
-          const gpuUsagePercent =
-            typeof job.gpuUsagePercent === "number" &&
-            job.gpuUsagePercent !== null &&
-            job.gpuUsagePercent !== undefined
-              ? job.gpuUsagePercent
-              : null;
+      {!isCompact && (
+        <div className="text-sm">
+          {(() => {
+            const gpuReserved =
+              typeof job.gpuReserved === "number"
+                ? job.gpuReserved
+                : Number(job.gpuReserved) || 0;
+            const gpuUsagePercent =
+              typeof job.gpuUsagePercent === "number" &&
+              job.gpuUsagePercent !== null &&
+              job.gpuUsagePercent !== undefined
+                ? job.gpuUsagePercent
+                : null;
 
-          // Show "no GPU" in gray if gpuReserved is 0
-          if (gpuReserved === 0) {
+            // Show "no GPU" in gray if gpuReserved is 0
+            if (gpuReserved === 0) {
+              return (
+                <div className="text-gray-400 text-sm">{t("jobs.noGpu")}</div>
+              );
+            }
+
+            // Show progress bar if we have gpuUsagePercent and job is running or completed
+            if (
+              (jobState === "R" ||
+                jobState === "C" ||
+                jobState === "F" ||
+                jobState === "X") &&
+              gpuUsagePercent !== null
+            ) {
+              // Calculate GPU time from GPU percent
+              const calculatedGpuTime = calculateGpuTimeFromPercent(
+                gpuUsagePercent,
+                (job as any).runtime,
+                gpuReserved
+              );
+
+              return (
+                <div className="mb-1">
+                  { job.gpuUsagePercentPerGpu !== null && typeof job.gpuUsagePercentPerGpu === "number" && (
+                  <ProgressBar
+                    label=""
+                    value={gpuReserved}
+                    percent={job.gpuUsagePercentPerGpu}
+                    color="#4b5563"
+                    icon={
+                      <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
+                    }
+                  />
+                  )}
+                  {calculatedGpuTime && (
+                    <div className="text-gray-600 flex justify-between ">
+                      <span>{t("jobs.gpuTime")}:</span>
+                      <span>{calculatedGpuTime}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Default: show gpu count
             return (
-              <div className="text-gray-400 text-sm">{t("jobs.noGpu")}</div>
-            );
-          }
-
-          // Show progress bar if we have gpuUsagePercent and job is running or completed
-          if (
-            (jobState === "R" ||
-              jobState === "C" ||
-              jobState === "F" ||
-              jobState === "X") &&
-            gpuUsagePercent !== null
-          ) {
-            // Calculate GPU time from GPU percent
-            const calculatedGpuTime = calculateGpuTimeFromPercent(
-              gpuUsagePercent,
-              (job as any).runtime,
-              gpuReserved
-            );
-
-            return (
-              <div className="mb-1">
-                { job.gpuUsagePercentPerGpu !== null && typeof job.gpuUsagePercentPerGpu === "number" && (
-                <ProgressBar
-                  label=""
-                  value={gpuReserved}
-                  percent={job.gpuUsagePercentPerGpu}
-                  color="#4b5563"
-                  icon={
-                    <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
-                  }
-                />
-                )}
-                {calculatedGpuTime && (
-                  <div className="text-gray-600 flex justify-between ">
-                    <span>{t("jobs.gpuTime")}:</span>
-                    <span>{calculatedGpuTime}</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-1">
+                <span className="text-gray-900">{gpuReserved}</span>
+                <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
               </div>
             );
-          }
-
-          // Default: show gpu count
-          return (
-            <div className="flex items-center gap-1">
-              <span className="text-gray-900">{gpuReserved}</span>
-              <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
-            </div>
-          );
-        })()}
-      </div>
+          })()}
+        </div>
+      )}
 
       {/* RAM Column */}
-      <div className="text-sm">
-        {(jobState === "R" ||
-          jobState === "C" ||
-          jobState === "F" ||
-          jobState === "X") &&
-        typeof job.memoryUsagePercent === "number" &&
-        job.memoryUsagePercent !== null &&
-        job.memoryUsagePercent !== undefined ? (
-          <div className="mb-1">
-            <ProgressBar
-              label="RAM"
-              value={`${
-                typeof job.memoryReserved === "number"
+      {!isCompact && (
+        <div className="text-sm">
+          {(jobState === "R" ||
+            jobState === "C" ||
+            jobState === "F" ||
+            jobState === "X") &&
+          typeof job.memoryUsagePercent === "number" &&
+          job.memoryUsagePercent !== null &&
+          job.memoryUsagePercent !== undefined ? (
+            <div className="mb-1">
+              <ProgressBar
+                label="RAM"
+                value={`${
+                  typeof job.memoryReserved === "number"
+                    ? job.memoryReserved
+                    : Number(job.memoryReserved) || 0
+                } ${t("jobs.gb")}`}
+                percent={job.memoryUsagePercent}
+                color="#4b5563"
+              />
+              <div className="h-4"></div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="text-gray-900">
+                {typeof job.memoryReserved === "number"
                   ? job.memoryReserved
-                  : Number(job.memoryReserved) || 0
-              } ${t("jobs.gb")}`}
-              percent={job.memoryUsagePercent}
-              color="#4b5563"
-            />
-            <div className="h-4"></div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1">
-            <span className="text-gray-900">
-              {typeof job.memoryReserved === "number"
-                ? job.memoryReserved
-                : Number(job.memoryReserved) || 0}{" "}
-              {t("jobs.gb")}
-            </span>
+                  : Number(job.memoryReserved) || 0}{" "}
+                {t("jobs.gb")}
+              </span>
 
-            <Icon icon="ph:memory" className="w-[14px] h-[14px]" />
-          </div>
-        )}
-      </div>
+              <Icon icon="ph:memory" className="w-[14px] h-[14px]" />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Created Column */}
       <div className="text-sm text-gray-600 text-right">

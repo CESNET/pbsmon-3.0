@@ -80,9 +80,9 @@ export function QsubResults({
   const tabs = [
     {
       id: "qualified",
-      label: currentLang === "cs" ? `Kvalifikované uzly (${totalCount})` : `Qualified Nodes (${totalCount})`,
+      label: currentLang === "cs" ? `Kvalifikované (${totalCount})` : `Qualified (${totalCount})`,
       content: (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {currentLang === "cs"
               ? `Kvalifikované uzly (${totalCount})`
@@ -102,7 +102,7 @@ export function QsubResults({
                   <h3 className="text-md font-medium text-gray-700 mb-3">
                     {clusterName}
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                     {nodes.map((node) => (
                       <div
                         key={node.name}
@@ -138,9 +138,9 @@ export function QsubResults({
     },
     {
       id: "immediate",
-      label: currentLang === "cs" ? `Okamžitě dostupné uzly (${immediatelyAvailableCount})` : `Immediately Available Nodes(${immediatelyAvailableCount})`,
+      label: currentLang === "cs" ? `Okamžitě dostupné (${immediatelyAvailableCount})` : `Immediately Available (${immediatelyAvailableCount})`,
       content: (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {currentLang === "cs"
               ? `Okamžitě dostupné uzly (${immediatelyAvailableCount})`
@@ -160,7 +160,7 @@ export function QsubResults({
                   <h3 className="text-md font-medium text-gray-700 mb-3">
                     {clusterName}
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                     {nodes.map((node) => (
                       <div
                         key={node.name}
@@ -211,7 +211,7 @@ export function QsubResults({
       )}
 
       {/* QSUB Command */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
             {currentLang === "cs" ? "QSUB příkaz" : "QSUB Command"}
@@ -225,18 +225,18 @@ export function QsubResults({
           >
             <Icon icon="solar:copy-bold" className="w-4 h-4" />
           </button>
-          <code className="text-gray-800 pr-8 block">{qsubCommand}</code>
+          <code className="text-gray-800 pr-8 block whitespace-pre-wrap break-all">{qsubCommand}</code>
         </div>
       </div>
 
       {/* QSUB Shell Script */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
             {currentLang === "cs" ? "QSUB shell script" : "QSUB Shell Script"}
           </h2>
         </div>
-        <div className="bg-gray-50 rounded-md p-4 font-mono text-sm border border-gray-200 whitespace-pre relative">
+        <div className="bg-gray-50 rounded-md p-4 font-mono text-sm border border-gray-200 relative overflow-x-auto">
           <button
             onClick={() => copyToClipboard(qsubScript)}
             className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
@@ -244,12 +244,12 @@ export function QsubResults({
           >
             <Icon icon="solar:copy-bold" className="w-4 h-4" />
           </button>
-          <code className="text-gray-800 pr-8 block">{qsubScript}</code>
+          <code className="text-gray-800 pr-8 block whitespace-pre-wrap break-all">{qsubScript}</code>
         </div>
       </div>
 
       {/* Statistics */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           {currentLang === "cs" ? "Statistiky" : "Statistics"}
         </h2>
@@ -279,7 +279,7 @@ export function QsubResults({
       {<MachineLegend />}
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4">
+        <div className="px-4 sm:px-6 py-4">
           <Tabs
             tabs={tabs}
             activeTab={activeTab}
