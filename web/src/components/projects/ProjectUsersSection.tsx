@@ -64,7 +64,9 @@ export function ProjectUsersSection({ users }: ProjectUsersSectionProps) {
             {users.map((user, index) => {
               const isFoundInPerun = user.foundInPerun !== false;
               const tooltipId = `user-not-found-${index}`;
-
+              const nameOfUser = typeof user.nameOfUser === "string"
+                ? user.nameOfUser
+                : (user.nameOfUser ? String(user.nameOfUser) : null);
               const orgString =
                 typeof user.org === "string"
                   ? user.org
@@ -102,7 +104,7 @@ export function ProjectUsersSection({ users }: ProjectUsersSectionProps) {
                             icon="mdi:account"
                             className="w-5 h-5 text-gray-400 mr-2"
                           />
-                          <span>{nameString}</span>
+                          <span>{nameOfUser || nameString}</span>
                         </Link>
                       ) : (
                         <>
@@ -118,7 +120,7 @@ export function ProjectUsersSection({ users }: ProjectUsersSectionProps) {
                               className="w-5 h-5 text-gray-400 mr-2"
                             />
                             <code className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                              {idString || nameString}
+                              {nameOfUser || idString || nameString}
                             </code>
                           </div>
                           <Tooltip

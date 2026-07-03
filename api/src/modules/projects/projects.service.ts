@@ -500,6 +500,21 @@ export class ProjectsService {
         'OpenStack Users'
       ] as PrometheusResponse;
 
+      const aaiUsersResponse = prometheusData[
+        'AAI Users Info'
+      ] as PrometheusResponse;
+
+      const aaiUserNameById = new Map<string, string>();
+      if (aaiUsersResponse?.data?.result) {
+        for (const item of aaiUsersResponse.data.result) {
+          const id = item.metric?.id;
+          const name = item.metric?.name;
+          if (id && name && !aaiUserNameById.has(id)) {
+            aaiUserNameById.set(id, name);
+          }
+        }
+      }
+
       // Build a map of AAI id -> user info from pbsmon_users.json
       // Also create a reverse map of logname -> user for fallback lookup
       const perunUsersMap = new Map<
@@ -643,9 +658,11 @@ export class ProjectsService {
           // If user not found in pbsmon_users.json, still add them with minimal info
           // Extract logname from userId if possible (userId format: "logname@einfra.cesnet.cz")
           const logname = userId.includes('@') ? userId.split('@')[0] : userId;
+          const nameOfUser = aaiUserNameById.has(userId) ? aaiUserNameById.get(userId) : undefined;
           users.push({
             logname,
             name: userId, // Use ID as name when not found
+            nameOfUser: nameOfUser ?? undefined,
             org: null,
             id: userId,
             foundInPerun: false,

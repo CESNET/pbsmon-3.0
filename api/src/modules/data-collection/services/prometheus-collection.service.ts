@@ -26,6 +26,11 @@ export class PrometheusCollectionService {
   // Define the queries (PROD data only)
   private readonly queries: PrometheusQueryConfig[] = [
     {
+      name: 'AAI Users Info',
+      description: 'List of users (username, user id)',
+      query: 'aai_dump_user_info',
+    },
+    {
       name: 'CPU Info',
       description: 'CPU count by hostname, model, cores, threads',
       query: 'count by (hostname, model, cores, threads) (cpumon_cpu_info)',
