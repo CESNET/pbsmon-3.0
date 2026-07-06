@@ -564,10 +564,12 @@ export class ProjectsService {
       if (projectNameIsUserId) {
         // For personal projects, find the user directly by matching project name with id in pbsmon_users.json
         const personalUser = perunUsersMap.get(projectName);
+        const fullName = aaiUserNameById.has(projectName) ? aaiUserNameById.get(projectName) : undefined;
         if (personalUser) {
           users.push({
             logname: personalUser.logname,
             name: personalUser.name,
+            fullName: fullName ?? undefined,
             org: personalUser.org,
             id: projectName,
             foundInPerun: true,
@@ -582,6 +584,7 @@ export class ProjectsService {
             users.push({
               logname: personalUserBase.logname,
               name: personalUserBase.name,
+              fullName: fullName ?? undefined,
               org: personalUserBase.org,
               id: projectName,
               foundInPerun: true,
@@ -595,6 +598,7 @@ export class ProjectsService {
           users.push({
             logname,
             name: projectName, // Use ID as name when not found
+            fullName: fullName ?? undefined,
             org: null,
             id: projectName,
             foundInPerun: false,
@@ -624,6 +628,7 @@ export class ProjectsService {
       for (const userId of userIds) {
         // Try to find user by ID (with or without domain)
         let perunUser = perunUsersMap.get(userId);
+        const fullName = aaiUserNameById.has(userId) ? aaiUserNameById.get(userId) : undefined;
 
         if (!perunUser) {
           // Try without domain
@@ -650,6 +655,7 @@ export class ProjectsService {
           users.push({
             logname: perunUser.logname,
             name: perunUser.name,
+            fullName: fullName ?? undefined,
             org: perunUser.org,
             id: userId,
             foundInPerun: true,
@@ -658,11 +664,10 @@ export class ProjectsService {
           // If user not found in pbsmon_users.json, still add them with minimal info
           // Extract logname from userId if possible (userId format: "logname@einfra.cesnet.cz")
           const logname = userId.includes('@') ? userId.split('@')[0] : userId;
-          const nameOfUser = aaiUserNameById.has(userId) ? aaiUserNameById.get(userId) : undefined;
           users.push({
             logname,
             name: userId, // Use ID as name when not found
-            nameOfUser: nameOfUser ?? undefined,
+            fullName: fullName ?? undefined,
             org: null,
             id: userId,
             foundInPerun: false,

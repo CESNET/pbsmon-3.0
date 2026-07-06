@@ -64,9 +64,9 @@ export function ProjectUsersSection({ users }: ProjectUsersSectionProps) {
             {users.map((user, index) => {
               const isFoundInPerun = user.foundInPerun !== false;
               const tooltipId = `user-not-found-${index}`;
-              const nameOfUser = typeof user.nameOfUser === "string"
-                ? user.nameOfUser
-                : (user.nameOfUser ? String(user.nameOfUser) : null);
+              const fullName = typeof user.fullName === "string"
+                ? user.fullName
+                : (user.fullName ? String(user.fullName) : null);
               const orgString =
                 typeof user.org === "string"
                   ? user.org
@@ -93,52 +93,52 @@ export function ProjectUsersSection({ users }: ProjectUsersSectionProps) {
                   key={userKey}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  {!isCompact && (
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isFoundInPerun ? (
-                        <Link
-                          to={`/users/${encodeURIComponent(lognameString)}`}
-                          className="flex items-center text-sm font-medium text-primary-700 hover:text-primary-900"
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {isFoundInPerun ? (
+                      <Link
+                        to={`/users/${encodeURIComponent(lognameString)}`}
+                        className="flex items-center text-sm font-medium text-primary-700 hover:text-primary-900"
+                      >
+                        <Icon
+                          icon="mdi:account"
+                          className="w-5 h-5 text-gray-400 mr-2"
+                        />
+                        <span>{fullName || nameString}</span>
+                      </Link>
+                    ) : (
+                      <>
+                        <div
+                          className="flex items-center text-sm font-medium text-gray-600"
+                          data-tooltip-id={tooltipId}
+                          data-tooltip-content={t(
+                            "projects.userNotFoundInPerun"
+                          )}
                         >
                           <Icon
-                            icon="mdi:account"
+                            icon="mdi:account-alert"
                             className="w-5 h-5 text-gray-400 mr-2"
                           />
-                          <span>{nameOfUser || nameString}</span>
-                        </Link>
-                      ) : (
-                        <>
-                          <div
-                            className="flex items-center text-sm font-medium text-gray-600"
-                            data-tooltip-id={tooltipId}
-                            data-tooltip-content={t(
-                              "projects.userNotFoundInPerun"
-                            )}
-                          >
-                            <Icon
-                              icon="mdi:account-alert"
-                              className="w-5 h-5 text-gray-400 mr-2"
-                            />
-                            <code className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                              {nameOfUser || idString || nameString}
-                            </code>
-                          </div>
-                          <Tooltip
-                            id={tooltipId}
-                            style={{ maxWidth: "300px", whiteSpace: "normal" }}
-                          />
-                        </>
-                      )}
+                          <code className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                            {fullName || idString || nameString}
+                          </code>
+                        </div>
+                        <Tooltip
+                          id={tooltipId}
+                          style={{ maxWidth: "300px", whiteSpace: "normal" }}
+                        />
+                      </>
+                    )}
+                  </td>
+                  {!isCompact && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <code
+                        title={lognameString || undefined}
+                        className="inline-block max-w-[10rem] sm:max-w-xs align-bottom truncate text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
+                      >
+                        {lognameString || "-"}
+                      </code>
                     </td>
                   )}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <code
-                      title={lognameString || undefined}
-                      className="inline-block max-w-[10rem] sm:max-w-xs align-bottom truncate text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded"
-                    >
-                      {lognameString || "-"}
-                    </code>
-                  </td>
                   {!isCompact && (
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-900">

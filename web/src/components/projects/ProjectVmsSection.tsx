@@ -58,9 +58,11 @@ export function ProjectVmsSection({ vms }: ProjectVmsSectionProps) {
                   {t("projects.vmId")}
                 </th>
               )}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t("projects.flavor")}
-              </th>
+              {!isCompact && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("projects.flavor")}
+                </th>
+              )}
               {!isCompact && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("projects.vcpus")}
@@ -82,7 +84,7 @@ export function ProjectVmsSection({ vms }: ProjectVmsSectionProps) {
                       icon="mdi:server"
                       className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0"
                     />
-                    <span className="text-sm font-medium text-gray-900 break-all">
+                    <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
                       {vm.name}
                     </span>
                   </div>
@@ -94,9 +96,11 @@ export function ProjectVmsSection({ vms }: ProjectVmsSectionProps) {
                     </code>
                   </td>
                 )}
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">{vm.flavorName}</span>
-                </td>
+                {!isCompact && (
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">{vm.flavorName}</span>
+                  </td>
+                )}
                 {!isCompact && (
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">{vm.vcpus}</span>

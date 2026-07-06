@@ -106,7 +106,7 @@ export class ProjectUserDTO {
 
   @Expose()
   @ApiProperty({ description: 'Full name of user (forename and family name)' })
-  nameOfUser?: string;
+  fullName?: string;
 
   @Expose()
   @ApiProperty({ description: 'User organization', nullable: true })
