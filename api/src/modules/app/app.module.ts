@@ -9,6 +9,7 @@ import { InfrastructureModule } from '@/modules/infrastructure/infrastructure.mo
 import { UsersModule } from '@/modules/users/users.module';
 import { JobsModule } from '@/modules/jobs/jobs.module';
 import { StatusModule } from '@/modules/status/status.module';
+import { DataFreshnessModule } from '@/modules/data-freshness/data-freshness.module';
 import { DataCollectionModule } from '@/modules/data-collection/data-collection.module';
 import { AccountingModule } from '@/modules/accounting/accounting.module';
 import { ProjectsModule } from '@/modules/projects/projects.module';
@@ -42,6 +43,7 @@ import configuration, {
     UsersModule,
     JobsModule,
     StatusModule,
+    DataFreshnessModule,
     DataCollectionModule,
     AccountingModule,
     ProjectsModule,

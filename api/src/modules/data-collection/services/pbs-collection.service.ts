@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { getFileMtime } from '@/common/utils/fs.util';
 import { PbsConfig } from '@/config/pbs.config';
 import {
   PbsData,
@@ -26,6 +27,7 @@ export class PbsCollectionService {
   private readonly config: PbsConfig;
 
   private pbsData: PbsData | null = null;
+  private jobsFileTimestamps: Record<string, number> = {};
 
   constructor(private readonly configService: ConfigService) {
     this.config = this.configService.get<PbsConfig>('pbs')!;
@@ -131,6 +133,13 @@ export class PbsCollectionService {
         if (servers?.items && servers.items.length > 0) {
           const fullServerName = servers.items[0].name;
           serverName = fullServerName.split('.')[0] || serverDir;
+        }
+
+        const jobsFileMtime = await getFileMtime(
+          path.join(serverPath, 'jobs.json'),
+        );
+        if (jobsFileMtime !== undefined) {
+          this.jobsFileTimestamps[serverName] = jobsFileMtime;
         }
 
         if (!serversData[serverName]) {
@@ -278,5 +287,13 @@ export class PbsCollectionService {
 
   getData(): PbsData | null {
     return this.pbsData;
+  }
+
+  /**
+   * Last-modified timestamp (ms since epoch) of jobs.json per server name,
+   * i.e. how fresh the currently held job data is.
+   */
+  getJobsFileTimestamps(): Record<string, number> {
+    return this.jobsFileTimestamps;
   }
 }

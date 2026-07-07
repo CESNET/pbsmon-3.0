@@ -22,6 +22,7 @@ export class PrometheusCollectionService {
   private prometheusData: PrometheusCollectionData = {
     timestamp: new Date().toISOString(),
   };
+  private lastCollectedAt?: number;
 
   // Define the queries (PROD data only)
   private readonly queries: PrometheusQueryConfig[] = [
@@ -88,6 +89,7 @@ export class PrometheusCollectionService {
     this.logger.log('Collecting data from PROMETHEUS...');
 
     const collectedData: Record<string, PrometheusResponse> = {};
+    let someFailed = false;
 
     for (const queryConfig of this.queries) {
       try {
@@ -101,6 +103,7 @@ export class PrometheusCollectionService {
               break;
             }
             if (attempt === numAttempts) {
+              someFailed = true;
               this.logger.warn(
                 `Failed to collect data for "${queryConfig.name}" after ${numAttempts} attempts.`,
               );
@@ -109,6 +112,7 @@ export class PrometheusCollectionService {
             await new Promise(f => setTimeout(f, 200));
         }
       } catch (error) {
+        someFailed = true;
         this.logger.warn(
           `Failed to collect data for "${queryConfig.name}": ${error instanceof Error ? error.message : String(error)}`,
         );
@@ -123,8 +127,14 @@ export class PrometheusCollectionService {
     for (const queryConfig of this.queries) {
       if (!collectedData[queryConfig.name] && this.prometheusData[queryConfig.name]) {
         collectedData[queryConfig.name] = this.prometheusData[queryConfig.name] as PrometheusResponse;
+        someFailed = true;
       }
     }
+
+    if (!someFailed) {
+      this.lastCollectedAt = Date.now();
+    }
+
 
     this.prometheusData = {
       timestamp: new Date().toISOString(),
@@ -135,6 +145,11 @@ export class PrometheusCollectionService {
 
   getData(): PrometheusCollectionData {
     return this.prometheusData;
+  }
+
+  /** Timestamp (ms since epoch) of the last completed collection run, undefined if none has run yet. */
+  getLastCollectedAt(): number | undefined {
+    return this.lastCollectedAt;
   }
 
   getQueries(): PrometheusQueryConfig[] {

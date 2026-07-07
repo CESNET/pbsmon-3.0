@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { getFileMtime } from '@/common/utils/fs.util';
 import { PerunConfig } from '@/config/perun.config';
 import {
   PerunData,
@@ -20,6 +21,9 @@ export class PerunCollectionService {
   private readonly config: PerunConfig;
 
   private perunData: PerunData | null = null;
+  private perunTimestamp?: number;
+  private storageSpacesTimestamp?: number;
+  private userStorageQuotasTimestamp?: number;
 
   constructor(private readonly configService: ConfigService) {
     this.config = this.configService.get<PerunConfig>('perun')!;
@@ -59,6 +63,19 @@ export class PerunCollectionService {
         this.logger.warn(
           `Failed to load users file: ${error instanceof Error ? error.message : String(error)}`,
         );
+      }
+
+      // PERUN freshness = the older of the two source files, i.e. the one
+      // that has gone stalest determines how outdated the combined data is
+      const [machinesMtime, usersMtime] = await Promise.all([
+        getFileMtime(machinesPath),
+        getFileMtime(usersPath),
+      ]);
+      const perunMtimes = [machinesMtime, usersMtime].filter(
+        (mtime): mtime is number => mtime !== undefined,
+      );
+      if (perunMtimes.length > 0) {
+        this.perunTimestamp = Math.min(...perunMtimes);
       }
 
       // Load all etc_group files
@@ -102,12 +119,16 @@ export class PerunCollectionService {
       }
 
       // Load storage spaces file
+      const storagePath = path.join(this.config.dataPath, 'motd.storage');
       let storageSpaces: StorageSpaces | null = null;
       try {
-        const storagePath = path.join(this.config.dataPath, 'motd.storage');
         const storageContent = await fs.readFile(storagePath, 'utf-8');
         storageSpaces = this.parseStorageSpaces(storageContent);
         this.logger.debug(`Loaded storage spaces data from ${storagePath}`);
+        const storageMtime = await getFileMtime(storagePath);
+        if (storageMtime !== undefined) {
+          this.storageSpacesTimestamp = storageMtime;
+        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -123,12 +144,16 @@ export class PerunCollectionService {
       }
 
       // Load user storage quotas CSV
+      const quotasPath = path.join(this.config.storageSpacesDataPath, 'quotas.csv');
       let userStorageQuotas: Record<string, UserStorageQuota[]> | null = null;
       try {
-        const quotasPath = path.join(this.config.storageSpacesDataPath, 'quotas.csv');
         const quotasContent = await fs.readFile(quotasPath, 'utf-8');
         userStorageQuotas = this.parseUserStorageQuotas(quotasContent);
         this.logger.debug(`Loaded user storage quotas from ${quotasPath}`);
+        const quotasMtime = await getFileMtime(quotasPath);
+        if (quotasMtime !== undefined) {
+          this.userStorageQuotasTimestamp = quotasMtime;
+        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -165,6 +190,21 @@ export class PerunCollectionService {
 
   getData(): PerunData | null {
     return this.perunData;
+  }
+
+  /** Last-modified timestamp (ms since epoch) of the older of pbsmon_machines.json / pbsmon_users.json. */
+  getPerunTimestamp(): number | undefined {
+    return this.perunTimestamp;
+  }
+
+  /** Last-modified timestamp (ms since epoch) of motd.storage. */
+  getStorageSpacesTimestamp(): number | undefined {
+    return this.storageSpacesTimestamp;
+  }
+
+  /** Last-modified timestamp (ms since epoch) of quotas.csv. */
+  getUserStorageQuotasTimestamp(): number | undefined {
+    return this.userStorageQuotasTimestamp;
   }
 
   /**

@@ -84,4 +84,14 @@ export class DataCollectionService implements OnModuleInit {
     if (!perunData?.userStorageQuotas) return null;
     return perunData.userStorageQuotas[username] || null;
   }
+
+  getDataTimestamps() {
+    return {
+      pbs: this.pbsCollectionService.getJobsFileTimestamps(),
+      storageSpaces: this.perunCollectionService.getStorageSpacesTimestamp(),
+      storageQuotas: this.perunCollectionService.getUserStorageQuotasTimestamp(),
+      perun: this.perunCollectionService.getPerunTimestamp(),
+      prometheus: this.prometheusCollectionService.getLastCollectedAt(),
+    };
+  }
 }
