@@ -69,10 +69,10 @@ export class JobsService {
     }
 
     // Collect all jobs from all servers
-    const allJobs: PbsJob[] = [];
+    let allJobs: PbsJob[] = [];
     for (const serverData of Object.values(pbsData.servers)) {
       if (serverData.jobs?.items) {
-        allJobs.push(...serverData.jobs.items);
+        allJobs = allJobs.concat(serverData.jobs.items);
       }
     }
 
@@ -184,12 +184,11 @@ export class JobsService {
       jobs = jobs.filter((job) => states.includes(job.state));
 
       if (state.includes('R') || state.includes('B')) { // running jobs
-        lastCompletedBy = Math.max(
-          ...jobs
-            .filter((job) => job.completedBy != null)
-            .map((job) => job.completedBy)
-            .filter((v): v is number => !!v)
-        );
+        lastCompletedBy = jobs
+          .filter((job) => job.completedBy != null)
+          .map((job) => job.completedBy)
+          .filter((v): v is number => !!v)
+          .reduce((max, v) => (v > max ? v : max), -Infinity);
       }
     }
 
@@ -223,10 +222,10 @@ export class JobsService {
     }
 
     // Collect all jobs from all servers
-    const allJobs: PbsJob[] = [];
+    let allJobs: PbsJob[] = [];
     for (const serverData of Object.values(pbsData.servers)) {
       if (serverData.jobs?.items) {
-        allJobs.push(...serverData.jobs.items);
+        allJobs = allJobs.concat(serverData.jobs.items);
       }
     }
 

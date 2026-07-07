@@ -44,6 +44,12 @@ EXPOSE 3000
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
+# jobs.json can be very large once streamed and parsed into memory (see
+# PbsCollectionService); Node's default old-space heap ceiling (~1.9GB) is
+# too low for that, so raise it. Override via the NODE_OPTIONS env var if a
+# deployment needs more.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Start the application
 CMD ["node", "dist/main"]
 

@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
+import { createReadStream } from 'fs';
 import * as path from 'path';
+import { chain } from 'stream-chain';
+import { parser } from 'stream-json';
+import { pick } from 'stream-json/filters/Pick';
+import { streamArray } from 'stream-json/streamers/StreamArray';
 import { getFileMtime } from '@/common/utils/fs.util';
 import { PbsConfig } from '@/config/pbs.config';
 import {
@@ -142,35 +147,43 @@ export class PbsCollectionService {
           this.jobsFileTimestamps[serverName] = jobsFileMtime;
         }
 
-        if (!serversData[serverName]) {
-          serversData[serverName] = {
-            timestamp: new Date().toISOString(),
-            serverName,
-            jobs,
-            queues,
-            nodes,
-            servers,
-            resources,
-            reservations,
-            schedulers,
-            hooks,
-            fairshare,
-          };
-        } else {
-          serversData[serverName] = {
-            timestamp: new Date().toISOString(),
-            serverName,
-            jobs: jobs ?? serversData[serverName].jobs,
-            queues: queues ?? serversData[serverName].queues,
-            nodes: nodes ?? serversData[serverName].nodes,
-            servers: servers ?? serversData[serverName].servers,
-            resources: resources ?? serversData[serverName].resources,
-            reservations: reservations ?? serversData[serverName].reservations,
-            schedulers: schedulers ?? serversData[serverName].schedulers,
-            hooks: hooks ?? serversData[serverName].hooks,
-            fairshare: fairshare ?? serversData[serverName].fairshare,
-          };
-        }
+        // Fall back to whatever we already have for this server - either from
+        // another directory processed earlier in this same run, or (if this is
+        // the first time we see it this run) from the previous collection
+        // cycle - so a single file failing to load/parse (e.g. jobs.json
+        // exceeding Node's max string length) doesn't wipe out otherwise-good
+        // data.
+        const existingThisRun = serversData[serverName];
+        const previousCycle = this.pbsData?.servers[serverName];
+
+        const fallbackTo = <T>(
+          fresh: T | null,
+          fieldName: string,
+        ): T | null => {
+          if (fresh !== null) return fresh;
+          const stale = (existingThisRun?.[fieldName as keyof PbsServerData] ??
+            previousCycle?.[fieldName as keyof PbsServerData]) as T | null;
+          if (stale) {
+            this.logger.warn(
+              `Using last known-good "${fieldName}" data for server ${serverName} because the current file failed to load.`,
+            );
+          }
+          return stale ?? null;
+        };
+
+        serversData[serverName] = {
+          timestamp: new Date().toISOString(),
+          serverName,
+          jobs: fallbackTo(jobs, 'jobs'),
+          queues: fallbackTo(queues, 'queues'),
+          nodes: fallbackTo(nodes, 'nodes'),
+          servers: fallbackTo(servers, 'servers'),
+          resources: fallbackTo(resources, 'resources'),
+          reservations: fallbackTo(reservations, 'reservations'),
+          schedulers: fallbackTo(schedulers, 'schedulers'),
+          hooks: fallbackTo(hooks, 'hooks'),
+          fairshare: fallbackTo(fairshare, 'fairshare'),
+        };
 
         const loadedEntities = [
           jobs && 'Jobs',
@@ -207,17 +220,38 @@ export class PbsCollectionService {
     }
   }
 
+  /**
+   * Reads a PBS entity file ({"type", "count", "items": [...]}) via a JSON
+   * stream instead of buffering the whole file into one string. jobs.json in
+   * particular can exceed V8's ~512MB max string length, which makes
+   * `fs.readFile(path, 'utf-8')` throw `RangeError: Invalid string length` -
+   * streaming keeps memory bounded to the parsed items, not the raw text.
+   */
   private async loadEntityFile<T extends PbsEntity>(
     filePath: string,
     entityType: string,
   ): Promise<PbsCollection<T> | null> {
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      const data: PbsCollection<T> = JSON.parse(content);
+      const items: T[] = [];
+
+      const pipeline = chain([
+        createReadStream(filePath),
+        parser(),
+        pick({ filter: 'items' }),
+        streamArray(),
+      ]);
+
+      await new Promise<void>((resolve, reject) => {
+        pipeline.on('data', ({ value }: { value: T }) => items.push(value));
+        pipeline.on('end', resolve);
+        pipeline.on('error', reject);
+      });
+
       this.logger.debug(
-        `Loaded ${entityType} data from ${filePath} (${data.count} items)`,
+        `Loaded ${entityType} data from ${filePath} (${items.length} items)`,
       );
-      return data;
+
+      return { type: entityType, count: items.length, items };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -226,7 +260,7 @@ export class PbsCollectionService {
           `PBS ${entityType} file not found: ${filePath}. Will preserve previous state if available.`,
         );
       } else {
-        this.logger.warn(
+        this.logger.error(
           `Failed to load ${entityType} file: ${errorMessage}. Will preserve previous state if available.`,
         );
       }

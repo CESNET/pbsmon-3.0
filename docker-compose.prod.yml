@@ -23,10 +23,19 @@ services:
       - OIDC_ISSUER=${OIDC_ISSUER:-}
       - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
       - SESSION_SECRET=${SESSION_SECRET:-}
+      - NODE_OPTIONS=${NODE_OPTIONS:---max-old-space-size=4096}
     volumes:
       - ./api/data:/app/data
     networks:
       - pbsmon-network
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 6G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
     healthcheck:
       test:
         [
