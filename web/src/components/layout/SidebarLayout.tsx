@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { Icon } from "@iconify/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ImpersonationBanner } from "@/components/common/ImpersonationBanner";
+import { DataFreshnessFooter } from "@/components/layout/DataFreshnessFooter";
 import { useImpersonation } from "@/contexts/ImpersonationContext";
 import { ApiError } from "@/lib/generated-api/core/ApiError";
 
@@ -442,6 +443,8 @@ export function SidebarLayout() {
 
             </ul>
           </div>
+
+          <DataFreshnessFooter />
         </aside>
         <main
           className="flex-1 bg-gray-light md:max-w-[calc(100vw-16rem)]"
