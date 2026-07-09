@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
@@ -6,6 +6,7 @@ import { useQueues } from "@/hooks/useQueues";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { QueueListDTO } from "@/lib/generated-api";
 import { QueueTreeNode } from "@/components/common/QueueTreeNode";
+import { QueuesSearchBar } from "@/components/queues/QueuesSearchBar";
 
 type SortColumn = "name" | "priority" | "totalJobs" | "fairshare" | "reservationName" | "reservationOwner" | "reservationStart" | "reservationEnd";
 
@@ -149,11 +150,24 @@ export function JobsQueuesPage() {
   const { t } = useTranslation();
   const [sort, setSort] = useState<SortColumn>("priority");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
-  const { data, isLoading, error } = useQueues({ qType: "non-reservation" });
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data, isLoading, error } = useQueues({
+    qType: "non-reservation",
+    search: debouncedSearch.trim() || undefined,
+  });
 
   const [resSort, setResSort] = useState<SortColumn>("reservationStart");
   const [resOrder, setResOrder] = useState<"asc" | "desc">("asc");
-  const { data: resData, isLoading: resIsLoading, error: resError } = useQueues({ qType: "reservation" });
+  const { data: resData, isLoading: resIsLoading, error: resError } = useQueues({
+    qType: "reservation",
+  });
 
   const filteredQueues = useMemo(() => {
     if (!data) return [];
@@ -227,6 +241,8 @@ export function JobsQueuesPage() {
           </div>
         )}
 
+        <QueuesSearchBar searchQuery={search} onSearchChange={setSearch} />
+
         {data && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {/* Table Header */}
@@ -286,7 +302,9 @@ export function JobsQueuesPage() {
             <div>
               {filteredQueues.length === 0 ? (
                 <div className="px-4 py-8 text-center text-gray-500">
-                  {t("queues.noQueuesFound")}
+                  {debouncedSearch.trim()
+                    ? t("queues.noSearchResults")
+                    : t("queues.noQueuesFound")}
                 </div>
               ) : (
                 filteredQueues.map((queue, index) => (

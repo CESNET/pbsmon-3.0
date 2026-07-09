@@ -32,12 +32,15 @@ export class QueuesService {
    * @param userContext User context for access control
    * @param serverName Optional server name filter. If not provided, returns queues from all servers.
    * @param targetUsername Optional username to check access for. If provided, checks access for this user instead of the current user context.
+   * @param qType Optional queue type filter ('reservation' or 'non-reservation').
+   * @param search Optional search query matched against queue name (case-insensitive substring). A queue matches if it or any of its descendants matches.
    */
   getQueuesList(
     userContext: UserContext,
     serverName?: string,
     targetUsername?: string,
     qType?: string,
+    search?: string,
   ): QueuesListDTO {
     const pbsData = this.dataCollectionService.getPbsData();
 
@@ -61,6 +64,7 @@ export class QueuesService {
         undefined,
         targetUsername,
         qType,
+        search,
       );
     }
 
@@ -88,6 +92,7 @@ export class QueuesService {
       queueToServerMap,
       targetUsername,
       qType,
+      search,
     );
   }
 
@@ -101,7 +106,9 @@ export class QueuesService {
     queueToServerMap?: Map<string, string>,
     targetUsername?: string,
     qType?: string,
+    search?: string,
   ): QueuesListDTO {
+    const searchLower = search?.trim().toLowerCase() || undefined;
     // Build queue map and parent-child relationships
     const queueMap = new Map<string, PbsQueue>();
     const parentMap = new Map<string, string[]>(); // child -> parents
@@ -165,6 +172,18 @@ export class QueuesService {
         .filter((q): q is PbsQueue => q !== undefined)
         .map((q) => buildQueueTree(q))
         .filter((q): q is QueueListDTO => q !== null); // Filter out null children
+
+      // If searching, keep this queue only if its own name matches or a
+      // descendant matched (so matching leaf queues stay reachable via their
+      // Route queue ancestors)
+      if (searchLower) {
+        const selfMatches =
+          queue.name.toLowerCase().includes(searchLower) ||
+          queue.attributes.queue_type.toLowerCase().includes(searchLower);
+        if (!selfMatches && childQueues.length === 0) {
+          return null;
+        }
+      }
 
       // Sort children: Route queues first, then by priority (higher first), then by name
       childQueues.sort((a, b) => {

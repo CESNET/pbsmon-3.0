@@ -45,14 +45,28 @@ export class QueuesController {
     description:
       'Filter queues by type (e.g., "reservation", "non-reservation"). If not provided, returns all queue types.',
   })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description:
+      'Search query (searches in queue name). A queue is included if it or any of its descendant queues match.',
+  })
   @ApiOkResponseModel(QueuesListDTO, 'Hierarchical list of queues')
   getQueues(
     @UserContextDecorator() userContext: UserContext,
     @Query('server') server?: string,
     @Query('user') user?: string,
     @Query('qType') qType?: string,
+    @Query('search') search?: string,
   ): ApiResponse<QueuesListDTO> {
-    const data = this.queuesService.getQueuesList(userContext, server, user, qType);
+    const data = this.queuesService.getQueuesList(
+      userContext,
+      server,
+      user,
+      qType,
+      search,
+    );
     return new ApiResponse(data, {
       totalCount: this.countQueues(data.queues),
     });
