@@ -78,6 +78,12 @@ export function ProjectsPage() {
         </div>
       </header>
       <div className="p-4 sm:p-6">
+        <ProjectsSearchBar
+          searchQuery={search}
+          onSearchChange={handleSearchChange}
+          totalProjects={totalCount}
+        />
+
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-600">{t("common.loading")}</div>
@@ -97,12 +103,6 @@ export function ProjectsPage() {
 
         {data && (
           <>
-            <ProjectsSearchBar
-              searchQuery={search}
-              onSearchChange={handleSearchChange}
-              totalProjects={totalCount}
-            />
-
             <ProjectsTable
               projects={projects}
               sortColumn={sort}
