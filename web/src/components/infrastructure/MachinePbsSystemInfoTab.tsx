@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { PrintAttributeValue } from "@/components/common/PrintAttribute";
 
 interface MachinePbsSystemInfoTabProps {
   rawAttributes: Record<string, string> | null;
@@ -33,7 +34,7 @@ export function MachinePbsSystemInfoTab({
                       {key}
                     </td>
                     <td className="px-3 sm:px-4 py-2 sm:py-3 text-sm text-gray-600 break-all">
-                      {String(value)}
+                      {PrintAttributeValue({ attrKey: key, attrValue: value })}
                     </td>
                   </tr>
                 ))}

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { JobDetailDTO } from "@/lib/generated-api";
+import { PrintAttributeValue } from "@/components/common/PrintAttribute";
 
 interface JobSystemInfoSectionProps {
   job: JobDetailDTO;
@@ -9,7 +10,7 @@ export function JobSystemInfoSection({ job }: JobSystemInfoSectionProps) {
   const { t } = useTranslation();
 
   // Get raw attributes - handle both the new rawAttributes field and fallback to environmentVariables structure
-  const rawAttributes = (job as any).rawAttributes || {};
+  const rawAttributes = (job as any).rawAttributes as Record<string, any> | null || {};
 
   if (Object.keys(rawAttributes).length === 0) {
     return (
@@ -48,7 +49,7 @@ export function JobSystemInfoSection({ job }: JobSystemInfoSectionProps) {
                     {key}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600 break-all">
-                    {String(value)}
+                    {PrintAttributeValue({ attrKey: key, attrValue: value })}
                   </td>
                 </tr>
               ))}
