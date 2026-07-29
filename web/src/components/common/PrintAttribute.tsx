@@ -3,6 +3,35 @@ interface PrintAttributeValueProps {
   attrValue: any;
 }
 
+// Splits an XML string into lines with an indent depth each. Regex-based
+// rather than a full parser, so it degrades gracefully (just leaves odd
+// spots unindented) instead of throwing on malformed/partial XML.
+function splitXmlLines(xml: string): { text: string; depth: number }[] {
+  const withBreaks = xml.trim().replace(/>\s*</g, ">\n<");
+  let pad = 0;
+  return withBreaks.split("\n").map((raw) => {
+    const line = raw.trim();
+    const isClosingTag = /^<\//.test(line);
+    const isSelfClosing = /\/>$/.test(line);
+    // An element whose content and closing tag are both on this line (eg.
+    // "<job>text</job>") nets to zero depth change - without this check it
+    // still counts as an unclosed opening tag below, permanently pushing
+    // every following sibling one level too far right.
+    const isFullElement = /^<(\w[-\w:.]*)\b[^>]*>[\s\S]*<\/\1>$/.test(line);
+    const isOpeningTag =
+      /^<\w/.test(line) && !isClosingTag && !isSelfClosing && !isFullElement;
+
+    if (isClosingTag) {
+      pad = Math.max(pad - 1, 0);
+    }
+    const depth = pad;
+    if (isOpeningTag) {
+      pad += 1;
+    }
+    return { text: line, depth };
+  });
+}
+
 export function PrintAttributeValue({
   attrKey,
   attrValue,
@@ -23,6 +52,9 @@ export function PrintAttributeValue({
   const commeSeparatedValues = [
     'Variable_List',
     'jobs',
+  ]
+  const xmlValues = [
+    'Submit_arguments',
   ]
   if (timeValues.includes(attrKey)) {
     const ts = typeof attrValue === "number" ? attrValue * 1000 : Number(attrValue) * 1000
@@ -53,6 +85,27 @@ export function PrintAttributeValue({
         {i < parts.length - 1 && ","}
       </span>
     ));
+  } else if (xmlValues.includes(attrKey)) {
+    const str = String(attrValue);
+    if (!str.includes("<")) {
+      return str;
+    }
+    // Indentation and line breaks are done via CSS (inline-block + padding),
+    // not literal spaces/newlines, so selecting and copying with the mouse
+    // still yields the original flat XML string, same as Variable_List.
+    return (
+      <span className="font-mono text-xs break-all">
+        {splitXmlLines(str).map((line, i) => (
+          <span
+            key={i}
+            className="inline-block w-full"
+            style={{ paddingLeft: `${line.depth * 1.25}em` }}
+          >
+            {line.text}
+          </span>
+        ))}
+      </span>
+    );
   } else {
     return String(attrValue);
   }
