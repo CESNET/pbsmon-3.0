@@ -206,6 +206,12 @@ export const qsubConfig: QsubFieldConfig[] = [
         }
       }
 
+      if (context?.scratch_type && context.scratch_type === 'shm') {
+        parts.push(
+          `scratch_shm=True`,
+        );
+      }
+
       return `-l ${parts.join(':')}`;
     },
     dataCollectionFunction: (nodes) => {
