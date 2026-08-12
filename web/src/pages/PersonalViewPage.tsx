@@ -346,13 +346,20 @@ export function PersonalViewPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             {t("pages.userDetail")}
           </h2>
-          <div className="w-40">
-            <button
-              onClick={() => handleUserDetail(username)}
-              className="px-3 py-1 text-sm font-medium text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded border border-primary-300 hover:border-primary-400"
-            >
-              { `${username}` }
-            </button>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-s text-gray-600">
+                {t("users.description")}
+              </span>
+            </div>
+            <div className="w-40">
+              <button
+                onClick={() => handleUserDetail(username)}
+                className="px-3 py-1 text-sm font-medium text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded border border-primary-300 hover:border-primary-400"
+              >
+                { `${username}` }
+              </button>
+            </div>
           </div>
         </div>
 

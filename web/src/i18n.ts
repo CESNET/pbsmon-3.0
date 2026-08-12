@@ -243,6 +243,7 @@ i18n.use(initReactI18next).init({
           },
         },
         users: {
+          description: "In the user detail, you can find several pieces of information.  Click the user button to see: membership expiration, publications and acknowledgments, group affiliations, your fairshare, usage statistics, and more.",
           username: "Username",
           nickname: "Nickname",
           fullName: "Full Name",
@@ -746,6 +747,7 @@ i18n.use(initReactI18next).init({
           },
         },
         users: {
+          description: "V detailech uživatele najdete několik informací. Kliknutím na tlačítko uživatele zobrazíte: datum vypršení členství, publikace a poděkování, příslušnost ke skupinám, fairshare, statistiky používání a další.",
           username: "Uživatelské jméno",
           nickname: "Přezdívka",
           fullName: "Celé jméno",
