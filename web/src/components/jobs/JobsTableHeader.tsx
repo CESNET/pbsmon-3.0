@@ -50,13 +50,13 @@ export function JobsTableHeader({
   const mobileGridCols = "grid-cols-[72px_1fr_88px]";
   let desktopGridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_1fr_1fr_1fr_120px]";
   } else if (hideMachineColumn) {
-    desktopGridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_120px_1fr_1fr_1fr_120px]";
   } else if (hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_140px_1fr_1fr_1fr_120px]";
   } else {
-    desktopGridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_120px_140px_1fr_1fr_1fr_120px]";
   }
   const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 

@@ -120,13 +120,13 @@ export function JobsTableRow({
   const mobileGridCols = "grid-cols-[72px_1fr_88px]";
   let desktopGridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_300px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_1fr_1fr_1fr_120px]";
   } else if (hideMachineColumn) {
-    desktopGridCols = "grid-cols-[100px_300px_150px_120px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_120px_1fr_1fr_1fr_120px]";
   } else if (hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_300px_150px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_140px_1fr_1fr_1fr_120px]";
   } else {
-    desktopGridCols = "grid-cols-[100px_300px_150px_120px_150px_1fr_1fr_1fr_160px]";
+    desktopGridCols = "grid-cols-[100px_280px_280px_120px_140px_1fr_1fr_1fr_120px]";
   }
   const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
@@ -160,7 +160,10 @@ export function JobsTableRow({
               {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
             </Link>
           ) : (
-            <span title={job.id}>
+            <span
+              title={job.id}
+              className="text-sm text-gray-900 font-mono"
+            >
               {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
             </span>
           )}
@@ -178,7 +181,7 @@ export function JobsTableRow({
         </div>
         {/* Name shown here only in compact view; the dedicated Name column takes over otherwise */}
         {isCompact && (
-          <div className="text-sm text-gray-900 truncate mt-0.5">
+          <div className="text-sm text-gray-900 break-all mt-0.5">
             {String(job.name || "")}
           </div>
         )}
@@ -197,7 +200,7 @@ export function JobsTableRow({
       {/* Name Column */}
       {!isCompact && (
         <div
-          className="text-sm text-gray-900 truncate"
+          className="text-sm text-gray-900 break-all"
           title={String(job.name || "")}
         >
           {String(job.name || "")}
