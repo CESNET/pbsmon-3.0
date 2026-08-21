@@ -50,6 +50,13 @@ export class QueueListDTO {
   queueType: 'Execution' | 'Route';
 
   @Expose()
+  @ApiProperty({
+    description: 'Default queue list from default_chunk.queue_list',
+    nullable: true,
+  })
+  defaultQueueList?: string | null;
+
+  @Expose()
   @ApiProperty({ description: 'Queue priority', nullable: true })
   priority?: number | null;
 

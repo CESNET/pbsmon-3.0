@@ -428,6 +428,7 @@ export class QueuesService {
 
     const minWalltime = queue.attributes['resources_min.walltime'] || null;
     const maxWalltime = queue.attributes['resources_max.walltime'] || null;
+    const defChunkQueueList = queue.attributes['default_chunk.queue_list'] || null
 
     const enabled = queue.attributes.enabled === 'True';
     const started = queue.attributes.started === 'True';
@@ -469,6 +470,7 @@ export class QueuesService {
       name: queue.name,
       server: serverName || null,
       queueType: queue.attributes.queue_type as 'Execution' | 'Route',
+      defaultQueueList: defChunkQueueList,
       priority,
       totalJobs,
       stateCount,

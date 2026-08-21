@@ -115,6 +115,9 @@ export const qsubConfig: QsubFieldConfig[] = [
         if (q.children) {
           for (const child of q.children) {
             executionQueues.push(...getAllExecutionQueues(child));
+            if (child.defaultQueueList) {
+              executionQueues.push(child.defaultQueueList);
+            }
           }
         }
         return executionQueues;
