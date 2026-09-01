@@ -290,8 +290,8 @@ export class JobsService {
       : null;
 
     // Get runtime from resources_used.walltime
-    const runtime = hasResourceUsage
-      ? attrs['resources_used.walltime'] || null
+    const runtime = hasResourceUsage && typeof attrs['resources_used.walltime'] === 'string'
+      ? this.parseTimeToSeconds(attrs['resources_used.walltime']) || null
       : null;
 
     // Calculate usage percentages
@@ -399,6 +399,7 @@ export class JobsService {
       gpuTimeUsed,
       memoryUsed,
       runtime,
+      walltimeReserved,
       completedBy,
       cpuUsagePercent,
       cpuUsagePercentPerCpu,
@@ -743,8 +744,8 @@ export class JobsService {
       : null;
 
     // Get runtime from resources_used.walltime
-    const runtime = hasResourceUsage
-      ? attrs['resources_used.walltime'] || null
+    const runtime = hasResourceUsage && typeof attrs['resources_used.walltime'] === 'string'
+      ? this.parseTimeToSeconds(attrs['resources_used.walltime']) || null
       : null;
 
     // Calculate usage percentages
@@ -1113,7 +1114,7 @@ export class JobsService {
 
             // Get runtime from resources_used.walltime
             const runtime = subHasResourceUsage
-              ? subAttrs['resources_used.walltime'] || null
+              ? this.parseTimeToSeconds(subAttrs['resources_used.walltime']) || null
               : null;
 
             // Get node
@@ -1169,7 +1170,7 @@ export class JobsService {
     memoryReserved: number,
     memoryUsed: number | null,
     walltimeReserved: number | null,
-    walltimeUsed: string | null,
+    walltimeUsed: number | null,
   ): JobMessageDTO[] {
     const messages: JobMessageDTO[] = [];
 
@@ -1194,12 +1195,12 @@ export class JobsService {
 
     // Check if walltime is drastically lower than reserved (for finished jobs)
     if (completedStates.includes(state) && walltimeReserved && walltimeUsed) {
-      const walltimeUsedSeconds = this.parseTimeToSeconds(walltimeUsed);
+      const walltimeUsedSeconds = walltimeUsed;
       // If actual walltime is less than 50% of reserved, it's drastically lower
       if (walltimeUsedSeconds > 0 && walltimeReserved > 0) {
         const walltimeRatio = walltimeUsedSeconds / walltimeReserved;
         if (walltimeRatio < 0.5) {
-          const walltimeUsedFormatted = walltimeUsed;
+          const walltimeUsedFormatted = this.formatTimeFromSeconds(walltimeUsed);
           const walltimeReservedFormatted =
             this.formatTimeFromSeconds(walltimeReserved);
           messages.push({

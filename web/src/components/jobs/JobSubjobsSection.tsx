@@ -9,6 +9,16 @@ interface JobSubjobsSectionProps {
 export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
   const { t } = useTranslation();
 
+  // Format seconds to HH:MM:SS
+  const formatSecondsToTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   if (subjobs.length === 0) {
     return null;
   }
@@ -105,7 +115,7 @@ export function JobSubjobsSection({ subjobs }: JobSubjobsSectionProps) {
                   {String(subjob.cpuTimeUsed || "-")}
                 </td>
                 <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                  {String(subjob.runtime || "-")}
+                  {typeof subjob.runtime === 'number' && subjob.runtime > 0 ? formatSecondsToTime(subjob.runtime) : "-"}
                 </td>
                 <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                   {typeof subjob.exitCode === "number" &&

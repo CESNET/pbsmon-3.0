@@ -58,8 +58,8 @@ export class SubjobDTO {
   cpuTimeUsed?: string | null;
 
   @Expose()
-  @ApiProperty({ description: 'Runtime (HH:MM:SS format)', nullable: true })
-  runtime?: string | null;
+  @ApiProperty({ description: 'Runtime (seconds format)', nullable: true })
+  runtime?: number | null;
 
   @Expose()
   @ApiProperty({ description: 'Exit code', nullable: true })
@@ -235,8 +235,8 @@ export class JobDetailDTO {
   memoryUsed?: number | null;
 
   @Expose()
-  @ApiProperty({ description: 'Runtime (HH:MM:SS format)', nullable: true })
-  runtime?: string | null;
+  @ApiProperty({ description: 'Runtime (seconds format)', nullable: true })
+  runtime?: number | null;
 
   @Expose()
   @ApiProperty({ description: 'CPU usage percentage', nullable: true })

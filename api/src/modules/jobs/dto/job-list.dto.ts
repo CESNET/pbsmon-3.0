@@ -88,10 +88,17 @@ export class JobListDTO {
 
   @Expose()
   @ApiProperty({
-    description: 'Runtime (HH:MM:SS format)',
+    description: 'Runtime (seconds format)',
     nullable: true,
   })
-  runtime?: string | null;
+  runtime?: number | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Walltime (seconds format)',
+    nullable: true,
+  })
+  walltimeReserved?: number | null;
 
   @Expose()
   @ApiProperty({

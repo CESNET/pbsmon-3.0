@@ -68,16 +68,6 @@ export function JobsTableRow({
     return timeStr;
   };
 
-  // Parse time string (HH:MM:SS) to seconds
-  const parseTimeToSeconds = (timeStr: string | null | undefined): number => {
-    if (!timeStr) return 0;
-    const parts = String(timeStr).split(":").map(Number);
-    if (parts.length === 3) {
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    }
-    return 0;
-  };
-
   // Format seconds to HH:MM:SS
   const formatSecondsToTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -95,11 +85,11 @@ export function JobsTableRow({
   //         GPU time = (gpuPercent / gpuReserved) * runtime
   const calculateGpuTimeFromPercent = (
     gpuPercent: number,
-    runtime: string | null | undefined,
+    runtime: number | null | undefined,
     gpuReserved: number
   ): string | null => {
     if (!runtime || gpuReserved === 0) return null;
-    const runtimeSeconds = parseTimeToSeconds(runtime);
+    const runtimeSeconds = runtime;
     if (runtimeSeconds === 0) return null;
     // Calculate GPU time: (total percentage / number of GPUs) * runtime
     const perGpuPercent = gpuPercent / gpuReserved;
@@ -113,6 +103,11 @@ export function JobsTableRow({
   const isCompact = useMediaQuery(
     "(max-width: 639px), (max-height: 500px) and (orientation: landscape)"
   );
+
+  const endingSoon = jobState === "R" &&
+    typeof (job as any).walltimeReserved === 'number' &&
+    typeof (job as any).runtime === 'number' &&
+    (((job as any).walltimeReserved * 0.85) - (job as any).runtime) < 0;
 
   // Calculate grid columns based on which columns are hidden.
   // In compact view only Status/ID/Created stay visible, so the compact
@@ -189,10 +184,11 @@ export function JobsTableRow({
           jobState === "C" ||
           jobState === "F" ||
           jobState === "X") &&
-          (job as any).runtime && (
-            <div className="text-xs text-gray-600 mt-1">
+          typeof (job as any).runtime === 'number' && (
+            <div className={`text-xs mt-1 ${endingSoon ? "text-red-600" : "text-gray-600"}`}>
               {t("jobs.runtime")}:{" "}
-              {formatTimeString(String((job as any).runtime))}
+              {formatSecondsToTime((job as any).runtime)}
+              {!isCompact && ("/" + formatSecondsToTime((job as any).walltimeReserved))}
             </div>
           )}
       </div>

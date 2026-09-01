@@ -18,16 +18,6 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
     job.state === "E" ||
     completedStates.includes(job.state);
 
-  // Parse time string (HH:MM:SS) to seconds
-  const parseTimeToSeconds = (timeStr: string | null | undefined): number => {
-    if (!timeStr) return 0;
-    const parts = String(timeStr).split(":").map(Number);
-    if (parts.length === 3) {
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    }
-    return 0;
-  };
-
   // Format seconds to HH:MM:SS
   const formatSecondsToTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -45,15 +35,14 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
   //         GPU time = (gpuPercent / gpuReserved) * runtime
   const calculateGpuTimeFromPercent = (
     gpuPercent: number,
-    runtime: string | null | undefined,
+    runtime: number | null | undefined,
     gpuReserved: number
   ): string | null => {
     if (!runtime || gpuReserved === 0) return null;
-    const runtimeSeconds = parseTimeToSeconds(runtime);
-    if (runtimeSeconds === 0) return null;
+    if (runtime === 0) return null;
     // Calculate GPU time: (total percentage / number of GPUs) * runtime
     const perGpuPercent = gpuPercent / gpuReserved;
-    const gpuTimeSeconds = (perGpuPercent / 100) * runtimeSeconds;
+    const gpuTimeSeconds = (perGpuPercent / 100) * runtime;
     return formatSecondsToTime(gpuTimeSeconds);
   };
 
@@ -133,7 +122,7 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
             {t("jobs.resourceUsage")}
           </h3>
           <div className="space-y-4">
-            {job.runtime && typeof job.runtime == "string" && (
+            {job.runtime && typeof job.runtime == "number" && (
               <div>
                 {typeof job.walltimeReserved === "number" &&
                 (typeof job.startedAt == "number" || typeof job.startedAt == "bigint") &&
@@ -142,7 +131,7 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
                   <ProgressBar
                     label={t("jobs.walltime")}
                     value={formatSecondsToTime(job.walltimeReserved)}
-                    percent={(parseTimeToSeconds(job.runtime)/(job.completedBy - job.startedAt) * 100)}
+                    percent={(job.runtime/(job.completedBy - job.startedAt) * 100)}
                     color="#4b5563"
                   />
                 ) : (
@@ -190,7 +179,7 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
                     // Calculate GPU time from GPU percent
                     const calculatedGpuTime = calculateGpuTimeFromPercent(
                       job.gpuUsagePercent,
-                      job.runtime ? String(job.runtime) : null,
+                      typeof job.runtime === 'number' && job.runtime > 0 ? job.runtime : null,
                       job.gpuReserved
                     );
                     return (
@@ -251,12 +240,12 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
                 )}
               </div>
             )}
-            {job.runtime && (
+            {typeof(job.runtime) === 'number' && job.runtime > 0 && (
               <div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">{t("jobs.runtime")}</span>
                   <span className="text-gray-900 font-medium">
-                    {String(job.runtime)}
+                    {formatSecondsToTime(job.runtime)}
                   </span>
                 </div>
               </div>
