@@ -750,7 +750,7 @@ export const qsubConfig: QsubFieldConfig[] = [
     },
     scriptParamFunction: (value) => {
       if (!value) return null;
-      return `-l select=1:spec>=${value}`;
+      return `-l select=1:spec=${value}`;
     },
     dataCollectionFunction: (nodes) => {
       const specs = new Set<number>();
