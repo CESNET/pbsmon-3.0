@@ -15,6 +15,7 @@ type SortColumn =
   | "id"
   | "name"
   | "state"
+  | "queue"
   | "owner"
   | "node"
   | "cpuReserved"
@@ -42,7 +43,7 @@ export function QueueDetailContent({
   );
 
   const [jobsPage, setJobsPage] = useState(1);
-  const [jobsLimit] = useState(20);
+  const [jobsLimit] = useState(100);
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");

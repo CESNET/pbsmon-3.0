@@ -44,6 +44,10 @@ export function JobsTableRow({
   // In compact view, show just the numeric job number to save space; full ID otherwise
   const shortJobId = job.id.match(/^\d+/)?.[0] || job.id;
 
+  // Keep the job number and the first host label, drop the rest of the domain:
+  // "21987122.pbs-m1.metacentrum.cz" -> "21987122.pbs-m1"
+  const serverJobId = job.id.match(/^[^.]+\.[^.]+/)?.[0] || job.id;
+
   // Format date (DD.MM.YYYY)
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp * 1000);
@@ -62,12 +66,6 @@ export function JobsTableRow({
     });
   };
 
-  // Format time string (HH:MM:SS)
-  const formatTimeString = (timeStr: string | null | undefined) => {
-    if (!timeStr) return null;
-    return timeStr;
-  };
-
   // Format seconds to HH:MM:SS
   const formatSecondsToTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -76,25 +74,6 @@ export function JobsTableRow({
     return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Calculate GPU time from GPU percent
-  // Note: gpuPercent represents the total percentage for all GPUs combined
-  // With 2 GPUs, gpuPercent can be up to 200% (100% per GPU)
-  // Formula: per-GPU percentage = gpuPercent / gpuReserved
-  //         GPU time = (gpuPercent / gpuReserved) * runtime
-  const calculateGpuTimeFromPercent = (
-    gpuPercent: number,
-    runtime: number | null | undefined,
-    gpuReserved: number
-  ): string | null => {
-    if (!runtime || gpuReserved === 0) return null;
-    const runtimeSeconds = runtime;
-    if (runtimeSeconds === 0) return null;
-    // Calculate GPU time: (total percentage / number of GPUs) * runtime
-    const perGpuPercent = gpuPercent / gpuReserved;
-    const gpuTimeSeconds = (perGpuPercent / 100) * runtimeSeconds;
-    return formatSecondsToTime(gpuTimeSeconds);
   };
 
   // Compact view covers narrow-width phones (portrait) as well as short-height
@@ -112,22 +91,25 @@ export function JobsTableRow({
   // Calculate grid columns based on which columns are hidden.
   // In compact view only Status/ID/Created stay visible, so the compact
   // template always has 3 tracks regardless of the props.
+  // The Name track is minmax(260px, 1fr): it keeps its 260px minimum when
+  // space is tight (table scrolls), and absorbs any spare width otherwise so
+  // it grows only up to the edge of the window, never past it.
   const mobileGridCols = "grid-cols-[72px_1fr_88px]";
   let desktopGridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_280px_280px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_90px_90px_90px_90px]";
   } else if (hideMachineColumn) {
-    desktopGridCols = "grid-cols-[100px_280px_280px_120px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_100px_90px_90px_90px_90px]";
   } else if (hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_280px_280px_140px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_100px_90px_90px_90px_90px]";
   } else {
-    desktopGridCols = "grid-cols-[100px_280px_280px_120px_140px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_100px_100px_90px_90px_90px_90px]";
   }
   const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (
     <div
-      className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 overflow-hidden`}
+      className={`grid ${gridCols} gap-2 items-center py-0 px-4 border-b border-gray-100 bg-white hover:bg-gray-50`}
     >
       {/* Status Column */}
       <div>
@@ -152,14 +134,14 @@ export function JobsTableRow({
               className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
               title={job.id}
             >
-              {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
+              {isCompact ? shortJobId : <span className="break-all">{serverJobId}</span>}
             </Link>
           ) : (
             <span
               title={job.id}
               className="text-sm text-gray-900 font-mono"
             >
-              {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
+              {isCompact ? shortJobId : <span className="break-all">{serverJobId}</span>}
             </span>
           )}
           {isParentJob && (
@@ -203,6 +185,22 @@ export function JobsTableRow({
         </div>
       )}
 
+      {/* Queue Column */}
+      {!isCompact && (
+        <div className="text-sm">
+          {job.queue ? (
+            <Link
+              to={`/queues/${encodeURIComponent(String(job.queue))}`}
+              className="text-gray-900 hover:text-primary-600 underline cursor-pointer"
+            >
+              {String(job.queue)}
+            </Link>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )}
+        </div>
+      )}
+
       {/* Username Column - Show username if canSeeOwner, anonymized otherwise */}
       {!isCompact && !hideUserColumn && (
         <div className="text-sm">
@@ -223,7 +221,12 @@ export function JobsTableRow({
       {!isCompact && !hideMachineColumn && (
         <div className="text-sm">
           {job.node ? (
-            <span>{String(job.node)}</span>
+            <Link
+              to={`/machines/${encodeURIComponent(String(job.node))}`}
+              className="text-gray-900 hover:text-primary-600 underline cursor-pointer"
+            >
+              {String(job.node)}
+            </Link>
           ) : (
             <span className="text-gray-400">-</span>
           )}
@@ -254,12 +257,6 @@ export function JobsTableRow({
                   <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
                 }
               />
-              {job.cpuTimeUsed && (
-                <div className="text-gray-600 flex justify-between">
-                  <span>{t("jobs.cpuTime")}:</span>
-                  <span>{formatTimeString(String(job.cpuTimeUsed))}</span>
-                </div>
-              )}
             </div>
           ) : job.cpuTimeUsed ? (
             // Show CPU time even if CPU percent is not available (for completed jobs)
@@ -271,10 +268,6 @@ export function JobsTableRow({
                     : Number(job.cpuReserved) || 0}
                 </span>
                 <Icon icon="solar:cpu-bold" className="w-[14px] h-[14px]" />
-              </div>
-              <div className="text-gray-600 flex justify-between">
-                <span>{t("jobs.cpuTime")}:</span>
-                <span>{formatTimeString(String(job.cpuTimeUsed))}</span>
               </div>
             </div>
           ) : (
@@ -320,13 +313,6 @@ export function JobsTableRow({
                 jobState === "X") &&
               gpuUsagePercent !== null
             ) {
-              // Calculate GPU time from GPU percent
-              const calculatedGpuTime = calculateGpuTimeFromPercent(
-                gpuUsagePercent,
-                (job as any).runtime,
-                gpuReserved
-              );
-
               return (
                 <div className="mb-1">
                   { job.gpuUsagePercentPerGpu !== null && typeof job.gpuUsagePercentPerGpu === "number" && (
@@ -339,12 +325,6 @@ export function JobsTableRow({
                       <Icon icon="bi:gpu-card" className="w-[14px] h-[14px]" />
                     }
                   />
-                  )}
-                  {calculatedGpuTime && (
-                    <div className="text-gray-600 flex justify-between ">
-                      <span>{t("jobs.gpuTime")}:</span>
-                      <span>{calculatedGpuTime}</span>
-                    </div>
                   )}
                 </div>
               );

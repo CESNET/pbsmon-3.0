@@ -487,7 +487,11 @@ export class JobsService {
           aVal = a.state;
           bVal = b.state;
           break;
-        case 'owner':
+        case 'queue':
+          aVal = a.queue;
+          bVal = b.queue;
+          break;
+          case 'owner':
           aVal = a.owner;
           bVal = b.owner;
           break;

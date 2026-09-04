@@ -7,6 +7,7 @@ import type { JobFilterableState } from "./JobsFilterableHeader";
 type SortColumn =
   | "id"
   | "name"
+  | "queue"
   | "state"
   | "owner"
   | "node"
@@ -42,7 +43,10 @@ export function JobsTable({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-      <div className="min-w-full sm:min-w-max">
+      {/* min-w-full (not min-w-max) keeps the grid bounded by the window so the
+          Name column's 1fr track grows only into spare width; when the fixed
+          minimums don't fit, overflow-x-auto on the parent provides scrolling. */}
+      <div className="min-w-full">
         <JobsTableHeader
           sortColumn={sortColumn}
           sortDirection={sortDirection}

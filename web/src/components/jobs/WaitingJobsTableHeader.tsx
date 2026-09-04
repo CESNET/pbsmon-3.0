@@ -37,7 +37,7 @@ export function WaitingJobsTableHeader({
   // In compact view only ID, the waiting reason (most important) and Created stay visible.
   const mobileGridCols = "grid-cols-[0.9fr_1.5fr_88px]";
   const desktopGridCols =
-    "grid-cols-[300px_150px_120px_100px_100px_100px_1fr_180px]";
+    "grid-cols-[180px_150px_100px_90px_90px_90px_minmax(160px,1fr)_90px]";
   const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (

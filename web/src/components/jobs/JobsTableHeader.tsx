@@ -6,6 +6,7 @@ import { JobsFilterableHeader, type JobFilterableState } from "./JobsFilterableH
 type SortColumn =
   | "id"
   | "name"
+  | "queue"
   | "state"
   | "owner"
   | "node"
@@ -47,23 +48,26 @@ export function JobsTableHeader({
   // Calculate grid columns based on which columns are hidden.
   // In compact view only Status/ID/Created stay visible, so the compact
   // template always has 3 tracks regardless of the props.
+  // The Name track is minmax(260px, 1fr) so it keeps its 260px minimum when
+  // space is tight (table scrolls) and grows into any spare width otherwise,
+  // stopping at the window edge. Must match JobsTableRow.
   const mobileGridCols = "grid-cols-[72px_1fr_88px]";
   let desktopGridCols: string;
   if (hideMachineColumn && hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_280px_280px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_90px_90px_90px_90px]";
   } else if (hideMachineColumn) {
-    desktopGridCols = "grid-cols-[100px_280px_280px_120px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_100px_90px_90px_90px_90px]";
   } else if (hideUserColumn) {
-    desktopGridCols = "grid-cols-[100px_280px_280px_140px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_100px_90px_90px_90px_90px]";
   } else {
-    desktopGridCols = "grid-cols-[100px_280px_280px_120px_140px_1fr_1fr_1fr_120px]";
+    desktopGridCols = "grid-cols-[100px_minmax(160px,1fr)_minmax(180px,1fr)_90px_100px_100px_90px_90px_90px_90px]";
   }
   const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (
     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
       <div
-        className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700 overflow-hidden`}
+        className={`grid ${gridCols} gap-2 text-sm font-medium text-gray-700`}
       >
         <JobsFilterableHeader
           filterableStates={filterableStates}
@@ -90,6 +94,19 @@ export function JobsTableHeader({
               onSort={onSort}
             >
               {t("jobs.name")}
+            </JobsSortableHeader>
+          </div>
+        )}
+
+        {!isCompact && (
+          <div>
+            <JobsSortableHeader
+              column="queue"
+              currentSortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={onSort}
+            >
+              {t("jobs.queue")}
             </JobsSortableHeader>
           </div>
         )}

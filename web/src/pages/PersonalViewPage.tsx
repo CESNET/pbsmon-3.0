@@ -19,6 +19,7 @@ import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader"
 type JobsSortColumnType =
   | "id"
   | "name"
+  | "queue"
   | "state"
   | "owner"
   | "node"

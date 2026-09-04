@@ -23,6 +23,10 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
   // In compact view, show just the numeric job number to save space; full ID otherwise
   const shortJobId = job.id.match(/^\d+/)?.[0] || job.id;
 
+  // Keep the job number and the first host label, drop the rest of the domain:
+  // "21987122.pbs-m1.metacentrum.cz" -> "21987122.pbs-m1"
+  const serverJobId = job.id.match(/^[^.]+\.[^.]+/)?.[0] || job.id;
+
   // Format date (DD.MM.YYYY)
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp * 1000);
@@ -46,12 +50,12 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
   // In compact view only ID, the waiting reason (most important) and Created stay visible.
   const mobileGridCols = "grid-cols-[0.9fr_1.5fr_88px]";
   const desktopGridCols =
-    "grid-cols-[300px_150px_120px_100px_100px_100px_1fr_180px]";
+    "grid-cols-[180px_150px_100px_90px_90px_90px_minmax(160px,1fr)_90px]";
   const gridCols = isCompact ? mobileGridCols : desktopGridCols;
 
   return (
     <div
-      className={`grid ${gridCols} gap-2 items-center py-3 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 overflow-hidden`}
+      className={`grid ${gridCols} gap-2 items-center py-0 px-4 border-b border-gray-100 bg-white hover:bg-gray-50 overflow-hidden`}
     >
       {/* ID Column */}
       <div className="text-left min-w-0">
@@ -61,11 +65,11 @@ export function WaitingJobsTableRow({ job }: WaitingJobsTableRowProps) {
             className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
             title={job.id}
           >
-            {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
+            {isCompact ? shortJobId : <span className="break-all">{serverJobId}</span>}
           </Link>
         ) : (
           <span title={job.id}>
-            {isCompact ? shortJobId : <span className="break-all">{job.id}</span>}
+            {isCompact ? shortJobId : <span className="break-all">{serverJobId}</span>}
           </span>
         )}
         {/* Name shown here only in compact view; the dedicated Name column takes over otherwise */}

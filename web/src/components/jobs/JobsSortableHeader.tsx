@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 type SortColumn =
   | "id"
   | "name"
+  | "queue"
   | "state"
   | "owner"
   | "node"

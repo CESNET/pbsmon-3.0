@@ -16,6 +16,7 @@ import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader"
 type SortColumn =
   | "id"
   | "name"
+  | "queue"
   | "state"
   | "owner"
   | "node"
@@ -69,7 +70,7 @@ export function JobsPage() {
 
   // All Jobs tab state
   const [allJobsPage, setAllJobsPage] = useState(1);
-  const [allJobsLimit] = useState(20);
+  const [allJobsLimit] = useState(100);
   const [allJobsSort, setAllJobsSort] = useState<SortColumn>("createdAt");
   const [allJobsOrder, setAllJobsOrder] = useState<"asc" | "desc">("desc");
   const [allJobsSearch, setAllJobsSearch] = useState("");
@@ -77,7 +78,7 @@ export function JobsPage() {
 
   // Waiting Jobs tab state
   const [waitingJobsPage, setWaitingJobsPage] = useState(1);
-  const [waitingJobsLimit] = useState(20);
+  const [waitingJobsLimit] = useState(100);
   const [waitingJobsSort, setWaitingJobsSort] =
     useState<WaitingSortColumn>("createdAt");
   const [waitingJobsOrder, setWaitingJobsOrder] = useState<"asc" | "desc">(
@@ -88,7 +89,7 @@ export function JobsPage() {
 
   // My Jobs tab state
   const [myJobsPage, setMyJobsPage] = useState(1);
-  const [myJobsLimit] = useState(20);
+  const [myJobsLimit] = useState(100);
   const [myJobsSort, setMyJobsSort] = useState<SortColumn>("createdAt");
   const [myJobsOrder, setMyJobsOrder] = useState<"asc" | "desc">("desc");
   const [myJobsSearch, setMyJobsSearch] = useState("");
