@@ -129,6 +129,8 @@ i18n.use(initReactI18next).init({
           redirectingToLogin: "Redirecting to login...",
           logout: "Logout",
           toggleMenu: "Toggle menu",
+          collapseMenu: "Collapse menu",
+          expandMenu: "Expand menu",
           dataFreshness: {
             pbs: "PBS {{server}}",
             storageSpaces: "Storage spaces",
@@ -627,6 +629,8 @@ i18n.use(initReactI18next).init({
           redirectingToLogin: "Přesměrovávání na přihlášení...",
           logout: "Odhlásit se",
           toggleMenu: "Přepnout menu",
+          collapseMenu: "Sbalit menu",
+          expandMenu: "Rozbalit menu",
           dataFreshness: {
             pbs: "PBS {{server}}",
             storageSpaces: "Diskové prostory",

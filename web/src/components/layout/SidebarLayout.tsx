@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "@iconify/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { ImpersonationBanner } from "@/components/common/ImpersonationBanner";
 import { DataFreshnessFooter } from "@/components/layout/DataFreshnessFooter";
 import { useImpersonation } from "@/contexts/ImpersonationContext";
 import { ApiError } from "@/lib/generated-api/core/ApiError";
+
+const SIDEBAR_COLLAPSED_KEY = "pbsmon.sidebarCollapsed";
 
 type MenuItem = {
   id: string;
@@ -120,10 +123,32 @@ export function SidebarLayout() {
     new Set(["resource-status"])
   );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  // Icon-only sidebar only applies on desktop; the mobile drawer stays full.
+  const collapsed = isDesktop && isSidebarCollapsed;
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SIDEBAR_COLLAPSED_KEY,
+        isSidebarCollapsed ? "true" : "false"
+      );
+    } catch {
+      // ignore storage errors (private mode, disabled storage)
+    }
+  }, [isSidebarCollapsed]);
 
   const handleLogout = async () => {
     try {
@@ -253,6 +278,27 @@ export function SidebarLayout() {
             className="w-6 h-6"
           />
         </button>
+        <button
+          onClick={() => setIsSidebarCollapsed((v) => !v)}
+          className="hidden md:inline-flex text-white p-1 mr-1 hover:opacity-75 transition-opacity"
+          aria-label={
+            isSidebarCollapsed
+              ? t("common.expandMenu")
+              : t("common.collapseMenu")
+          }
+          title={
+            isSidebarCollapsed
+              ? t("common.expandMenu")
+              : t("common.collapseMenu")
+          }
+        >
+          <Icon
+            icon={
+              isSidebarCollapsed ? "mdi:menu" : "mdi:menu-open"
+            }
+            className="w-6 h-6"
+          />
+        </button>
         <div className="ml-auto flex gap-2">
           <button
             onClick={() => i18n.changeLanguage("cs")}
@@ -290,16 +336,28 @@ export function SidebarLayout() {
         <aside
           className={[
             "w-64 bg-primary-600 text-white flex flex-col shadow-[1px_1px_5px_rgba(0,0,0,0.25),inset_0_0_8px_rgba(0,0,0,0.25)]",
-            "fixed inset-y-0 left-0 z-50 transition-transform duration-300 overflow-y-auto",
+            "fixed inset-y-0 left-0 z-50 transition-all duration-300 overflow-y-auto",
             "md:static md:inset-auto md:translate-x-0",
+            collapsed ? "md:w-20" : "md:w-64",
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
-          <div className="pl-[29px] pr-4 pt-10 pb-6 border-b border-primary-700">
+          <div
+            className={[
+              "pt-10 pb-6 border-b border-primary-700",
+              collapsed
+                ? "flex justify-center px-2"
+                : "pl-[29px] pr-4",
+            ].join(" ")}
+          >
             <img
-              src="/images/logo-white.svg"
+              src={
+                collapsed
+                  ? "/images/logo-small.svg"
+                  : "/images/logo-white.svg"
+              }
               alt={t("common.logoAlt")}
-              className="w-[195px] h-[47px]"
+              className={collapsed ? "h-[47px] w-auto" : "w-[195px] h-[47px]"}
             />
           </div>
           <nav>
@@ -310,16 +368,26 @@ export function SidebarLayout() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] text-white hover:bg-primary-700 transition-colors"
+                  title={collapsed ? currentUser?.username || "---" : undefined}
+                  className={[
+                    "flex items-center h-[54px] text-white hover:bg-primary-700 transition-colors",
+                    collapsed
+                      ? "justify-center px-0"
+                      : "gap-[14px] pl-[14px] pr-4",
+                  ].join(" ")}
                 >
                   <Icon icon="mdi:account" className="w-6 h-6" />
-                  <span className="text-sm flex-1">
-                    {currentUser?.username || "---"}
-                  </span>
-                  <Icon
+                  {!collapsed && (
+                    <>
+                      <span className="text-sm flex-1">
+                        {currentUser?.username || "---"}
+                      </span>
+                      <Icon
                         icon="mdi:open-in-new"
                         className="w-[11px] h-[11px] text-white"
                       />
+                    </>
+                  )}
                 </a>
               </li>
               {menuItems.map((item) => (
@@ -327,26 +395,44 @@ export function SidebarLayout() {
                   {item.isExpandable ? (
                     <>
                       <button
-                        onClick={() => toggleExpanded(item.id)}
+                        onClick={() =>
+                          collapsed
+                            ? setIsSidebarCollapsed(false)
+                            : toggleExpanded(item.id)
+                        }
+                        title={collapsed ? t(item.translationKey) : undefined}
                         className={[
-                          "w-full flex items-center justify-between pl-[14px] pr-4 h-[54px] transition-colors",
+                          "w-full flex items-center h-[54px] transition-colors",
+                          collapsed
+                            ? "justify-center px-0"
+                            : "justify-between pl-[14px] pr-4",
                           isItemActive(item)
                             ? "bg-secondary text-white"
                             : "text-white hover:bg-primary-700",
                         ].join(" ")}
                       >
-                        <div className="flex items-center gap-[14px]">
+                        <div
+                          className={
+                            collapsed
+                              ? "flex items-center"
+                              : "flex items-center gap-[14px]"
+                          }
+                        >
                           {item.icon}
-                          <span>{t(item.translationKey)}</span>
+                          {!collapsed && <span>{t(item.translationKey)}</span>}
                         </div>
-                        <Icon
-                          icon="mdi:chevron-down"
-                          className={`w-[14px] h-[14px] text-white transition-transform ${
-                            expandedItems.has(item.id) ? "rotate-180" : ""
-                          }`}
-                        />
+                        {!collapsed && (
+                          <Icon
+                            icon="mdi:chevron-down"
+                            className={`w-[14px] h-[14px] text-white transition-transform ${
+                              expandedItems.has(item.id) ? "rotate-180" : ""
+                            }`}
+                          />
+                        )}
                       </button>
-                      {expandedItems.has(item.id) && item.subItems && (
+                      {!collapsed &&
+                        expandedItems.has(item.id) &&
+                        item.subItems && (
                         <ul className="bg-[#82909E]">
                           {item.subItems.map((subItem, index) => {
                             const isLast = index === item.subItems!.length - 1;
@@ -387,9 +473,13 @@ export function SidebarLayout() {
                     <NavLink
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
+                      title={collapsed ? t(item.translationKey) : undefined}
                       className={({ isActive }) =>
                         [
-                          "flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] transition-colors",
+                          "flex items-center h-[54px] transition-colors",
+                          collapsed
+                            ? "justify-center px-0"
+                            : "gap-[14px] pl-[14px] pr-4",
                           isActive
                             ? "bg-secondary text-white"
                             : "text-white hover:bg-primary-700",
@@ -397,7 +487,7 @@ export function SidebarLayout() {
                       }
                     >
                       {item.icon}
-                      <span>{t(item.translationKey)}</span>
+                      {!collapsed && <span>{t(item.translationKey)}</span>}
                     </NavLink>
                   )}
                 </li>
@@ -411,21 +501,31 @@ export function SidebarLayout() {
                 <li key={link.id}>
                   <a
                     href={link.href}
-                    className="flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] text-white hover:bg-primary-700 transition-colors"
+                    title={collapsed ? t(link.translationKey) : undefined}
+                    className={[
+                      "flex items-center h-[54px] text-white hover:bg-primary-700 transition-colors",
+                      collapsed
+                        ? "justify-center px-0"
+                        : "gap-[14px] pl-[14px] pr-4",
+                    ].join(" ")}
                     {...(link.external && {
                       target: "_blank",
                       rel: "noopener noreferrer",
                     })}
                   >
                     {link.icon}
-                    <span className="text-sm flex-1">
-                      {t(link.translationKey)}
-                    </span>
-                    {link.external && (
-                      <Icon
-                        icon="mdi:open-in-new"
-                        className="w-[11px] h-[11px] text-white"
-                      />
+                    {!collapsed && (
+                      <>
+                        <span className="text-sm flex-1">
+                          {t(link.translationKey)}
+                        </span>
+                        {link.external && (
+                          <Icon
+                            icon="mdi:open-in-new"
+                            className="w-[11px] h-[11px] text-white"
+                          />
+                        )}
+                      </>
                     )}
                   </a>
                 </li>
@@ -434,20 +534,31 @@ export function SidebarLayout() {
               <li>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-[14px] pl-[14px] pr-4 h-[54px] w-full text-white hover:bg-primary-700 transition-colors bg-transparent border-none cursor-pointer"
+                  title={collapsed ? t("common.logout") : undefined}
+                  className={[
+                    "flex items-center h-[54px] w-full text-white hover:bg-primary-700 transition-colors bg-transparent border-none cursor-pointer",
+                    collapsed
+                      ? "justify-center px-0"
+                      : "gap-[14px] pl-[14px] pr-4",
+                  ].join(" ")}
                 >
                   <Icon icon="mdi:logout" className="w-6 h-6" />
-                  <span>{t("common.logout")}</span>
+                  {!collapsed && <span>{t("common.logout")}</span>}
                 </button>
               </li>
 
             </ul>
           </div>
 
-          <DataFreshnessFooter />
+          {!collapsed && <DataFreshnessFooter />}
         </aside>
         <main
-          className="flex-1 bg-gray-light md:max-w-[calc(100vw-16rem)]"
+          className={[
+            "flex-1 bg-gray-light",
+            collapsed
+              ? "md:max-w-[calc(100vw-5rem)]"
+              : "md:max-w-[calc(100vw-16rem)]",
+          ].join(" ")}
           style={{
             paddingBottom: impersonatedUsername ? "60px" : "0",
           }}
