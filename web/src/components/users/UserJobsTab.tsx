@@ -32,6 +32,7 @@ interface UserJobsTabProps {
   stateFilter: JobFilterableState;
   onSort: (column: SortColumn) => void;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   onSearchChange: (query: string) => void;
   onStateFilterChange: (state: JobFilterableState) => void;
 }
@@ -48,6 +49,7 @@ export function UserJobsTab({
   stateFilter,
   onSort,
   onPageChange,
+  onPageSizeChange,
   onSearchChange,
   onStateFilterChange,
 }: UserJobsTabProps) {
@@ -96,6 +98,8 @@ export function UserJobsTab({
             currentPage={jobsPage}
             totalPages={jobsTotalPages}
             onPageChange={onPageChange}
+            pageSize={jobsLimit}
+            onPageSizeChange={onPageSizeChange}
           />
         </>
       )}

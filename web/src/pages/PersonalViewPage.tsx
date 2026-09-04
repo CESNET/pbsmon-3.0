@@ -8,6 +8,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { JobsTable } from "@/components/jobs/JobsTable";
 import { ProjectsTable } from "@/components/projects/ProjectsTable";
 import { Pagination } from "@/components/common/Pagination";
+import { useJobsPageSize } from "@/hooks/useJobsPageSize";
 import { JobsSearchBar } from "@/components/jobs/JobsSearchBar";
 import { ProjectsSearchBar } from "@/components/projects/ProjectsSearchBar";
 import type {
@@ -36,7 +37,7 @@ export function PersonalViewPage() {
 
   // Jobs state
   const [jobsPage, setJobsPage] = useState(1);
-  const [jobsLimit] = useState(20);
+  const [jobsLimit, setJobsLimit] = useJobsPageSize();
   const [jobsSort, setJobsSort] = useState<JobsSortColumnType>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
@@ -206,6 +207,11 @@ export function PersonalViewPage() {
   const handleJobsPageChange = (newPage: number) => {
     setJobsPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleJobsPageSizeChange = (newSize: number) => {
+    setJobsLimit(newSize);
+    setJobsPage(1);
   };
 
   const handleJobsSearchChange = (query: string) => {
@@ -577,6 +583,8 @@ export function PersonalViewPage() {
                 currentPage={jobsPage}
                 totalPages={userJobsTotalPages}
                 onPageChange={handleJobsPageChange}
+                pageSize={jobsLimit}
+                onPageSizeChange={handleJobsPageSizeChange}
               />
             </>
           )}

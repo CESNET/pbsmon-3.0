@@ -8,6 +8,7 @@ import { useUserDetail } from "@/hooks/useUserDetail";
 import { useUserAccounting } from "@/hooks/useUserAccounting";
 import { useJobs } from "@/hooks/useJobs";
 import { useQueues } from "@/hooks/useQueues";
+import { useJobsPageSize } from "@/hooks/useJobsPageSize";
 import { Tabs } from "@/components/common/Tabs";
 import { UserBasicInfo } from "@/components/users/UserBasicInfo";
 import { UserFairshareSection } from "@/components/users/UserFairshareSection";
@@ -49,7 +50,7 @@ export function UserDetailPage() {
 
   // Jobs tab state
   const [jobsPage, setJobsPage] = useState(1);
-  const [jobsLimit] = useState(20);
+  const [jobsLimit, setJobsLimit] = useJobsPageSize();
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
@@ -104,6 +105,11 @@ export function UserDetailPage() {
   const handleJobsPageChange = (newPage: number) => {
     setJobsPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleJobsPageSizeChange = (newSize: number) => {
+    setJobsLimit(newSize);
+    setJobsPage(1);
   };
 
   const handleJobsSearchChange = (query: string) => {
@@ -195,6 +201,7 @@ export function UserDetailPage() {
           stateFilter={stateFilter}
           onSort={handleJobsSort}
           onPageChange={handleJobsPageChange}
+          onPageSizeChange={handleJobsPageSizeChange}
           onSearchChange={handleJobsSearchChange}
           onStateFilterChange={handleStateFilterChange}
         />

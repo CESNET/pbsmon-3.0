@@ -26,6 +26,7 @@ interface MachinePbsTasksTabProps {
   jobsSearch: string;
   stateFilter: JobFilterableState;
   onJobsPageChange: (page: number) => void;
+  onJobsPageSizeChange: (pageSize: number) => void;
   onJobsSort: (column: SortColumn) => void;
   onJobsSearchChange: (query: string) => void;
   onStateFilterChange: (state: JobFilterableState) => void;
@@ -40,6 +41,7 @@ export function MachinePbsTasksTab({
   jobsSearch,
   stateFilter,
   onJobsPageChange,
+  onJobsPageSizeChange,
   onJobsSort,
   onJobsSearchChange,
   onStateFilterChange,
@@ -107,6 +109,8 @@ export function MachinePbsTasksTab({
             currentPage={jobsPage}
             totalPages={jobsTotalPages}
             onPageChange={onJobsPageChange}
+            pageSize={jobsLimit}
+            onPageSizeChange={onJobsPageSizeChange}
           />
         </>
       )}

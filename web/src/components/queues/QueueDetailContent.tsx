@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Tabs } from "@/components/common/Tabs";
 import { QueueTreeNode } from "@/components/common/QueueTreeNode";
 import { QueuePbsJobsTab } from "@/components/queues/QueuePbsJobsTab";
+import { useJobsPageSize } from "@/hooks/useJobsPageSize";
 import { QueuePbsMachinesTab } from "@/components/queues/QueuePbsMachinesTab";
 import { QueuePbsSystemInfoTab } from "@/components/queues/QueuePbsSystemInfoTab";
 import { Icon } from "@iconify/react";
@@ -43,7 +44,7 @@ export function QueueDetailContent({
   );
 
   const [jobsPage, setJobsPage] = useState(1);
-  const [jobsLimit] = useState(100);
+  const [jobsLimit, setJobsLimit] = useJobsPageSize();
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
@@ -113,6 +114,11 @@ export function QueueDetailContent({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleJobsPageSizeChange = (newSize: number) => {
+    setJobsLimit(newSize);
+    setJobsPage(1);
+  };
+
   const handleJobsSearchChange = (query: string) => {
     setJobsSearch(query);
     setJobsPage(1);
@@ -132,6 +138,7 @@ export function QueueDetailContent({
           jobsSearch={jobsSearch}
           stateFilter={stateFilter}
           onJobsPageChange={handleJobsPageChange}
+          onJobsPageSizeChange={handleJobsPageSizeChange}
           onJobsSort={handleJobsSort}
           onJobsSearchChange={handleJobsSearchChange}
           onStateFilterChange={handleStateFilterChange}

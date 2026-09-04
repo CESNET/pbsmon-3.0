@@ -7,6 +7,7 @@ import { Tabs } from "@/components/common/Tabs";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
 import { MachinePbsTasksTab } from "@/components/infrastructure/MachinePbsTasksTab";
+import { useJobsPageSize } from "@/hooks/useJobsPageSize";
 import { MachinePbsQueuesTab } from "@/components/infrastructure/MachinePbsQueuesTab";
 import { MachinePbsSystemInfoTab } from "@/components/infrastructure/MachinePbsSystemInfoTab";
 import { MachinePbsOutagesTab } from "@/components/infrastructure/MachinePbsOutagesTab";
@@ -39,7 +40,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
   const isMobile = useMediaQuery("(max-width: 639px)");
 
   const [jobsPage, setJobsPage] = useState(1);
-  const [jobsLimit] = useState(20);
+  const [jobsLimit, setJobsLimit] = useJobsPageSize();
   const [jobsSort, setJobsSort] = useState<SortColumn>("createdAt");
   const [jobsOrder, setJobsOrder] = useState<"asc" | "desc">("desc");
   const [jobsSearch, setJobsSearch] = useState("");
@@ -196,6 +197,11 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleJobsPageSizeChange = (newSize: number) => {
+    setJobsLimit(newSize);
+    setJobsPage(1);
+  };
+
   const handleJobsSearchChange = (query: string) => {
     setJobsSearch(query);
     setJobsPage(1);
@@ -216,6 +222,7 @@ export function MachineDetailContent({ node }: MachineDetailContentProps) {
               jobsSearch={jobsSearch}
               stateFilter={stateFilter}
               onJobsPageChange={handleJobsPageChange}
+              onJobsPageSizeChange={handleJobsPageSizeChange}
               onJobsSort={handleJobsSort}
               onJobsSearchChange={handleJobsSearchChange}
               onStateFilterChange={handleStateFilterChange}

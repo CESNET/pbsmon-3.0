@@ -11,6 +11,7 @@ import { WaitingJobsSummary } from "@/components/jobs/WaitingJobsSummary";
 import { Pagination } from "@/components/common/Pagination";
 import { Tabs } from "@/components/common/Tabs";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useJobsPageSize } from "@/hooks/useJobsPageSize";
 import type { JobFilterableState } from "@/components/jobs/JobsFilterableHeader";
 
 type SortColumn =
@@ -68,9 +69,11 @@ export function JobsPage() {
     }
   }, [isMobile, activeTab]);
 
+  // Job list page size - shared and persisted (localStorage) across all tabs
+  const [jobsPageSize, setJobsPageSize] = useJobsPageSize();
+
   // All Jobs tab state
   const [allJobsPage, setAllJobsPage] = useState(1);
-  const [allJobsLimit] = useState(100);
   const [allJobsSort, setAllJobsSort] = useState<SortColumn>("createdAt");
   const [allJobsOrder, setAllJobsOrder] = useState<"asc" | "desc">("desc");
   const [allJobsSearch, setAllJobsSearch] = useState("");
@@ -78,7 +81,6 @@ export function JobsPage() {
 
   // Waiting Jobs tab state
   const [waitingJobsPage, setWaitingJobsPage] = useState(1);
-  const [waitingJobsLimit] = useState(100);
   const [waitingJobsSort, setWaitingJobsSort] =
     useState<WaitingSortColumn>("createdAt");
   const [waitingJobsOrder, setWaitingJobsOrder] = useState<"asc" | "desc">(
@@ -89,7 +91,6 @@ export function JobsPage() {
 
   // My Jobs tab state
   const [myJobsPage, setMyJobsPage] = useState(1);
-  const [myJobsLimit] = useState(100);
   const [myJobsSort, setMyJobsSort] = useState<SortColumn>("createdAt");
   const [myJobsOrder, setMyJobsOrder] = useState<"asc" | "desc">("desc");
   const [myJobsSearch, setMyJobsSearch] = useState("");
@@ -105,7 +106,7 @@ export function JobsPage() {
     error: allJobsError,
   } = useJobs({
     page: allJobsPage,
-    limit: allJobsLimit,
+    limit: jobsPageSize,
     sort: allJobsSort,
     order: allJobsOrder,
     search: allJobsSearch.trim() || undefined,
@@ -120,7 +121,7 @@ export function JobsPage() {
     error: waitingJobsError,
   } = useJobs({
     page: waitingJobsPage,
-    limit: waitingJobsLimit,
+    limit: jobsPageSize,
     sort: waitingJobsSort,
     order: waitingJobsOrder,
     search: waitingJobsSearch.trim() || undefined,
@@ -137,7 +138,7 @@ export function JobsPage() {
     error: myJobsError,
   } = useJobs({
     page: myJobsPage,
-    limit: myJobsLimit,
+    limit: jobsPageSize,
     sort: myJobsSort,
     order: myJobsOrder,
     search: myJobsSearch.trim() || undefined,
@@ -237,16 +238,24 @@ export function JobsPage() {
     setMyJobsPage(1);
   };
 
+  // Shared page size handler - resets every tab back to its first page
+  const handleJobsPageSizeChange = (newSize: number) => {
+    setJobsPageSize(newSize);
+    setAllJobsPage(1);
+    setWaitingJobsPage(1);
+    setMyJobsPage(1);
+  };
+
   const allJobsTotalPages = allJobsData?.meta?.totalCount
-    ? Math.ceil(allJobsData.meta.totalCount / allJobsLimit)
+    ? Math.ceil(allJobsData.meta.totalCount / jobsPageSize)
     : 0;
 
   const waitingJobsTotalPages = waitingJobsData?.meta?.totalCount
-    ? Math.ceil(waitingJobsData.meta.totalCount / waitingJobsLimit)
+    ? Math.ceil(waitingJobsData.meta.totalCount / jobsPageSize)
     : 0;
 
   const myJobsTotalPages = myJobsData?.meta?.totalCount
-    ? Math.ceil(myJobsData.meta.totalCount / myJobsLimit)
+    ? Math.ceil(myJobsData.meta.totalCount / jobsPageSize)
     : 0;
 
   const tabs = [
@@ -295,6 +304,8 @@ export function JobsPage() {
                 currentPage={myJobsPage}
                 totalPages={myJobsTotalPages}
                 onPageChange={handleMyJobsPageChange}
+                pageSize={jobsPageSize}
+                onPageSizeChange={handleJobsPageSizeChange}
               />
             </>
           )}
@@ -345,6 +356,8 @@ export function JobsPage() {
                 currentPage={allJobsPage}
                 totalPages={allJobsTotalPages}
                 onPageChange={handleAllJobsPageChange}
+                pageSize={jobsPageSize}
+                onPageSizeChange={handleJobsPageSizeChange}
               />
             </>
           )}
@@ -400,6 +413,8 @@ export function JobsPage() {
                 currentPage={waitingJobsPage}
                 totalPages={waitingJobsTotalPages}
                 onPageChange={handleWaitingJobsPageChange}
+                pageSize={jobsPageSize}
+                onPageSizeChange={handleJobsPageSizeChange}
               />
             </>
           )}
