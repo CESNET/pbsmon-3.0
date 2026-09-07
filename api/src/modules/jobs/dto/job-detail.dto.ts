@@ -272,6 +272,21 @@ export class JobDetailDTO {
 
   @Expose()
   @ApiProperty({
+    description: 'Estimated start time (Unix epoch seconds)',
+    nullable: true,
+  })
+  estimStartTime?: number | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Estimated resources',
+    type: String,
+    nullable: true,
+  })
+  estimNodes?: string | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Start timestamp (Unix epoch seconds)',
     nullable: true,
   })

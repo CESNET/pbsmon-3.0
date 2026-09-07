@@ -43,6 +43,14 @@ export function JobTimestampsSection({ job }: JobTimestampsSectionProps) {
             </div>
           </div>
         )}
+        {job.state == "Q" && job.estimStartTime && (
+          <div>
+            <div className="text-sm text-gray-500">{t("jobs.estimatedStartTime")}</div>
+            <div className="text-sm text-gray-900">
+              {formatTimestamp(job.estimStartTime)}
+            </div>
+          </div>
+        )}
         {job.startedAt && (
           <div>
             <div className="text-sm text-gray-500">{t("jobs.startedAt")}</div>

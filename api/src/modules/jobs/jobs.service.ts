@@ -270,7 +270,9 @@ export class JobsService {
     const walltimeReserved = attrs['Resource_List.walltime']
       ? this.parseTimeToSeconds(attrs['Resource_List.walltime'])
       : null;
-
+    const estimStartTime = attrs['estimated.start_time']
+      ? this.parseResourceValue(attrs['estimated.start_time'])
+      : null;
     // Parse used resources (for running, exiting, and completed jobs: C, F, X)
     const state = attrs['job_state'] || 'U';
     const completedStates = ['C', 'F', 'X'];
@@ -400,6 +402,7 @@ export class JobsService {
       memoryUsed,
       runtime,
       walltimeReserved,
+      estimStartTime,
       completedBy,
       cpuUsagePercent,
       cpuUsagePercentPerCpu,
@@ -820,6 +823,14 @@ export class JobsService {
       ? parseInt(attrs['credential_validity'], 10)
       : null;
 
+    // parse estimations
+    const estimStartTime = attrs['estimated.start_time']
+      ? this.parseResourceValue(attrs['estimated.start_time'])
+      : null;
+    const estimNodes = attrs['estimated.exec_vnode']
+      ? attrs['estimated.exec_vnode']
+      : null;
+
     // Get node name
     let node: string | null = null;
     if (attrs['exec_host']) {
@@ -947,6 +958,8 @@ export class JobsService {
       memoryUsagePercent,
       createdAt,
       eligibleAt,
+      estimStartTime,
+      estimNodes,
       startedAt,
       obitAt,
       completedBy,

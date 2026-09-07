@@ -102,6 +102,13 @@ export class JobListDTO {
 
   @Expose()
   @ApiProperty({
+    description: 'Estimated start time (Unix epoch seconds)',
+    nullable: true,
+  })
+  estimStartTime?: number | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Timestamp (Unix epoch seconds) the job is expected to end by (start time + walltime)',
     nullable: true,
   })

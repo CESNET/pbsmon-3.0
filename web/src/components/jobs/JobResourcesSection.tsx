@@ -62,6 +62,19 @@ export function JobResourcesSection({ job }: JobResourcesSectionProps) {
         </div>
       </div>
 
+
+
+      {/* Estimated Nodes */}
+      {job.state == "Q" && job.estimNodes && (
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">
+          {t("jobs.estimatedNodes")}
+        </h3>
+        <div className="bg-gray-50 p-3 rounded font-mono text-sm break-all">
+          {String(job.estimNodes)}
+        </div>
+      </div>
+      )}
       {/* Resource Reservation */}
       <div className="mb-6">
         <h3 className="text-sm font-medium text-gray-700 mb-3">

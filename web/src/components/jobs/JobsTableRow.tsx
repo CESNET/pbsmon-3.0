@@ -173,6 +173,14 @@ export function JobsTableRow({
               {!isCompact && ("/" + formatSecondsToTime((job as any).walltimeReserved))}
             </div>
           )}
+          {job.canSeeOwner && jobState === "Q" &&
+            typeof (job as any).estimStartTime === 'number' && (job as any).estimStartTime > 0 && (
+            <div className={`text-xs mt-1 text-gray-600`}>
+              {t("jobs.estimatedStartTime")}:{" "}
+              {formatDate((job as any).estimStartTime)}{" "}
+              {formatTime((job as any).estimStartTime)}
+            </div>
+          )}
       </div>
 
       {/* Name Column */}
