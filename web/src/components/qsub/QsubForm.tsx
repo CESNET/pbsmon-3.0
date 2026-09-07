@@ -101,7 +101,6 @@ export function QsubForm({ onSubmit }: QsubFormProps) {
       <div className="flex items-center gap-1 mb-1">
         <label className="block text-sm font-medium text-gray-700">
           {label}
-          {field.required && <span className="text-red-500 ml-1">*</span>}
         </label>
         {description && (
           <>
@@ -297,51 +296,74 @@ export function QsubForm({ onSubmit }: QsubFormProps) {
                     formField.onChange(formatted);
                   };
 
+                  const presets = [
+                    "01:00:00",
+                    "02:00:00",
+                    "24:00:00",
+                    "48:00:00",
+                    "168:00:00",
+                    "336:00:00",
+                  ];
+
                   return (
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <input
-                          type="number"
-                          min="0"
-                          max="720"
-                          placeholder="HH"
-                          value={hours}
-                          onChange={(e) => {
-                            const h = e.target.value;
-                            updateTime(h, minutes, seconds);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-center"
-                        />
+                    <div>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="720"
+                            placeholder="HH"
+                            value={hours}
+                            onChange={(e) => {
+                              const h = e.target.value;
+                              updateTime(h, minutes, seconds);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-center"
+                          />
+                        </div>
+                        <span className="self-center text-gray-500">:</span>
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="59"
+                            placeholder="MM"
+                            value={minutes}
+                            onChange={(e) => {
+                              const m = e.target.value;
+                              updateTime(hours, m, seconds);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-center"
+                          />
+                        </div>
+                        <span className="self-center text-gray-500">:</span>
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="59"
+                            placeholder="SS"
+                            value={seconds}
+                            onChange={(e) => {
+                              const s = e.target.value;
+                              updateTime(hours, minutes, s);
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-center"
+                          />
+                        </div>
                       </div>
-                      <span className="self-center text-gray-500">:</span>
-                      <div className="flex-1">
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="MM"
-                          value={minutes}
-                          onChange={(e) => {
-                            const m = e.target.value;
-                            updateTime(hours, m, seconds);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-center"
-                        />
-                      </div>
-                      <span className="self-center text-gray-500">:</span>
-                      <div className="flex-1">
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          placeholder="SS"
-                          value={seconds}
-                          onChange={(e) => {
-                            const s = e.target.value;
-                            updateTime(hours, minutes, s);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-center"
-                        />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {presets.map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => formField.onChange(preset)}
+                            className="px-2 py-0.5 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-100 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                          >
+                            {preset}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   );
