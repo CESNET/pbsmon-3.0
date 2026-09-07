@@ -27,7 +27,7 @@ export function Tabs({ tabs, activeTab, onTabChange }: TabsProps) {
                 ${
                   activeTab === tab.id
                     ? "border-primary-500 text-primary-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-400"
                 }
               `}
             >

@@ -71,7 +71,7 @@ export function JobsFilterableHeader({
               const newFilter = e.target.value as JobFilterableState;
               onStateFilterChange?.(newFilter);
             }}
-            className="w-full min-w-0 text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+            className="w-full min-w-0 text-sm bg-white border border-gray-200 rounded-md shadow-sm cursor-pointer hover:border-gray-500 focus:ring-primary-500 focus:border-primary-500"
           >
             {stateOptions.map((option) => (
               <option key={option.value} value={option.value}>
