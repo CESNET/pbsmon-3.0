@@ -404,7 +404,7 @@ export const qsubConfig: QsubFieldConfig[] = [
     scriptParamFunction: (value) => {
       if (!value) return null;
       // Cluster selection uses cl_<clustername> attribute
-      return `-l select=1:cl_${value}=1`;
+      return `-l select=1:cl_${value}=true`;
     },
     dataCollectionFunction: (nodes) => {
       const clusters = new Set<string>();
@@ -729,7 +729,7 @@ export const qsubConfig: QsubFieldConfig[] = [
     },
     scriptParamFunction: (value) => {
       if (!value) return null;
-      return `-l select=1:singularity=1`;
+      return `-l select=1:singularity=true`;
     },
     dataCollectionFunction: () => null, // Boolean doesn't need options
   },
@@ -835,7 +835,7 @@ export const qsubConfig: QsubFieldConfig[] = [
     },
     scriptParamFunction: (value) => {
       if (!value) return null;
-      return `-l select=1:umg=1`;
+      return `-l select=1:umg=true`;
     },
     dataCollectionFunction: () => null, // Boolean doesn't need options
   },
