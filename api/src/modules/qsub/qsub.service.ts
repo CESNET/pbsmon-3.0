@@ -222,10 +222,11 @@ export class QsubService {
             return false;
           }
         }
-        // For queue field, pass hierarchical queues; for others, pass PbsQueue array
+        // The queue and walltime fields need the hierarchical queue tree (with
+        // children and walltime limits); other fields get the flat PbsQueue array.
         // Type assertion needed because filterFunction accepts QueueListDTO[] | PbsQueue[]
         const queuesForFilter =
-          field.name === 'queue'
+          field.name === 'queue' || field.name === 'walltime'
             ? (hierarchicalQueues as any)
             : (allQueues as any);
         return field.filterFunction(node, value, queuesForFilter, context);

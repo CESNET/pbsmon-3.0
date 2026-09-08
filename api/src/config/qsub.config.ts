@@ -59,11 +59,92 @@ export const qsubConfig: QsubFieldConfig[] = [
     required: true,
     default: '01:00:00',
     category: 'basic',
-    filterFunction: (node, value, queues) => {
+    // Walltime limits are read from the selected queue (see filterFunction),
+    // but the field stays always visible because it is required.
+    filterFunction: (node, value, queues, context) => {
       if (!value) return true;
-      // Walltime filtering is typically done at queue level, not node level
-      // This is a placeholder - actual filtering would need queue data
-      return true;
+
+      const requestedSeconds = parseWalltime(value);
+      if (requestedSeconds === null) return true;
+
+      // Walltime limits are defined on the queue. Without a selected queue we
+      // cannot know the limit, so don't filter on walltime.
+      const selectedQueue = context?.queue;
+      if (!selectedQueue) return true;
+
+      const queueName = selectedQueue.includes('@')
+        ? selectedQueue.split('@')[0]
+        : selectedQueue;
+
+      const findQueue = (
+        list: QueueListDTO[],
+        name: string,
+      ): QueueListDTO | null => {
+        for (const queue of list) {
+          if (queue.name === name) {
+            return queue;
+          }
+          if (queue.children) {
+            const found = findQueue(queue.children, name);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const selected = queues
+        ? findQueue(queues as QueueListDTO[], queueName)
+        : null;
+      // If the selected queue isn't in the hierarchy, we can't know its limit;
+      // let the queue filter decide node membership.
+      if (!selected) return true;
+
+      // Collect every execution queue reachable from the selected queue, along
+      // with the max walltime that applies to it. The limit may not be set on
+      // the (routing) queue itself but on one of its child execution queues, so
+      // a child inherits its parent's limit only when it doesn't set its own.
+      const reachable: { name: string; maxWalltime: string | null }[] = [];
+      const walk = (q: QueueListDTO, inheritedMax: string | null) => {
+        const effectiveMax = q.maxWalltime ?? inheritedMax ?? null;
+        if (q.queueType === 'Execution') {
+          reachable.push({ name: q.name, maxWalltime: effectiveMax });
+        }
+        for (const child of q.children ?? []) {
+          walk(child, effectiveMax);
+          if (child.defaultQueueList) {
+            reachable.push({
+              name: child.defaultQueueList,
+              maxWalltime: child.maxWalltime ?? effectiveMax ?? null,
+            });
+          }
+        }
+      };
+      walk(selected, selected.maxWalltime ?? null);
+
+      const permits = (maxWalltime: string | null): boolean => {
+        if (!maxWalltime) return true; // no limit == unlimited
+        const maxSeconds = parseWalltime(maxWalltime);
+        if (maxSeconds === null) return true;
+        return maxSeconds >= requestedSeconds;
+      };
+
+      // A route queue we couldn't resolve to any execution queue: only its own
+      // limit (if any) can be enforced.
+      if (reachable.length === 0) {
+        return permits(selected.maxWalltime ?? null);
+      }
+
+      // Prefer the execution queues this node actually belongs to; if we can't
+      // tell (the node doesn't list them), fall back to all reachable ones -
+      // queue membership itself is enforced by the queue filter, not here.
+      const queueList = node.attributes['resources_available.queue_list'] || '';
+      const nodeQueues = queueList.split(',').map((q) => q.trim());
+      const nodeMatches = reachable.filter((eq) => nodeQueues.includes(eq.name));
+      const candidates = nodeMatches.length > 0 ? nodeMatches : reachable;
+
+      // The node qualifies if at least one candidate execution queue permits
+      // the requested walltime.
+      return candidates.some((eq) => permits(eq.maxWalltime));
     },
     scriptParamFunction: (value) => {
       if (!value) return null;
@@ -111,6 +192,9 @@ export const qsubConfig: QsubFieldConfig[] = [
         const executionQueues: string[] = [];
         if (q.queueType === 'Execution') {
           executionQueues.push(q.name);
+          if (q.defaultQueueList) {
+            executionQueues.push(q.defaultQueueList);
+          }
         }
         if (q.children) {
           for (const child of q.children) {
@@ -859,6 +943,20 @@ export function parseSize(sizeStr: string): number {
     default:
       return value;
   }
+}
+
+/**
+ * Parse a PBS walltime string ("HH:MM:SS", "MM:SS", or a plain number of
+ * seconds) into a total number of seconds. Returns null when it can't be parsed.
+ */
+export function parseWalltime(walltime: string): number | null {
+  if (!walltime) return null;
+  const parts = walltime
+    .trim()
+    .split(':')
+    .map((p) => parseInt(p, 10));
+  if (parts.length === 0 || parts.some((p) => isNaN(p))) return null;
+  return parts.reduce((total, part) => total * 60 + part, 0);
 }
 
 export function getBasicFields(): QsubFieldConfig[] {
