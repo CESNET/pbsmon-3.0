@@ -190,6 +190,7 @@ i18n.use(initReactI18next).init({
           node: "Node",
           exitCode: "Exit Code",
           comment: "Comment",
+          diagnostics: "Diagnostics",
           resources: "Resources",
           tabs: {
             myJobs: "My Jobs",
@@ -694,6 +695,7 @@ i18n.use(initReactI18next).init({
           node: "Uzel",
           exitCode: "Návratový kód",
           comment: "Komentář",
+          diagnostics: "Diagnostika",
           waitingReason: "Důvod čekání",
           waitingJobsSummary: "Přehled úloh podle důvodu čekání",
           filterByReason: "Filtrovat podle důvodu",

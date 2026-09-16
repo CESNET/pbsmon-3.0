@@ -18,6 +18,27 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
   const stateLabel = String(
     t(`jobs.state.${stateName}`, { default: stateName })
   );
+  const rawAttributes =
+    ((job as any).rawAttributes as Record<string, unknown> | null) || {};
+  const diagMessagesRaw = rawAttributes["resources_used.diag_messages"];
+  let diagMessages: Record<string, string> | null = null;
+  if (typeof diagMessagesRaw === "string") {
+    try {
+      const trimmed = diagMessagesRaw.trim();
+      const unquoted =
+        trimmed.length >= 2 &&
+        trimmed.startsWith("'") &&
+        trimmed.endsWith("'")
+          ? trimmed.slice(1, -1)
+          : trimmed;
+      const parsed = JSON.parse(unquoted);
+      if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+        diagMessages = parsed;
+      }
+    } catch {
+      diagMessages = null;
+    }
+  }
 
   return (
     <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
@@ -127,6 +148,24 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
           <div className="text-sm text-gray-500 mb-1">{t("jobs.comment")}</div>
           <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded whitespace-pre-wrap break-all">
             {String(job.comment)}
+          </div>
+        </div>
+      )}
+      {diagMessages && (
+        <div className="mt-4">
+          <div className="text-sm text-gray-500 mb-1">
+            {t("jobs.diagnostics")}
+          </div>
+          <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded">
+            <ul className="space-y-1">
+              {Object.entries(diagMessages).map(([node, message]) => (
+                <li key={node} className="break-all">
+                  <span className="font-medium">{node}</span>
+                  {": "}
+                  <span>{String(message)}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
