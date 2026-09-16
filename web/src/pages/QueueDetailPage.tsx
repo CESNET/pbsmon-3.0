@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useQueueDetail } from "@/hooks/useQueueDetail";
@@ -7,6 +8,17 @@ export function QueueDetailPage() {
   const { t } = useTranslation();
   const { queueId } = useParams<{ queueId: string }>();
   const { data, isLoading, error } = useQueueDetail(queueId || "");
+
+  // Set browser tab title to queue
+  useEffect(() => {
+    if (queueId) {
+      document.title = queueId;
+    }
+
+    return () => {
+      document.title = 'MetaCentrum';
+    };
+  }, [queueId]);
 
   if (isLoading) {
     return (

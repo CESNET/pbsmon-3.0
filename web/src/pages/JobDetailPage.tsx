@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useJobDetail } from "@/hooks/useJobDetail";
@@ -14,6 +15,18 @@ export function JobDetailPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const { data, isLoading, error } = useJobDetail(jobId || "");
   const isMobile = useMediaQuery("(max-width: 639px)");
+
+  // Set browser tab title to job
+  useEffect(() => {
+    if (jobId) {
+      document.title = jobId;
+    }
+
+    return () => {
+      document.title = 'MetaCentrum';
+    };
+  }, [jobId]);
+
 
   if (isLoading) {
     return (
