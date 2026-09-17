@@ -8,6 +8,8 @@ interface JobBasicInfoProps {
   job: JobDetailDTO;
 }
 
+const DIAG_ERROR_KEYWORDS = ["exceeded"];
+
 export function JobBasicInfo({ job }: JobBasicInfoProps) {
   const { t } = useTranslation();
 
@@ -158,13 +160,22 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
           </div>
           <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded">
             <ul className="space-y-1">
-              {Object.entries(diagMessages).map(([node, message]) => (
-                <li key={node} className="break-all">
-                  <span className="font-medium">{node}</span>
-                  {": "}
-                  <span>{String(message)}</span>
-                </li>
-              ))}
+              {Object.entries(diagMessages).map(([node, message]) => {
+                const messageText = String(message);
+                const lowerMessage = messageText.toLowerCase();
+                const isError = DIAG_ERROR_KEYWORDS.some((keyword) =>
+                  lowerMessage.includes(keyword)
+                );
+                return (
+                  <li key={node} className="break-all">
+                    <span className="font-medium">{node}</span>
+                    {": "}
+                    <span className={isError ? "text-red-600" : undefined}>
+                      {messageText}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
