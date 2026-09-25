@@ -370,7 +370,6 @@ export function JobsTableRow({
                 percent={job.memoryUsagePercent}
                 color="#4b5563"
               />
-              <div className="h-4"></div>
             </div>
           ) : (
             <div className="flex items-center gap-1">
