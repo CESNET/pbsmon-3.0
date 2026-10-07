@@ -1481,12 +1481,20 @@ export class InfrastructureService {
       };
     }
 
+    const isExclusive = (state: string): boolean => {
+      const stateLower = state.toLowerCase();
+      return (
+        stateLower.includes('job-exclusive') ||
+        stateLower.includes('resv-exclusive')
+      );
+    }
+
     // Determine state based on usage (free, partially_used, used)
     let state: NodeState = NodeState.UNKNOWN;
     if (cpuUsage !== null) {
       if (cpuUsage === 0) {
         state = NodeState.FREE;
-      } else if (cpuUsage === 100) {
+      } else if (cpuUsage === 100 || isExclusive(pbsState) || isExclusive(pbsStateAux)) {
         state = NodeState.USED;
       } else {
         state = NodeState.PARTIALLY_USED;
