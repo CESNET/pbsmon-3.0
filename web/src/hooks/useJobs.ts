@@ -5,7 +5,7 @@ import type {
   JobsListMetaDto,
 } from "@/lib/generated-api";
 
-type JobsListResponse = {
+export type JobsListResponse = {
   data: JobsListDTO;
   meta?: JobsListMetaDto;
 };

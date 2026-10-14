@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   OnModuleDestroy,
@@ -12,6 +13,70 @@ import { UserContext, UserRole } from '@/common/types/user-context.types';
 import { UserInfoDTO, UserUsageDTO } from './dto/user-info.dto';
 import { OutageRecordDTO } from './dto/outage-record.dto';
 import { CanonicalOrgNameDTO } from './dto/org-name.dto';
+import { ArchivedJobDTO, ArchivedJobsListDTO } from './dto/archived-job.dto';
+
+export type ArchivedJobsRange = '24h' | '48h' | 'week' | 'month';
+
+export interface ArchivedJobsParams {
+  page: number;
+  limit: number;
+  sort: string;
+  order: 'asc' | 'desc';
+  lastCount?: number;
+  range?: ArchivedJobsRange;
+  search?: string;
+  username?: string;
+  job?: string;
+  name?: string;
+  queue?: string;
+  pbsServer?: string;
+  cpusFrom?: number;
+  cpusTo?: number;
+  gpusFrom?: number;
+  gpusTo?: number;
+  walltimeFrom?: string;
+  walltimeTo?: string;
+  runtimeFrom?: string;
+  runtimeTo?: string;
+  recordFrom?: Date;
+  recordTo?: Date;
+  createdFrom?: Date;
+  createdTo?: Date;
+  startedFrom?: Date;
+  startedTo?: Date;
+}
+
+// Whitelist of sortable columns - the sort value is put into SQL directly
+const ARCHIVE_SORT_COLUMNS: Record<string, string> = {
+  id: 'id_string',
+  cpus: 'cpus',
+  name: 'jobname',
+  queue: 'queue',
+  username: 'username',
+  pbsServer: 'server_hostname',
+  recordTime: 'date_time',
+  createdAt: 'create_time',
+  startedAt: 'start_time',
+  endedAt: 'end_time',
+  walltime: 'walltime',
+  exitStatus: 'exit_status',
+  // Live job list (My Jobs) sort keys, so archived jobs can be merged with live ones.
+  // 'state' and 'node' are constant for archived jobs (Archived / no node), so any
+  // order is consistent with the merge - fall back to the record time.
+  owner: 'username',
+  cpuReserved: 'cpus',
+  gpuReserved: 'req_gpus',
+  memoryReserved: 'memory_reserved',
+  state: 'date_time',
+  node: 'date_time',
+};
+
+const ARCHIVE_RANGE_MS: Record<ArchivedJobsRange, number> = {
+  '24h': 24 * 60 * 60 * 1000,
+  '48h': 48 * 60 * 60 * 1000,
+  week: 7 * 24 * 60 * 60 * 1000,
+  month: 30 * 24 * 60 * 60 * 1000,
+};
 
 @Injectable()
 export class AccountingService implements OnModuleDestroy {
@@ -414,6 +479,211 @@ export class AccountingService implements OnModuleDestroy {
       );
       return [];
     }
+  }
+
+  /**
+   * Get finished jobs from accounting records (paginated, sorted, filtered)
+   * Returns empty list if database is not available
+   * Note: acct_pbs_record.date_time is in milliseconds, other times in seconds
+   */
+  async getArchivedJobs(
+    params: ArchivedJobsParams,
+  ): Promise<{ data: ArchivedJobsListDTO; totalCount: number }> {
+    const empty = { data: { jobs: [] }, totalCount: 0 };
+    if (!this.isDatabaseAvailable()) {
+      this.logger.debug('getArchivedJobs() - database not available');
+      return empty;
+    }
+
+    const conditions: string[] = [];
+    const values: unknown[] = [];
+    const addCondition = (sql: string, value: unknown) => {
+      values.push(value);
+      conditions.push(sql.replace('?', `$${values.length}`));
+    };
+
+    // Case-insensitive substring search across text columns,
+    // wildcards in the search term are matched literally
+    const search = params.search?.trim();
+    if (search) {
+      values.push(`%${search.replace(/[\\%_]/g, '\\$&')}%`);
+      const param = `$${values.length}`;
+      conditions.push(
+        '(' +
+          ['u.user_name', 'p.acct_id_string', 'p.jobname', 'p.queue', 's.hostname']
+            .map((column) => `${column} ILIKE ${param}`)
+            .join(' OR ') +
+          ')',
+      );
+    }
+    if (params.username) {
+      addCondition('u.user_name = ?', params.username);
+    }
+    if (params.job) {
+      addCondition('p.acct_id_string LIKE ?', params.job);
+    }
+    if (params.name) {
+      addCondition('p.jobname LIKE ?', params.name);
+    }
+    if (params.queue) {
+      addCondition('p.queue LIKE ?', params.queue);
+    }
+    if (params.pbsServer) {
+      addCondition('s.hostname LIKE ?', params.pbsServer);
+    }
+    if (params.range) {
+      addCondition(
+        'p.date_time >= ?',
+        Date.now() - ARCHIVE_RANGE_MS[params.range],
+      );
+    }
+    if (params.recordFrom) {
+      addCondition('p.date_time >= ?', params.recordFrom.getTime());
+    }
+    if (params.recordTo) {
+      addCondition('p.date_time <= ?', params.recordTo.getTime());
+    }
+    if (params.createdFrom) {
+      addCondition('p.create_time >= ?', this.toEpochSeconds(params.createdFrom));
+    }
+    if (params.createdTo) {
+      addCondition('p.create_time <= ?', this.toEpochSeconds(params.createdTo));
+    }
+    if (params.startedFrom) {
+      addCondition('p.start_time >= ?', this.toEpochSeconds(params.startedFrom));
+    }
+    if (params.startedTo) {
+      addCondition('p.start_time <= ?', this.toEpochSeconds(params.startedTo));
+    }
+    if (params.cpusFrom !== undefined) {
+      addCondition('p.used_ncpus >= ?', params.cpusFrom);
+    }
+    if (params.cpusTo !== undefined) {
+      addCondition('p.used_ncpus <= ?', params.cpusTo);
+    }
+    if (params.gpusFrom !== undefined) {
+      addCondition('p.req_gpus >= ?', params.gpusFrom);
+    }
+    if (params.gpusTo !== undefined) {
+      addCondition('p.req_gpus <= ?', params.gpusTo);
+    }
+    if (params.walltimeFrom) {
+      addCondition('p.req_walltime >= ?', this.walltimeToSeconds(params.walltimeFrom));
+    }
+    if (params.walltimeTo) {
+      addCondition('p.req_walltime <= ?', this.walltimeToSeconds(params.walltimeTo));
+    }
+    if (params.runtimeFrom) {
+      addCondition('p.used_walltime >= ?', this.walltimeToSeconds(params.runtimeFrom));
+    }
+    if (params.runtimeTo) {
+      addCondition('p.used_walltime <= ?', this.walltimeToSeconds(params.runtimeTo));
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // "Last N records" limits the matching set to the N most recent records
+    // before sorting and pagination are applied
+    let lastCountLimit = '';
+    if (params.lastCount) {
+      values.push(params.lastCount);
+      lastCountLimit = `ORDER BY p.date_time DESC LIMIT $${values.length}`;
+    }
+
+    const records = `
+      SELECT p.acct_id_string AS id_string, p.date_time, p.jobname, p.queue,
+             u.user_name AS username, p.used_ncpus AS cpus,
+             p.create_time, p.start_time, p.end_time, p.exit_status,
+             p.req_walltime AS walltime, p.used_walltime AS runtime,
+             p.used_cpupercent AS cpupercent,
+             p.req_mem AS memory_reserved, p.used_mem AS memory_used,
+             p.req_gpus AS req_gpus, p.used_gpupercent AS gpupercent,
+             p.req_nodes AS req_nodes,
+             s.hostname AS server_hostname
+      FROM acct_pbs_record p
+        NATURAL LEFT JOIN ci_acct_pbs_server s
+        NATURAL LEFT JOIN acct_user u
+      ${where}
+      ${lastCountLimit}
+    `;
+
+    const sortColumn = ARCHIVE_SORT_COLUMNS[params.sort] ?? 'end_time';
+    const sortOrder = params.order === 'asc' ? 'ASC' : 'DESC';
+    const offset = (params.page - 1) * params.limit;
+
+    try {
+      const countResult = await this.pool!.query(
+        `SELECT count(*) FROM (${records}) r`,
+        values,
+      );
+      const totalCount = parseInt(countResult.rows[0]?.count || '0', 10);
+
+      const listValues = [...values, params.limit, offset];
+      const result = await this.pool!.query(
+        `SELECT * FROM (${records}) r
+         ORDER BY ${sortColumn} ${sortOrder} NULLS LAST
+         LIMIT $${listValues.length - 1} OFFSET $${listValues.length}`,
+        listValues,
+      );
+
+      const jobs: ArchivedJobDTO[] = (result.rows || []).map((row) => ({
+        id: row.id_string || '',
+        cpus: this.toNumber(row.cpus) ?? 0,
+        name: row.jobname || '',
+        queue: row.queue || '',
+        username: row.username || null,
+        pbsServer: row.server_hostname || null,
+        recordTime: this.toNumber(row.date_time) !== null
+          ? Math.floor(this.toNumber(row.date_time)! / 1000)
+          : null,
+        createdAt: this.toNumber(row.create_time),
+        startedAt: this.toNumber(row.start_time),
+        endedAt: this.toNumber(row.end_time),
+        requestedResources: row.req_nodes || null,
+        memoryReserved: this.toNumber(row.memory_reserved),
+        memoryUsed: this.toNumber(row.memory_used),
+        gpuReserved: this.toNumber(row.req_gpus),
+        gpupercent: this.toNumber(row.gpupercent),
+        runtime: this.toNumber(row.runtime),
+        walltime: this.toNumber(row.walltime),
+        cpupercent: this.toNumber(row.cpupercent),
+        exitStatus: this.toNumber(row.exit_status),
+      }));
+
+      return { data: { jobs }, totalCount };
+    } catch (error) {
+      this.logger.error(
+        'Error getting archived jobs:',
+        error instanceof Error ? error.stack : error,
+      );
+      return empty;
+    }
+  }
+
+  private toEpochSeconds(date: Date): number {
+    return Math.floor(date.getTime() / 1000);
+  }
+
+  // pg returns bigint/numeric columns as strings
+  private toNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  /**
+   * Convert walltime "H:MM:SS" (or "MM:SS" / "SS") to seconds
+   */
+  private walltimeToSeconds(walltime: string): number {
+    const parts = walltime.trim().split(':');
+    if (parts.length > 3 || parts.some((part) => !/^\d+$/.test(part))) {
+      throw new BadRequestException(
+        `Invalid walltime '${walltime}', expected H:MM:SS`,
+      );
+    }
+    return parts.reduce((total, part) => total * 60 + parseInt(part, 10), 0);
   }
 
   /**

@@ -11,6 +11,7 @@ import { MachineDetailPage } from "@/pages/MachineDetailPage";
 import { ClusterDetailPage } from "@/pages/ClusterDetailPage";
 import { JobsPage } from "@/pages/JobsPage";
 import { JobDetailPage } from "@/pages/JobDetailPage";
+import { ArchivedJobDetailPage } from "@/pages/ArchivedJobDetailPage";
 import { JobsQueuesPage } from "@/pages/JobsQueuesPage";
 import { QueueDetailPage } from "@/pages/QueueDetailPage";
 import { UsersPage } from "@/pages/UsersPage";
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="storage-spaces" element={<StorageSpacesPage />} />
             <Route path="jobs" element={<JobsPage />} />
             <Route path="jobs/:jobId" element={<JobDetailPage />} />
+            <Route path="jobs/archive/:jobId" element={<ArchivedJobDetailPage />} />
             <Route
               path="waiting-jobs"
               element={<Navigate to="/jobs?tab=waiting" replace />}

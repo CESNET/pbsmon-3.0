@@ -45,15 +45,15 @@ export class JobListDTO {
   username: string;
 
   @Expose()
-  @ApiProperty({ description: 'Queue name', nullable: true })
+  @ApiProperty({ description: 'Queue name', type: String, nullable: true })
   queue?: string | null;
 
   @Expose()
-  @ApiProperty({ description: 'Server name', nullable: true })
+  @ApiProperty({ description: 'Server name', type: String, nullable: true })
   server?: string | null;
 
   @Expose()
-  @ApiProperty({ description: 'Assigned node/machine name', nullable: true })
+  @ApiProperty({ description: 'Assigned node/machine name', type: String, nullable: true })
   node?: string | null;
 
   @Expose()
@@ -71,6 +71,7 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'CPU time used (HH:MM:SS format)',
+    type: String,
     nullable: true,
   })
   cpuTimeUsed?: string | null;
@@ -78,17 +79,19 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'GPU time used (HH:MM:SS format)',
+    type: String,
     nullable: true,
   })
   gpuTimeUsed?: string | null;
 
   @Expose()
-  @ApiProperty({ description: 'Memory used in GB', nullable: true })
+  @ApiProperty({ description: 'Memory used in GB', type: Number, nullable: true })
   memoryUsed?: number | null;
 
   @Expose()
   @ApiProperty({
     description: 'Runtime (seconds format)',
+    type: Number,
     nullable: true,
   })
   runtime?: number | null;
@@ -96,6 +99,7 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'Walltime (seconds format)',
+    type: Number,
     nullable: true,
   })
   walltimeReserved?: number | null;
@@ -103,6 +107,7 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'Estimated start time (Unix epoch seconds)',
+    type: Number,
     nullable: true,
   })
   estimStartTime?: number | null;
@@ -110,28 +115,29 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'Timestamp (Unix epoch seconds) the job is expected to end by (start time + walltime)',
+    type: Number,
     nullable: true,
   })
   completedBy?: number | null;
 
   @Expose()
-  @ApiProperty({ description: 'CPU usage percentage', nullable: true })
+  @ApiProperty({ description: 'CPU usage percentage', type: Number, nullable: true })
   cpuUsagePercent?: number | null;
 
   @Expose()
-  @ApiProperty({ description: 'CPU usage percentage per CPU', nullable: true })
+  @ApiProperty({ description: 'CPU usage percentage per CPU', type: Number, nullable: true })
   cpuUsagePercentPerCpu?: number | null;
 
   @Expose()
-  @ApiProperty({ description: 'GPU usage percentage', nullable: true })
+  @ApiProperty({ description: 'GPU usage percentage', type: Number, nullable: true })
   gpuUsagePercent?: number | null;
 
   @Expose()
-  @ApiProperty({ description: 'GPU usage percentage per GPU', nullable: true })
+  @ApiProperty({ description: 'GPU usage percentage per GPU', type: Number, nullable: true })
   gpuUsagePercentPerGpu?: number | null;
 
   @Expose()
-  @ApiProperty({ description: 'Memory usage percentage', nullable: true })
+  @ApiProperty({ description: 'Memory usage percentage', type: Number, nullable: true })
   memoryUsagePercent?: number | null;
 
   @Expose()
@@ -141,6 +147,7 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'Exit code (for completed jobs)',
+    type: Number,
     nullable: true,
   })
   exitCode?: number | null;
@@ -148,6 +155,7 @@ export class JobListDTO {
   @Expose()
   @ApiProperty({
     description: 'Job comment (reason for waiting, etc.)',
+    type: String,
     nullable: true,
   })
   comment?: string | null;

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-export type JobFilterableState = "all" | "Q" | "R|B" | "C|F|X" | "E" | "H" | "S" | "T|M" | "W";
+export type JobFilterableState = "all" | "Q" | "R|B" | "C|F|X" | "E" | "H" | "S" | "T|M" | "W" | "Archived";
 
 interface JobsFilterableHeaderProps {
   filterableStates?: Record<string, string> | null;
@@ -33,6 +33,8 @@ function convertPbsStateToFilterableState(pbsState: string): JobFilterableState 
       return "T|M";
     case 'W':
       return "W";
+    case 'ARCHIVED':
+      return "Archived";
     default:
       return "all"; // Default to "all" for unrecognized states
   }

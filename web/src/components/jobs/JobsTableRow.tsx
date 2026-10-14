@@ -35,6 +35,8 @@ export function JobsTableRow({
     color: stateColor,
   };
   const jobState = String(job.state || "");
+  // Running, finished and archived jobs have runtime and resource usage
+  const hasUsage = ["R", "C", "F", "X", "Archived"].includes(jobState);
 
   // Check if this is a parent job (array job controller)
   // Parent jobs have IDs like "14699148[].pbs-m1.metacentrum.cz"
@@ -130,7 +132,11 @@ export function JobsTableRow({
         <div className="flex items-center gap-2">
           {job.canSeeOwner ? (
             <Link
-              to={`/jobs/${encodeURIComponent(job.id)}`}
+              to={
+                jobState === "Archived"
+                  ? `/jobs/archive/${encodeURIComponent(job.id)}`
+                  : `/jobs/${encodeURIComponent(job.id)}`
+              }
               className="text-sm text-gray-900 font-mono hover:text-primary-600 underline cursor-pointer"
               title={job.id}
             >
@@ -162,10 +168,7 @@ export function JobsTableRow({
             {String(job.name || "")}
           </div>
         )}
-        {(jobState === "R" ||
-          jobState === "C" ||
-          jobState === "F" ||
-          jobState === "X") &&
+        {hasUsage &&
           typeof (job as any).runtime === 'number' && (
             <div className={`text-xs mt-1 ${endingSoon ? "text-red-600" : "text-gray-600"}`}>
               {t("jobs.runtime")}:{" "}
@@ -244,10 +247,7 @@ export function JobsTableRow({
       {/* CPU Column */}
       {!isCompact && (
         <div className="text-sm">
-          {(jobState === "R" ||
-            jobState === "C" ||
-            jobState === "F" ||
-            jobState === "X") &&
+          {hasUsage &&
           typeof job.cpuUsagePercentPerCpu === "number" &&
           job.cpuUsagePercentPerCpu !== null &&
           job.cpuUsagePercentPerCpu !== undefined ? (
@@ -315,10 +315,7 @@ export function JobsTableRow({
 
             // Show progress bar if we have gpuUsagePercent and job is running or completed
             if (
-              (jobState === "R" ||
-                jobState === "C" ||
-                jobState === "F" ||
-                jobState === "X") &&
+              hasUsage &&
               gpuUsagePercent !== null
             ) {
               return (
@@ -352,10 +349,7 @@ export function JobsTableRow({
       {/* RAM Column */}
       {!isCompact && (
         <div className="text-sm">
-          {(jobState === "R" ||
-            jobState === "C" ||
-            jobState === "F" ||
-            jobState === "X") &&
+          {hasUsage &&
           typeof job.memoryUsagePercent === "number" &&
           job.memoryUsagePercent !== null &&
           job.memoryUsagePercent !== undefined ? (
