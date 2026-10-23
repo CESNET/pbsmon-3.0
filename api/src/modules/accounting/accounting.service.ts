@@ -482,6 +482,34 @@ export class AccountingService implements OnModuleDestroy {
   }
 
   /**
+   * Get owner username of an archived job by its exact job ID
+   * Returns null if the job is not in the archive or database is not available
+   */
+  async getArchivedJobOwner(jobId: string): Promise<string | null> {
+    if (!this.isDatabaseAvailable()) {
+      this.logger.debug('getArchivedJobOwner() - database not available');
+      return null;
+    }
+
+    try {
+      const result = await this.pool!.query(
+        `SELECT u.user_name
+         FROM acct_pbs_record p NATURAL LEFT JOIN acct_user u
+         WHERE p.acct_id_string = $1
+         LIMIT 1`,
+        [jobId],
+      );
+      return result.rows[0]?.user_name || null;
+    } catch (error) {
+      this.logger.error(
+        'Error getting archived job owner:',
+        error instanceof Error ? error.stack : error,
+      );
+      return null;
+    }
+  }
+
+  /**
    * Get finished jobs from accounting records (paginated, sorted, filtered)
    * Returns empty list if database is not available
    * Note: acct_pbs_record.date_time is in milliseconds, other times in seconds

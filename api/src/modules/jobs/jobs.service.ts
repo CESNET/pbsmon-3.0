@@ -666,8 +666,13 @@ export class JobsService {
     const jobOwner = owner.split('@')[0];
 
     let canSeeOwner = true;
+    // Septik data can be downloaded only by admin or the job owner (see SeptikService)
+    // Array job itself (123[]) has no data, only its subjobs
+    const isArrayParent = jobId.includes('[]');
+    let canDownloadSeptik = !isArrayParent;
     if (userContext.role !== UserRole.ADMIN) {
       const usernameBase = userContext.username.split('@')[0];
+      canDownloadSeptik = !isArrayParent && jobOwner === usernameBase;
       const allowedUsernames = new Set<string>();
       // Add both full username (if it contains @) and base username
       allowedUsernames.add(userContext.username);
@@ -693,6 +698,7 @@ export class JobsService {
       ...jobDetail,
       owner: canSeeOwner ? jobDetail.owner : 'Anonym',
       canSeeOwner,
+      canDownloadSeptik,
     };
   }
 
@@ -938,6 +944,7 @@ export class JobsService {
       owner,
       username,
       canSeeOwner: true, // Will be overridden in getJobDetail based on user context
+      canDownloadSeptik: false, // Will be overridden in getJobDetail based on user context
       queue: attrs['queue'] || null,
       server: attrs['server'] || null,
       node,
@@ -1036,6 +1043,7 @@ export class JobsService {
       owner,
       username,
       canSeeOwner: true, // Will be overridden in getJobDetail based on user context
+      canDownloadSeptik: false, // Will be overridden in getJobDetail based on user context
       queue: attrs['queue'] || null,
       server: attrs['server'] || null,
       node,

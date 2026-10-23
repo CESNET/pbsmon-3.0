@@ -14,12 +14,14 @@ import { DataCollectionModule } from '@/modules/data-collection/data-collection.
 import { AccountingModule } from '@/modules/accounting/accounting.module';
 import { ProjectsModule } from '@/modules/projects/projects.module';
 import { AuthModule } from '@/modules/auth/auth.module';
+import { SeptikModule } from '@/modules/septik/septik.module';
 import configuration, {
   prometheusConfig,
   perunConfig,
   pbsConfig,
   accountingConfig,
   oidcConfig,
+  septikConfig,
 } from '@/config/configuration';
 
 @Module({
@@ -33,6 +35,7 @@ import configuration, {
         pbsConfig,
         accountingConfig,
         oidcConfig,
+        septikConfig,
       ],
       envFilePath: '.env',
     }),
@@ -48,6 +51,7 @@ import configuration, {
     AccountingModule,
     ProjectsModule,
     AuthModule,
+    SeptikModule,
   ],
   providers: [
     {

@@ -179,6 +179,13 @@ export class JobDetailDTO {
   canSeeOwner: boolean;
 
   @Expose()
+  @ApiProperty({
+    description:
+      'Whether the current user can download septik data of the job (true if admin or job owner)',
+  })
+  canDownloadSeptik: boolean;
+
+  @Expose()
   @ApiProperty({ description: 'Queue name', nullable: true })
   queue?: string | null;
 

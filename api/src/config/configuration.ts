@@ -7,6 +7,7 @@ import { PerunConfig, getPerunConfig } from './perun.config';
 import { PbsConfig, getPbsConfig } from './pbs.config';
 import { AccountingConfig, getAccountingConfig } from './accounting.config';
 import { OidcConfig, getOidcConfig } from './oidc.config';
+import { SeptikConfig, getSeptikConfig } from './septik.config';
 
 function validate<T extends object>(
   config: T,
@@ -58,4 +59,9 @@ export const accountingConfig = registerAs('accounting', () => {
 export const oidcConfig = registerAs('oidc', () => {
   const config = getOidcConfig();
   return validate(config, OidcConfig, 'OIDC');
+});
+
+export const septikConfig = registerAs('septik', () => {
+  const config = getSeptikConfig();
+  return validate(config, SeptikConfig, 'Septik');
 });

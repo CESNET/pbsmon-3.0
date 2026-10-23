@@ -237,6 +237,20 @@ i18n.use(initReactI18next).init({
           environmentVariables: "Environment Variables",
           messages: "Messages",
           jobNotFound: "Job not found",
+          septik: {
+            download: "Download data",
+            downloading: "Downloading…",
+            notFound: "No data available for this job",
+            forbidden: "You can download data only of your own jobs",
+            failed: "Download failed",
+            view: "View data",
+            loading: "Loading…",
+            viewFailed: "Loading data failed",
+            close: "Close",
+            empty: "The data contains no files",
+            binary: "Binary file, download the data to see it",
+            truncated: "The file is too large, only its beginning is shown. Download the data to see all of it.",
+          },
           messageTypes: {
             cpuUsageLow:
               "CPU usage is below 75% ({{percent}}%). The job was inefficient. Consider reducing the number of CPUs requested.",
@@ -792,6 +806,20 @@ i18n.use(initReactI18next).init({
           environmentVariables: "Seznam proměnných",
           messages: "Zprávy",
           jobNotFound: "Úloha nenalezena",
+          septik: {
+            download: "Stáhnout data",
+            downloading: "Stahuji…",
+            notFound: "Pro tuto úlohu nejsou dostupná žádná data",
+            forbidden: "Stáhnout lze pouze data vlastních úloh",
+            failed: "Stažení se nezdařilo",
+            view: "Zobrazit data",
+            loading: "Načítám…",
+            viewFailed: "Načtení dat se nezdařilo",
+            close: "Zavřít",
+            empty: "Data neobsahují žádné soubory",
+            binary: "Binární soubor, pro jeho zobrazení stáhněte data",
+            truncated: "Soubor je příliš velký, zobrazen je pouze jeho začátek. Celý soubor získáte stažením dat.",
+          },
           messageTypes: {
             cpuUsageLow:
               "Využití CPU je pod 75% ({{percent}}%). Úloha byla neefektivní. Zvažte snížení počtu požadovaných CPU.",

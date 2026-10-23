@@ -9,6 +9,8 @@ import { JobResourcesSection } from "@/components/jobs/JobResourcesSection";
 import { JobSubjobsSection } from "@/components/jobs/JobSubjobsSection";
 import { JobSystemInfoSection } from "@/components/jobs/JobSystemInfoSection";
 import { JobMessagesSection } from "@/components/jobs/JobMessagesSection";
+import { SeptikDownloadButton } from "@/components/jobs/SeptikDownloadButton";
+import { SeptikViewButton } from "@/components/jobs/SeptikViewButton";
 
 export function JobDetailPage() {
   const { t } = useTranslation();
@@ -93,10 +95,16 @@ export function JobDetailPage() {
   return (
     <>
       <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-primary-900">
             {t("pages.jobDetail")}
           </h1>
+          {data.canDownloadSeptik && (
+            <div className="flex items-center gap-3">
+              <SeptikViewButton jobId={data.id} />
+              <SeptikDownloadButton jobId={data.id} />
+            </div>
+          )}
         </div>
       </header>
       <div className="p-4 sm:p-6">

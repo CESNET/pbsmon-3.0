@@ -69,6 +69,8 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Impersonate-User'],
+    // File name of downloads (septik)
+    exposedHeaders: ['Content-Disposition'],
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());

@@ -6,7 +6,7 @@ const API_BASE_URL =
   import.meta.env.API_BASE_URL ||
   (import.meta.env.PROD ? "/api" : "http://localhost:4000");
 
-const normalizedBaseUrl = API_BASE_URL.endsWith("/")
+export const normalizedBaseUrl = API_BASE_URL.endsWith("/")
   ? API_BASE_URL.slice(0, -1)
   : API_BASE_URL;
 
@@ -15,6 +15,10 @@ let impersonatedUsername: string | null = null;
 
 export function setImpersonatedUsername(username: string | null) {
   impersonatedUsername = username;
+}
+
+export function getImpersonatedUsername(): string | null {
+  return impersonatedUsername;
 }
 
 export function getImpersonationHeaders(

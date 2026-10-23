@@ -4,6 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useArchivedJob } from "@/hooks/useArchivedJobs";
 import { ProgressBar } from "@/components/common/ProgressBar";
+import { SeptikDownloadButton } from "@/components/jobs/SeptikDownloadButton";
+import { SeptikViewButton } from "@/components/jobs/SeptikViewButton";
 
 const GB = 1024 * 1024 * 1024;
 
@@ -76,10 +78,17 @@ export function ArchivedJobDetailPage() {
 
   const header = (
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl sm:text-2xl font-bold text-primary-900">
           {t("pages.archivedJobDetail")}
         </h1>
+        {/* Array job itself (123[]) has no data, only its subjobs */}
+        {job && !job.id.includes("[]") && (
+          <div className="flex items-center gap-3">
+            <SeptikViewButton jobId={job.id} />
+            <SeptikDownloadButton jobId={job.id} />
+          </div>
+        )}
       </div>
     </header>
   );
