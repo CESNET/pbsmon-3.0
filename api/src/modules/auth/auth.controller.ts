@@ -137,7 +137,7 @@ export class AuthController {
         return new UnauthorizedException('Invalid username');
       }
 
-      const unixAdminEtcGroups = ['pbs-admins', 'metasw'];
+      const unixAdminEtcGroups = ['pbs-admins', 'pbsmon-admins'];
 
       const isAdmin = this.checkIsAdmin(username, unixAdminEtcGroups);
 
@@ -198,7 +198,7 @@ export class AuthController {
   /**
    * Check if a user is an admin by verifying membership in admin groups
    * @param username - The username to check
-   * @param adminGroups - Array of group names to check (e.g., ['pbs-admins', 'metasw'])
+   * @param adminGroups - Array of group names to check (e.g., ['pbs-admins', 'pbsmon-admins'])
    * @returns true if the user is a member of any of the admin groups, false otherwise
    */
   private checkIsAdmin(username: string, adminGroups: string[]): boolean {
