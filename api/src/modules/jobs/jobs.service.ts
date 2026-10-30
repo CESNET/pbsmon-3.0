@@ -111,6 +111,7 @@ export class JobsService {
         ...job,
         name: canSeeOwner ? job.name : 'Anonym',
         owner: canSeeOwner ? job.owner : 'Anonym',
+        is_dependent: canSeeOwner ? job.is_dependent : false,
         canSeeOwner,
       };
     });
@@ -296,6 +297,8 @@ export class JobsService {
       ? this.parseTimeToSeconds(attrs['resources_used.walltime']) || null
       : null;
 
+    const is_dependent = attrs['depend'] && attrs['depend'].trim() !== '' ? true : false;
+
     // Calculate usage percentages
     let cpuUsagePercent: number | null = null;
     let cpuUsagePercentPerCpu: number | null = null;
@@ -412,6 +415,7 @@ export class JobsService {
       createdAt,
       exitCode,
       comment: attrs['comment'] || null,
+      is_dependent,
       canSeeOwner: true, // Will be overridden in getJobsList based on user context
     };
   }
@@ -761,6 +765,8 @@ export class JobsService {
       ? this.parseTimeToSeconds(attrs['resources_used.walltime']) || null
       : null;
 
+    const is_dependent = attrs['depend'] && attrs['depend'].trim() !== '' ? true : false;
+
     // Calculate usage percentages
     let cpuUsagePercent: number | null = null;
     let cpuUsagePercentPerCpu: number | null = null;
@@ -943,6 +949,7 @@ export class JobsService {
       stateColor: stateInfo.color,
       owner,
       username,
+      is_dependent,
       canSeeOwner: true, // Will be overridden in getJobDetail based on user context
       canDownloadSeptik: false, // Will be overridden in getJobDetail based on user context
       queue: attrs['queue'] || null,
@@ -1042,6 +1049,7 @@ export class JobsService {
       stateColor: stateInfo.color,
       owner,
       username,
+      is_dependent: false,
       canSeeOwner: true, // Will be overridden in getJobDetail based on user context
       canDownloadSeptik: false, // Will be overridden in getJobDetail based on user context
       queue: attrs['queue'] || null,

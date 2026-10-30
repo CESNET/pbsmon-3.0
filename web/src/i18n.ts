@@ -219,6 +219,8 @@ i18n.use(initReactI18next).init({
           parentJob: "Parent job",
           parentJobTooltip:
             "This is a parent job (controller job) for an array job",
+          dependentJobTooltip:
+            "This job is dependent on another job and will not run until the dependencies are met.",
           systemInformation: "System Information",
           timestamps: "Timestamps",
           createdAt: "Created",
@@ -788,6 +790,8 @@ i18n.use(initReactI18next).init({
           subjobId: "ID podúlohy",
           parentJob: "Řidici uloha",
           parentJobTooltip: "Toto je řídicí úloha (parent job) pro pole úloh",
+          dependentJobTooltip:
+            "Tato úloha je závislá na jiné úloze a nespustí se, dokud nebudou splněny závislosti.",
           systemInformation: "Systémové informace",
           timestamps: "Časové značky",
           createdAt: "Vytvořeno",

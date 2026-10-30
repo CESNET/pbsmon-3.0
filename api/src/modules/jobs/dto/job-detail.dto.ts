@@ -174,6 +174,13 @@ export class JobDetailDTO {
   @Expose()
   @ApiProperty({
     description:
+      'The job execution depends on other jobs (true if job has dependencies, false otherwise)',
+  })
+  is_dependent: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description:
       'Whether the current user can see the job owner username (true if admin, same user, or in same group)',
   })
   canSeeOwner: boolean;

@@ -161,6 +161,14 @@ export function JobsTableRow({
               <Tooltip id={parentJobTooltipId} />
             </>
           )}
+          {job.is_dependent && (
+            <>
+              <Icon
+                icon="ph:link-bold"
+                className="w-4 h-4 text-primary-600 flex-shrink-0"
+              />
+            </>
+          )}
         </div>
         {/* Name shown here only in compact view; the dedicated Name column takes over otherwise */}
         {isCompact && (

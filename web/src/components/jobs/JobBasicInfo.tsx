@@ -65,6 +65,17 @@ export function JobBasicInfo({ job }: JobBasicInfoProps) {
                 <Tooltip id="parent-job-detail" />
               </>
             )}
+            {job.is_dependent && (
+              <>
+                <Icon
+                  icon="ph:link-bold"
+                  className="w-5 h-5 text-primary-600"
+                  data-tooltip-id="dependent-job-detail"
+                  data-tooltip-content={t("jobs.dependentJobTooltip")}
+                />
+                <Tooltip id="dependent-job-detail" />
+              </>
+            )}
           </div>
         </div>
         <div>

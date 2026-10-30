@@ -277,6 +277,7 @@ export function JobsPage() {
           estimStartTime: null,
           completedBy: null,
           comment: null,
+          is_dependent: false, // Archived jobs don't have dependency info
           canSeeOwner: true,
         }))
       : [];
