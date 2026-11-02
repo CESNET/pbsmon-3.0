@@ -20,6 +20,9 @@ export interface PrometheusResponse {
  */
 @Injectable()
 export class PrometheusClient {
+  // Without a timeout axios waits forever, and an unreachable Prometheus
+  // (dropped packets) would block each query for the kernel connect timeout
+  private static readonly REQUEST_TIMEOUT_MS = 30000;
   private readonly logger = new Logger(PrometheusClient.name);
   private readonly config: PrometheusConfig;
 
@@ -43,6 +46,7 @@ export class PrometheusClient {
 
     try {
       const response = await axios.get(url, {
+        timeout: PrometheusClient.REQUEST_TIMEOUT_MS,
         params: {
           query: query,
           time: endTime.toString(),
@@ -85,6 +89,7 @@ export class PrometheusClient {
 
     try {
       const response = await axios.get(url, {
+        timeout: PrometheusClient.REQUEST_TIMEOUT_MS,
         params: {
           query: query,
           time: endTime.toString(),

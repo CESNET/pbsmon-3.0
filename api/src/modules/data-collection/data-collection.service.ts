@@ -17,14 +17,18 @@ export class DataCollectionService implements OnModuleInit {
     private readonly pbsCollectionService: PbsCollectionService,
   ) {}
 
-  async onModuleInit() {
+  onModuleInit() {
+    // Not awaited: a slow or unreachable data source must not block app.listen()
     this.logger.log('Application started - collecting initial data');
-    await Promise.all([
+    Promise.all([
       this.collectPerun(),
       this.collectPrometheus(),
       this.collectPbs(),
-    ]);
-    this.logger.log('Initial data collection completed');
+    ])
+      .then(() => this.logger.log('Initial data collection completed'))
+      .catch((error) =>
+        this.logger.error('Initial data collection failed', error),
+      );
   }
 
   // CRON job - PERUN: every 1 minute
