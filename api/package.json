@@ -37,6 +37,7 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.5",
     "express-session": "^1.18.2",
+    "memorystore": "^1.6.8",
     "openid-client": "^6.8.1",
     "passport": "^0.7.0",
     "passport-openidconnect": "^0.1.2",

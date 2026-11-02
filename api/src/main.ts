@@ -8,6 +8,9 @@ import * as cookieParser from 'cookie-parser';
 import './common/types/session.types';
 
 const session = require('express-session');
+const MemoryStore = require('memorystore')(session);
+
+const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,12 +25,14 @@ async function bootstrap() {
   app.use(
     session({
       secret: process.env.SESSION_SECRET,
+      // Production-ready in-memory store, prunes expired sessions
+      store: new MemoryStore({ checkPeriod: SESSION_MAX_AGE }),
       resave: false,
       saveUninitialized: false,
       cookie: {
         secure: false,
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: SESSION_MAX_AGE,
         sameSite: 'lax', // Allows cookies to be sent on top-level navigations (OIDC redirects)
         path: '/', // Ensure cookie is available for all paths
       },
