@@ -15,6 +15,37 @@ function formatQuota(v: string | null): string {
   return v ?? "—";
 }
 
+const SIZE_UNITS = ["", "K", "M", "G", "T", "P", "E"];
+
+// Parses sizes like "512", "1.5G", "20 MB", "3TiB", "100kB" into bytes.
+// Returns null when the value is missing or cannot be parsed.
+function parseSize(v: string | null): number | null {
+  if (!v) return null;
+  const m = v.trim().match(/^([\d.,]+)\s*([kmgtpe]?)(?:i?b)?$/i);
+  if (!m) return null;
+  const n = parseFloat(m[1].replace(",", "."));
+  if (isNaN(n)) return null;
+  return n * Math.pow(1024, SIZE_UNITS.indexOf(m[2].toUpperCase()));
+}
+
+// Color of the used value: green below soft limit, yellow when soft limit is
+// reached, red from 90 % of hard limit. Undefined when no limit is set
+// (zero limit is treated as no limit).
+function usageColor(
+  used: number | null,
+  soft: number | null,
+  hard: number | null
+): string | undefined {
+  const softLimit = soft && soft > 0 ? soft : null;
+  const hardLimit = hard && hard > 0 ? hard : null;
+  if (used === null || (softLimit === null && hardLimit === null)) {
+    return undefined;
+  }
+  if (hardLimit !== null && used >= hardLimit * 0.9) return "#ef4444";
+  if (softLimit !== null && used >= softLimit) return "#eab308";
+  return "#22c55e";
+}
+
 function formatGrace(v: string | null): string {
   if (!v) return "—";
   return v;
@@ -109,7 +140,16 @@ export function UserStorageQuotasSection({
                 <td className="px-4 py-3 font-mono text-xs text-gray-700 max-w-[10rem] sm:max-w-xs truncate">
                   {quota.directory}
                 </td>
-                <td className="px-4 py-3 text-right text-gray-800">
+                <td
+                  className="px-4 py-3 text-right text-gray-800"
+                  style={{
+                    color: usageColor(
+                      parseSize(quota.used),
+                      parseSize(quota.softQuota),
+                      parseSize(quota.hardQuota)
+                    ),
+                  }}
+                >
                   {quota.used}
                 </td>
                 {!isCompact && (
@@ -121,12 +161,26 @@ export function UserStorageQuotasSection({
                   {formatQuota(quota.hardQuota)}
                 </td>
                 {!isCompact && (
-                  <td className="px-4 py-3 text-center text-gray-500">
+                  <td
+                    className="px-4 py-3 text-center text-gray-500"
+                    style={{
+                      color: quota.grace === "expired" ? "#ef4444" : undefined,
+                    }}
+                  >
                     {formatGrace(quota.grace)}
                   </td>
                 )}
                 {!isCompact && (
-                  <td className="px-4 py-3 text-right text-gray-800">
+                  <td
+                    className="px-4 py-3 text-right text-gray-800"
+                    style={{
+                      color: usageColor(
+                        quota.filesUsed,
+                        quota.filesSoftLimit,
+                        quota.filesHardLimit
+                      ),
+                    }}
+                  >
                     {formatNumber(quota.filesUsed)}
                   </td>
                 )}
@@ -138,7 +192,13 @@ export function UserStorageQuotasSection({
                   </td>
                 )}
                 {!isCompact && (
-                  <td className="px-4 py-3 text-center text-gray-500">
+                  <td
+                    className="px-4 py-3 text-center text-gray-500"
+                    style={{
+                      color:
+                        quota.filesGrace === "expired" ? "#ef4444" : undefined,
+                    }}
+                  >
                     {formatGrace(quota.filesGrace)}
                   </td>
                 )}
