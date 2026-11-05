@@ -36,6 +36,7 @@ i18n.use(initReactI18next).init({
           documentation: "Documentation",
           faq: "FAQ",
           metacentrum: "Metacentrum.cz",
+          statistics: "Statistics",
         },
         queues: {
           routeQueue: "Route Queue",
@@ -556,6 +557,102 @@ i18n.use(initReactI18next).init({
           userOrg: "Organization",
           userNotFoundInPerun: "User with this ID was not found in Perun data",
         },
+        statistics: {
+          accessDenied: "You do not have permission to view statistics.",
+          limitedClusters: "Your statistics are limited to clusters: {{clusters}}.",
+          limitedOrganizations:
+            "You can select only these organizations: {{organizations}}.",
+          noOrganizations:
+            "You cannot select a specific organization, only all organizations.",
+          userNotAllowed:
+            "You can only enter yourself or users from your groups.",
+          from: "From",
+          to: "To",
+          showGraph: "Show graph",
+          downloadData: "Download data",
+          downloadSvg: "Download SVG",
+          loadError: "Failed to load data:",
+          reset: "Reset",
+          cluster: "Cluster",
+          queue: "Queue",
+          organization: "Organization",
+          allOrganizations: "All organizations",
+          allAcademies: "All the Czech Academies",
+          selectCluster: "-- Select cluster --",
+          selectQueue: "-- Select queue --",
+          userNickname: "User nickname (all users if empty)",
+          chartShape: "Chart shape",
+          chartShapes: {
+            area: "Area chart",
+            line: "Line chart",
+            barVertical: "Vertical bar chart",
+            barHorizontal: "Horizontal bar chart",
+            pie: "Pie chart",
+          },
+          omitShortBar: "Omit the 0–10 s bar",
+          groupAcademies: "All the Czech Academies together",
+          clusterUsage: {
+            title: "Usage graphs of a specific cluster",
+            description:
+              "Select a cluster, chart shape and time period. Either an area chart including computed time, time spent in reserved and time spent in maintenance, or a line chart of usage.",
+          },
+          averageUsage: {
+            title: "Average usage graph for all clusters",
+            description: "Select time period.",
+          },
+          queueWaitTime: {
+            title: "Job wait time before start in individual queues",
+            description: "Select a queue, chart shape and time period.",
+          },
+          queueRunTime: {
+            title: "Job run time in individual queues",
+            description: "Select a queue, chart shape and time period.",
+          },
+          clusterOrganizations: {
+            title: "Usage of a single cluster by organizations",
+            description: "Select a cluster, chart shape and time period.",
+          },
+          organizationsByJobTime: {
+            title: "Organizations by job time",
+            description:
+              "Hours computed by jobs per organization. Select an organization (or all organizations), chart shape and time period.",
+          },
+          organizationsByJobCount: {
+            title: "Organizations by number of jobs",
+            description:
+              "Number of jobs per organization. Select an organization (or all organizations), chart shape and time period.",
+          },
+          usersByJobTime: {
+            title: "Users by job time",
+            description:
+              "Hours computed by jobs of the 60 most active users. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+          },
+          usersByJobCount: {
+            title: "Users by number of jobs",
+            description:
+              "Number of jobs of the 60 most active users. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+          },
+          queuesByJobCount: {
+            title: "Queues by number of jobs",
+            description:
+              "Number of jobs per queue. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+          },
+          queuesByComputedTime: {
+            title: "Queues by computed time",
+            description:
+              "CPU hours computed by jobs per queue. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+          },
+          clustersByComputedTime: {
+            title: "Clusters by computed time",
+            description:
+              "Hours computed by jobs per cluster. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+          },
+          clustersByJobCount: {
+            title: "Clusters by number of jobs",
+            description:
+              "Number of jobs per cluster. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+          },
+        },
         personalView: {
           totalStatistics: "Total Statistics",
           myStatistics: "My Statistics",
@@ -600,6 +697,7 @@ i18n.use(initReactI18next).init({
           documentation: "Dokumentace",
           faq: "FAQ",
           metacentrum: "Metacentrum.cz",
+          statistics: "Statistiky",
         },
         queues: {
           routeQueue: "Směrovací fronta",
@@ -1128,6 +1226,103 @@ i18n.use(initReactI18next).init({
           userOrg: "Organizace",
           userNotFoundInPerun:
             "Uživatel s tímto ID nebyl nalezen v Perun datech",
+        },
+        statistics: {
+          accessDenied: "Nemáte oprávnění zobrazit statistiky.",
+          limitedClusters: "Vaše statistiky jsou omezeny na clustery: {{clusters}}.",
+          limitedOrganizations:
+            "Můžete vybrat jen tyto organizace: {{organizations}}.",
+          noOrganizations:
+            "Nemůžete vybrat konkrétní organizaci, jen všechny organizace.",
+          userNotAllowed:
+            "Můžete zadat jen sebe nebo uživatele ze svých skupin.",
+          from: "Od",
+          to: "Do",
+          showGraph: "Zobrazit graf",
+          downloadData: "Stáhnout data",
+          downloadSvg: "Stáhnout SVG",
+          loadError: "Načtení dat se nezdařilo:",
+          reset: "Reset",
+          cluster: "Cluster",
+          queue: "Fronta",
+          organization: "Organizace",
+          allOrganizations: "Všechny organizace",
+          allAcademies: "Všechny akademie ČR",
+          selectCluster: "-- Vyberte cluster --",
+          selectQueue: "-- Vyberte frontu --",
+          userNickname:
+            "Přezdívka uživatele (pokud nebude zadána, berou se všichni uživatelé)",
+          chartShape: "Tvar grafu",
+          chartShapes: {
+            area: "Plošný graf",
+            line: "Spojnicový graf",
+            barVertical: "Sloupcový graf",
+            barHorizontal: "Pruhový graf",
+            pie: "Koláčový graf",
+          },
+          omitShortBar: "Sloupeček 0–10 s nebude přítomen",
+          groupAcademies: "Všechny AV ČR dohromady",
+          clusterUsage: {
+            title: "Grafy vytížení konkrétního clusteru",
+            description:
+              "Vyberte cluster, tvar grafu a časové období. Buď plošný graf zahrnující propočítaný čas, čas strávený v reserved a čas strávený v maintenance, nebo spojnicový graf vytížení.",
+          },
+          averageUsage: {
+            title: "Graf průměrného vytížení pro všechny clustery",
+            description: "Zadejte časové období.",
+          },
+          queueWaitTime: {
+            title: "Graf doby čekání úloh na spuštění v jednotlivých frontách",
+            description: "Vyberte frontu, tvar grafu a časové období.",
+          },
+          queueRunTime: {
+            title: "Graf doby běhu úloh v jednotlivých frontách",
+            description: "Vyberte frontu, tvar grafu a časové období.",
+          },
+          clusterOrganizations: {
+            title: "Graf využití jednoho clusteru organizacemi",
+            description: "Vyberte cluster, tvar grafu a časové období.",
+          },
+          organizationsByJobTime: {
+            title: "Organizace podle času úloh",
+            description:
+              "Propočítané hodiny úloh podle organizací. Vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          organizationsByJobCount: {
+            title: "Organizace podle počtu úloh",
+            description:
+              "Počet úloh podle organizací. Vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          usersByJobTime: {
+            title: "Uživatelé podle času úloh",
+            description:
+              "Propočítané hodiny úloh 60 nejaktivnějších uživatelů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          usersByJobCount: {
+            title: "Uživatelé podle počtu úloh",
+            description:
+              "Počet úloh 60 nejaktivnějších uživatelů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          queuesByJobCount: {
+            title: "Fronty podle počtu úloh",
+            description:
+              "Počet úloh podle front. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          queuesByComputedTime: {
+            title: "Fronty podle propočítaného času",
+            description:
+              "Propočítané CPU hodiny úloh podle front. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          clustersByComputedTime: {
+            title: "Clustery podle propočítaného času",
+            description:
+              "Propočítané hodiny úloh podle clusterů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
+          clustersByJobCount: {
+            title: "Clustery podle počtu úloh",
+            description:
+              "Počet úloh podle clusterů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+          },
         },
         personalView: {
           totalStatistics: "Celkové statistiky",

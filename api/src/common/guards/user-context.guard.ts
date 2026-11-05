@@ -8,9 +8,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { UserContext, UserRole } from '@/common/types/user-context.types';
+import {
+  UserContext,
+  UserRole,
+  parseUserRole,
+} from '@/common/types/user-context.types';
 import { DataCollectionService } from '@/modules/data-collection/data-collection.service';
 import { OidcConfig } from '@/config/oidc.config';
+import { resolveImpersonatedUserRole } from '@/modules/auth/user-role';
 
 /**
  * Metadata key to skip authentication check
@@ -84,12 +89,15 @@ export class UserContextGuard implements CanActivate {
         impersonatedUsername.trim(),
       );
 
-      // Create impersonated user context
-      // Keep role as USER so admins can see what regular users see
+      // Create impersonated user context with a role that never exceeds
+      // the admin's own (see resolveImpersonatedUserRole)
       request.userContext = {
         id: userId || '',
         username: impersonatedUsername.trim(),
-        role: UserRole.USER,
+        role: resolveImpersonatedUserRole(
+          this.dataCollectionService.getPerunData(),
+          impersonatedUsername.trim(),
+        ),
       };
       return true;
     }
@@ -119,7 +127,7 @@ export class UserContextGuard implements CanActivate {
       return {
         id: sessionUser.id,
         username: sessionUser.username,
-        role: sessionUser.role === 'admin' ? UserRole.ADMIN : UserRole.USER,
+        role: parseUserRole(sessionUser.role),
       };
     }
 

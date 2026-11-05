@@ -16,8 +16,9 @@ import { ApiResponse as ApiResponseDto } from '@/common/dto/api-response.dto';
 import { ApiOkResponseModel } from '@/common/swagger/api-generic-response';
 import { CurrentUserDTO } from './dto/current-user.dto';
 import { UserContextDecorator } from '@/common/decorators/user-context.decorator';
-import { UserContext } from '@/common/types/user-context.types';
+import { UserContext, UserRole } from '@/common/types/user-context.types';
 import { OidcService } from './oidc.service';
+import { resolveUserRole } from './user-role';
 import { DataCollectionService } from '@/modules/data-collection/data-collection.service';
 import '@/common/types/session.types';
 
@@ -137,16 +138,14 @@ export class AuthController {
         return new UnauthorizedException('Invalid username');
       }
 
-      const unixAdminEtcGroups = ['pbs-admins', 'pbsmon-admins'];
-
-      const isAdmin = this.checkIsAdmin(username, unixAdminEtcGroups);
+      const role = this.resolveUserRole(username);
 
       if (req.session) {
         (req.session as any).user = {
           id: user.id,
           username: username,
           name: user.name,
-          role: isAdmin ? 'admin' : 'user',
+          role,
           eduperson_entitlement: user.eduperson_entitlement,
         };
 
@@ -196,37 +195,16 @@ export class AuthController {
   }
 
   /**
-   * Check if a user is an admin by verifying membership in admin groups
-   * @param username - The username to check
-   * @param adminGroups - Array of group names to check (e.g., ['pbs-admins', 'pbsmon-admins'])
-   * @returns true if the user is a member of any of the admin groups, false otherwise
+   * Resolve the user's role from unix group membership (see user-role.ts)
    */
-  private checkIsAdmin(username: string, adminGroups: string[]): boolean {
+  private resolveUserRole(username: string): UserRole {
     const perunData = this.dataCollectionService.getPerunData();
-
-    if (!perunData || !perunData.etcGroups) {
+    if (!perunData?.etcGroups) {
       this.logger.warn('Perun data or etcGroups not available');
-      return false;
     }
-
-    // Iterate through all servers' etc groups
-    for (const serverGroup of perunData.etcGroups) {
-      // Check each group entry for this server
-      for (const entry of serverGroup.entries) {
-        // Check if this is one of the admin groups we're looking for
-        if (adminGroups.includes(entry.groupname)) {
-          // Check if the username is in the members array
-          if (entry.members.includes(username)) {
-            this.logger.debug(
-              `User ${username} is admin (member of ${entry.groupname} on ${serverGroup.serverName})`,
-            );
-            return true;
-          }
-        }
-      }
-    }
-
-    this.logger.debug(`User ${username} is not an admin`);
-    return false;
+    const role = resolveUserRole(perunData, username);
+    this.logger.debug(`User ${username} resolved to role ${role}`);
+    return role;
   }
+
 }

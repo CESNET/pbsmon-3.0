@@ -1,19 +1,68 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   OnModuleDestroy,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Pool } from 'pg';
-import { AccountingConfig } from '@/config/accounting.config';
+import { CustomTypesConfig, Pool, types } from 'pg';
+import {
+  AccountingConfig,
+  STATISTICS_ALL_ITEMS,
+} from '@/config/accounting.config';
 import { DataCollectionService } from '@/modules/data-collection/data-collection.service';
-import { UserContext, UserRole } from '@/common/types/user-context.types';
+import {
+  UserContext,
+  UserRole,
+  canReadStatistics,
+} from '@/common/types/user-context.types';
 import { UserInfoDTO, UserUsageDTO } from './dto/user-info.dto';
 import { OutageRecordDTO } from './dto/outage-record.dto';
-import { CanonicalOrgNameDTO } from './dto/org-name.dto';
+import {
+  CanonicalOrgNameDTO,
+  StatisticsOrganizationDTO,
+} from './dto/org-name.dto';
 import { ArchivedJobDTO, ArchivedJobsListDTO } from './dto/archived-job.dto';
+import {
+  StatisticsGraphChartDTO,
+  StatisticsGraphDataDTO,
+} from './dto/statistics-graph.dto';
+import {
+  StatisticsGraphAccess,
+  StatisticsGraphParams,
+  StatisticsGraphQuery,
+  getStatisticsGraphQuery,
+} from './statistics/statistics-graph-queries';
+import { StatisticsAccessDTO } from './dto/statistics-access.dto';
+import { getVisibleUsernames } from '@/modules/users/group-members';
+import { renderChartSvg } from './statistics/charts';
+
+// Statistics return DATE columns as 'YYYY-MM-DD' strings - the default parser
+// converts them to Date at local midnight, which shifts the day in JSON (UTC)
+const DATE_OID: number = types.builtins.DATE;
+
+// Statistics queries may be heavy and run for a long time - no time limit
+// (0 = disabled), overriding any statement_timeout of the DB role/database.
+// proxy_read_timeout of /api/accounting/statistics/ in nginx limits how long
+// the client waits for the result.
+const STATISTICS_QUERY_TIMEOUT_MS = 0;
+
+function statisticsTypeParser(
+  oid: number,
+  format?: 'text' | 'binary',
+): (value: string) => unknown {
+  if (oid === DATE_OID) {
+    return (value) => value;
+  }
+  return types.getTypeParser(oid, format) as (value: string) => unknown;
+}
+
+const STATISTICS_TYPE_PARSERS = {
+  getTypeParser: statisticsTypeParser,
+} as CustomTypesConfig;
 
 export type ArchivedJobsRange = '24h' | '48h' | 'week' | 'month';
 
@@ -478,6 +527,299 @@ export class AccountingService implements OnModuleDestroy {
         error instanceof Error ? error.stack : error,
       );
       return [];
+    }
+  }
+
+  /**
+   * What the user may see in statistics. Admins see everything; users with
+   * the statistics role only the clusters configured for them
+   * (STATISTICS_USER_CLUSTERS, '*' = all), as the 'user' parameter only themselves and
+   * members of their groups (the same users as on the users page) and as the
+   * 'organization' parameter only the organizations configured for them
+   * (STATISTICS_USER_ORGANIZATIONS, '*' = all; none when not configured).
+   * Throws ForbiddenException for everyone else, including statistics users
+   * without configured clusters.
+   */
+  getStatisticsAccess(userContext: UserContext): StatisticsGraphAccess {
+    if (!canReadStatistics(userContext)) {
+      throw new ForbiddenException('Access to statistics denied');
+    }
+    if (userContext.role === UserRole.ADMIN) {
+      return { clusters: null, users: null, organizations: null };
+    }
+
+    const config = this.configService.get<AccountingConfig>('accounting');
+    const username = userContext.username;
+    // Entry of the user in a per-user list setting, by login with or without realm
+    const configuredFor = (lists: Record<string, string[]> | undefined) => {
+      const base = username.split('@')[0];
+      if (lists && Object.hasOwn(lists, username)) {
+        return lists[username];
+      }
+      return lists && Object.hasOwn(lists, base) ? lists[base] : [];
+    };
+
+    // '*' in the list: no limit, like for admins (null)
+    const unlessAll = (items: string[]) =>
+      items.includes(STATISTICS_ALL_ITEMS) ? null : items;
+
+    const clusters = configuredFor(config?.statisticsUserClusters);
+    if (clusters.length === 0) {
+      throw new ForbiddenException('Access to statistics denied');
+    }
+
+    const organizations = configuredFor(config?.statisticsUserOrganizations);
+    if (organizations.length === 0) {
+      throw new ForbiddenException('Access to statistics denied');
+    }
+
+    return {
+      clusters: unlessAll(clusters),
+      users: getVisibleUsernames(
+        this.dataCollectionService.getPerunData(),
+        username,
+      ),
+      organizations: unlessAll(organizations),
+    };
+  }
+
+  /**
+   * Statistics access of the user for the frontend: the clusters and users
+   * they are limited to (left out when not limited).
+   */
+  getStatisticsAccessInfo(userContext: UserContext): StatisticsAccessDTO {
+    const access = this.getStatisticsAccess(userContext);
+    return {
+      clusters: access.clusters ?? undefined,
+      users: access.users ? [...access.users].sort() : undefined,
+      organizations: access.organizations ?? undefined,
+    };
+  }
+
+  /**
+   * Get names of clusters (physical resources) available for statistics.
+   * Only for users who can read statistics (statistics role or admin).
+   * Returns empty array if database is not available
+   */
+  async getStatisticsClusters(userContext: UserContext): Promise<string[]> {
+    const access = this.getStatisticsAccess(userContext);
+
+    if (!this.isDatabaseAvailable()) {
+      this.logger.debug('getStatisticsClusters() - database not available');
+      return [];
+    }
+
+    try {
+      const query = `
+        SELECT pr.name
+        FROM physical_resources pr
+        WHERE pr.enabled_time IS NOT NULL OR pr.disabled_time IS NOT NULL
+        ORDER BY pr.name
+      `;
+
+      const result = await this.pool!.query<{ name: string | null }>(query);
+
+      return (result.rows || [])
+        .map((row) => row.name || '')
+        .filter((name) => !access.clusters || access.clusters.includes(name));
+    } catch (error) {
+      this.logger.error(
+        'Error getting statistics clusters:',
+        error instanceof Error ? error.stack : error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Get names of queues available for statistics.
+   * Only for users who can read statistics (statistics role or admin).
+   * Returns empty array if database is not available
+   */
+  async getStatisticsQueues(userContext: UserContext): Promise<string[]> {
+    this.getStatisticsAccess(userContext);
+
+    if (!this.isDatabaseAvailable()) {
+      this.logger.debug('getStatisticsQueues() - database not available');
+      return [];
+    }
+
+    try {
+      const query = `
+        SELECT queue
+        FROM acct_pbs_record
+        GROUP BY queue
+        ORDER BY queue
+      `;
+
+      const result = await this.pool!.query(query);
+
+      return (result.rows || []).map((row) => row.queue || '');
+    } catch (error) {
+      this.logger.error(
+        'Error getting statistics queues:',
+        error instanceof Error ? error.stack : error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Get organizations available for statistics, each with one representative
+   * IdP name (user_org). Only for users who can read statistics
+   * (statistics role or admin).
+   * Returns empty array if database is not available
+   */
+  async getStatisticsOrganizations(
+    userContext: UserContext,
+  ): Promise<StatisticsOrganizationDTO[]> {
+    const access = this.getStatisticsAccess(userContext);
+
+    if (!this.isDatabaseAvailable()) {
+      this.logger.debug(
+        'getStatisticsOrganizations() - database not available',
+      );
+      return [];
+    }
+
+    try {
+      const query = `
+        SELECT name, idpnames[1] AS idpname
+        FROM (
+          SELECT name, array_agg(user_org) AS idpnames
+          FROM org_names
+          GROUP BY name
+        ) AS orgnames
+        ORDER BY name
+      `;
+
+      const result = await this.pool!.query<{
+        name: string | null;
+        idpname: string | null;
+      }>(query);
+
+      return (result.rows || [])
+        .map((row) => ({
+          name: row.name || '',
+          idpName: row.idpname || '',
+        }))
+        .filter(
+          (org) =>
+            !access.organizations || access.organizations.includes(org.name),
+        );
+    } catch (error) {
+      this.logger.error(
+        'Error getting statistics organizations:',
+        error instanceof Error ? error.stack : error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Get data of a statistics graph. The graph id selects a parametrized SQL
+   * query (see statistics/statistics-graph-queries.ts), params are validated
+   * and bound to its placeholders.
+   * Only for users who can read statistics (statistics role or admin).
+   * Returns empty data if database is not available
+   */
+  async getStatisticsGraphData(
+    graphId: string,
+    params: StatisticsGraphParams,
+    userContext: UserContext,
+  ): Promise<StatisticsGraphDataDTO> {
+    const access = this.getStatisticsAccess(userContext);
+
+    const graph = getStatisticsGraphQuery(graphId);
+    const { columns, rows } = await this.runStatisticsGraphQuery(
+      graphId,
+      graph,
+      params ?? {},
+      access,
+    );
+    return { graphId, columns, rows };
+  }
+
+  /**
+   * Get chart of a statistics graph as SVG, rendered from the same data as
+   * getStatisticsGraphData(). Only for graphs that define a chart.
+   * Only for users who can read statistics (statistics role or admin).
+   */
+  async getStatisticsGraphChart(
+    graphId: string,
+    params: StatisticsGraphParams,
+    userContext: UserContext,
+  ): Promise<StatisticsGraphChartDTO> {
+    const access = this.getStatisticsAccess(userContext);
+
+    const graph = getStatisticsGraphQuery(graphId);
+    if (!graph.chart) {
+      throw new BadRequestException(
+        `Statistics graph '${graphId}' has no chart`,
+      );
+    }
+
+    const { columns, rows } = await this.runStatisticsGraphQuery(
+      graphId,
+      graph,
+      params ?? {},
+      access,
+    );
+    const records = rows.map((row) =>
+      Object.fromEntries(columns.map((column, i) => [column, row[i]])),
+    );
+    const svg = renderChartSvg(graph.chart(records, params ?? {}));
+    return { graphId, svg };
+  }
+
+  /**
+   * Validates the params and runs the graph query in a read-only transaction
+   * with a statement timeout. Returns empty data if database is not available
+   */
+  private async runStatisticsGraphQuery(
+    graphId: string,
+    graph: StatisticsGraphQuery,
+    params: StatisticsGraphParams,
+    access: StatisticsGraphAccess,
+  ): Promise<{ columns: string[]; rows: unknown[][] }> {
+    const values = graph.values(params, access);
+
+    if (!this.isDatabaseAvailable()) {
+      this.logger.debug('runStatisticsGraphQuery() - database not available');
+      return { columns: [], rows: [] };
+    }
+
+    const client = await this.pool!.connect();
+    try {
+      // Read-only transaction: a graph query can never modify data,
+      // statement_timeout is applied on the server and reset on COMMIT
+      await client.query('BEGIN READ ONLY');
+      await client.query(
+        `SET LOCAL statement_timeout = ${STATISTICS_QUERY_TIMEOUT_MS}`,
+      );
+      const result = await client.query<unknown[]>({
+        text: graph.sql,
+        values,
+        rowMode: 'array',
+        types: STATISTICS_TYPE_PARSERS,
+      });
+      await client.query('COMMIT');
+
+      return {
+        columns: result.fields.map((field) => field.name),
+        rows: result.rows,
+      };
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      this.logger.error(
+        `Error getting statistics graph '${graphId}':`,
+        error instanceof Error ? error.stack : error,
+      );
+      throw new InternalServerErrorException(
+        `Failed to get data of statistics graph '${graphId}'`,
+      );
+    } finally {
+      client.release();
     }
   }
 

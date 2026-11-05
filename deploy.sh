@@ -47,7 +47,7 @@ if [ "$SKIP_PULL" = false ]; then
         echo -e "${GREEN}✓ Code updated successfully${NC}"
         echo -e "${YELLOW}Restarting script with --skip-pull flag...${NC}"
         # Kill current process and restart script with --skip-pull
-        exec "$0" --skip-pull
+        exec "$0" --skip-pull "$@"
     else
         echo -e "${RED}✗ Failed to pull code from git${NC}"
         exit 1
@@ -134,7 +134,7 @@ fi
 
 # Build and start API first
 echo -e "${YELLOW}Building and starting API container first...${NC}"
-if $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d --build api; then
+if $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d --build --force-recreate api; then
     echo -e "${GREEN}✓ API container started${NC}"
 else
     echo -e "${RED}✗ Failed to start API container${NC}"
@@ -181,7 +181,7 @@ fi
 
 # Now build and start web service
 echo -e "${YELLOW}Building and starting web container...${NC}"
-if $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d --build web; then
+if $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d --build --force-recreate web; then
     echo -e "${GREEN}✓ Web container started${NC}"
 else
     echo -e "${RED}✗ Failed to start web container${NC}"

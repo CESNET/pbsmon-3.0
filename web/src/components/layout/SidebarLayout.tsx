@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "@iconify/react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { canReadStatistics, useCurrentUser } from "@/hooks/useCurrentUser";
+import { useStatisticsAccess } from "@/hooks/useStatistics";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { ImpersonationBanner } from "@/components/common/ImpersonationBanner";
 import { DataFreshnessFooter } from "@/components/layout/DataFreshnessFooter";
@@ -12,13 +13,27 @@ import { ApiError } from "@/lib/generated-api/core/ApiError";
 
 const SIDEBAR_COLLAPSED_KEY = "pbsmon.sidebarCollapsed";
 
+/** What menu item visibility may depend on */
+type MenuVisibility = {
+  role: string | undefined;
+  /** The backend grants access to statistics */
+  hasStatisticsAccess: boolean;
+};
+
 type MenuItem = {
   id: string;
   path: string;
   translationKey: string;
   icon?: ReactNode;
   isExpandable?: boolean;
-  subItems?: Omit<MenuItem, "isExpandable" | "subItems">[];
+  subItems?: Omit<
+    MenuItem,
+    "isExpandable" | "subItems" | "isVisible" | "desktopOnly"
+  >[];
+  /** Optional visibility check based on the current user's access */
+  isVisible?: (visibility: MenuVisibility) => boolean;
+  /** Hide the item on small screens (cellphones) */
+  desktopOnly?: boolean;
 };
 
 type SupportLink = {
@@ -74,6 +89,15 @@ const menuItems: MenuItem[] = [
       { id: "status", path: "/status", translationKey: "pages.currentStatus" }, */
     ],
   },
+  {
+    id: "statistics",
+    path: "/statistics",
+    translationKey: "pages.statistics",
+    icon: <Icon icon="mdi:chart-bar" className="w-6 h-6" />,
+    // The backend decides: statistics users also need configured clusters
+    isVisible: ({ hasStatisticsAccess }) => hasStatisticsAccess,
+    desktopOnly: true,
+  },
 ];
 
 const supportLinks: SupportLink[] = [
@@ -118,6 +142,13 @@ export function SidebarLayout() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const { data: currentUser, isLoading, error } = useCurrentUser();
+  const statisticsAccess = useStatisticsAccess(
+    canReadStatistics(currentUser?.role),
+  );
+  const menuVisibility: MenuVisibility = {
+    role: currentUser?.role,
+    hasStatisticsAccess: statisticsAccess.data !== undefined,
+  };
   const { impersonatedUsername } = useImpersonation();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
     new Set(["resource-status"])
@@ -390,7 +421,13 @@ export function SidebarLayout() {
                   )}
                 </a>
               </li>
-              {menuItems.map((item) => (
+              {menuItems
+                .filter(
+                  (item) =>
+                    (!item.isVisible || item.isVisible(menuVisibility)) &&
+                    (!item.desktopOnly || isDesktop)
+                )
+                .map((item) => (
                 <li key={item.id}>
                   {item.isExpandable ? (
                     <>

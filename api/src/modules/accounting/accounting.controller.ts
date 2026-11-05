@@ -1,9 +1,12 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   ForbiddenException,
   Get,
+  HttpCode,
   Param,
+  Post,
   NotFoundException,
   Query,
 } from '@nestjs/common';
@@ -23,8 +26,17 @@ import {
 } from './accounting.service';
 import { UserInfoDTO } from './dto/user-info.dto';
 import { OutageRecordDTO } from './dto/outage-record.dto';
-import { CanonicalOrgNameDTO } from './dto/org-name.dto';
+import {
+  CanonicalOrgNameDTO,
+  StatisticsOrganizationDTO,
+} from './dto/org-name.dto';
 import { ArchivedJobsListDTO } from './dto/archived-job.dto';
+import { StatisticsAccessDTO } from './dto/statistics-access.dto';
+import {
+  StatisticsGraphChartDTO,
+  StatisticsGraphDataDTO,
+  StatisticsGraphRequestDTO,
+} from './dto/statistics-graph.dto';
 import {
   ApiOkResponseModel,
   ApiOkResponseArray,
@@ -96,6 +108,116 @@ export class AccountingController {
   @ApiOkResponseArray(CanonicalOrgNameDTO, 'List of organization names')
   async getCanonicalOrgNames(): Promise<ApiResponseDto<CanonicalOrgNameDTO[]>> {
     const data = await this.accountingService.getCanonicalOrgNames();
+    return new ApiResponseDto(data);
+  }
+
+  @Get('statistics/access')
+  @ApiOperation({
+    summary: 'Get statistics access of the current user',
+    description:
+      'Returns the clusters and users the current user is limited to in statistics. Admins are not limited. Users with the statistics role are limited to the clusters configured for them and to themselves and members of their groups; without configured clusters they have no access.',
+  })
+  @ApiOkResponseModel(StatisticsAccessDTO, 'Statistics access')
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  getStatisticsAccess(
+    @UserContextDecorator() userContext: UserContext,
+  ): ApiResponseDto<StatisticsAccessDTO> {
+    return new ApiResponseDto(
+      this.accountingService.getStatisticsAccessInfo(userContext),
+    );
+  }
+
+  @Get('statistics/clusters')
+  @ApiOperation({
+    summary: 'Get clusters available for statistics',
+    description:
+      'Returns sorted list of cluster names available for statistics, limited to the clusters of the user. Only for users with the statistics or admin role. Returns empty array if database is not configured.',
+  })
+  @ApiOkResponseArray(String, 'List of cluster names')
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  async getStatisticsClusters(
+    @UserContextDecorator() userContext: UserContext,
+  ): Promise<ApiResponseDto<string[]>> {
+    const data = await this.accountingService.getStatisticsClusters(userContext);
+    return new ApiResponseDto(data);
+  }
+
+  @Get('statistics/queues')
+  @ApiOperation({
+    summary: 'Get queues available for statistics',
+    description:
+      'Returns sorted list of queue names found in accounting records, available for statistics. Only for users with the statistics or admin role. Returns empty array if database is not configured.',
+  })
+  @ApiOkResponseArray(String, 'List of queue names')
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  async getStatisticsQueues(
+    @UserContextDecorator() userContext: UserContext,
+  ): Promise<ApiResponseDto<string[]>> {
+    const data = await this.accountingService.getStatisticsQueues(userContext);
+    return new ApiResponseDto(data);
+  }
+
+  @Get('statistics/organizations')
+  @ApiOperation({
+    summary: 'Get organizations available for statistics',
+    description:
+      'Returns list of organizations sorted by name, each with one representative IdP name. Only for users with the statistics or admin role. Returns empty array if database is not configured.',
+  })
+  @ApiOkResponseArray(StatisticsOrganizationDTO, 'List of organizations')
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  async getStatisticsOrganizations(
+    @UserContextDecorator() userContext: UserContext,
+  ): Promise<ApiResponseDto<StatisticsOrganizationDTO[]>> {
+    const data =
+      await this.accountingService.getStatisticsOrganizations(userContext);
+    return new ApiResponseDto(data);
+  }
+
+  @Post('statistics/graphs/:graphId')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Get data of a statistics graph',
+    description:
+      'Returns data of the statistics graph identified by graphId, computed from the given parameters. Only for users with the statistics or admin role. Returns empty data if database is not configured.',
+  })
+  @ApiOkResponseModel(StatisticsGraphDataDTO, 'Statistics graph data')
+  @ApiResponse({ status: 400, description: 'Invalid graph parameters' })
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  @ApiResponse({ status: 404, description: 'Unknown statistics graph' })
+  async getStatisticsGraph(
+    @Param('graphId') graphId: string,
+    @Body() request: StatisticsGraphRequestDTO,
+    @UserContextDecorator() userContext: UserContext,
+  ): Promise<ApiResponseDto<StatisticsGraphDataDTO>> {
+    const data = await this.accountingService.getStatisticsGraphData(
+      graphId,
+      request?.params ?? {},
+      userContext,
+    );
+    return new ApiResponseDto(data);
+  }
+
+  @Post('statistics/graphs/:graphId/chart')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Get chart of a statistics graph',
+    description:
+      'Returns the statistics graph identified by graphId rendered as SVG, computed from the given parameters. Only for users with the statistics or admin role.',
+  })
+  @ApiOkResponseModel(StatisticsGraphChartDTO, 'Statistics graph chart')
+  @ApiResponse({ status: 400, description: 'Invalid graph parameters or graph without chart' })
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  @ApiResponse({ status: 404, description: 'Unknown statistics graph' })
+  async getStatisticsGraphChart(
+    @Param('graphId') graphId: string,
+    @Body() request: StatisticsGraphRequestDTO,
+    @UserContextDecorator() userContext: UserContext,
+  ): Promise<ApiResponseDto<StatisticsGraphChartDTO>> {
+    const data = await this.accountingService.getStatisticsGraphChart(
+      graphId,
+      request?.params ?? {},
+      userContext,
+    );
     return new ApiResponseDto(data);
   }
 
