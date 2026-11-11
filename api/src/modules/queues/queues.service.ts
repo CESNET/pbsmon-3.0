@@ -4,6 +4,7 @@ import {
   PbsQueue,
   PbsReservation,
   PbsNode,
+  PbsServerData,
 } from '@/modules/data-collection/types/pbs.types';
 import {
   QueueListDTO,
@@ -697,6 +698,33 @@ export class QueuesService {
   }
 
   /**
+   * Check if a reservation has invalid nodes (nodes that do not belong to the same partition as the reservation)
+   */
+  private checkReservationInvalid(
+    reservationNodes: String[],
+    serverData: PbsServerData
+  ): boolean {
+    if (!serverData) {
+      return false;
+    }
+    let partitionSet = false;
+    let partition: string | null = null;
+
+    for (const node of serverData.nodes?.items ?? []) {
+      if (reservationNodes.includes(node.name)) {
+        const nodePartition = node.attributes.partition || null;
+        if (!partitionSet) {
+          partition = nodePartition;
+          partitionSet = true;
+        }
+        if (nodePartition !== partition) return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Parse reservation information for a queue
    * Finds reservations linked to this queue and associated nodes
    */
@@ -870,6 +898,11 @@ export class QueuesService {
       }
     }
 
+    const invalid = this.checkReservationInvalid(
+      nodes,
+      serverData
+    );
+
     return {
       name: reservation.name,
       displayName: reservation.attributes.Reserve_Name || null,
@@ -886,6 +919,7 @@ export class QueuesService {
       resourceNodect: reservation.attributes['Resource_List.nodect'] || null,
       authorizedUsers,
       nodes: nodes.length > 0 ? nodes : null,
+      invalid,
       isStarted,
       queue: reservation.attributes.queue || null,
     };

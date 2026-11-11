@@ -408,8 +408,13 @@ export function JobsQueuesPage() {
                     <div className={`col-span-1 ${isCompact ? "" : "col-span-3"} text-sm min-w-0`}>
                       <Link
                         to={`/queues/${queueId}`}
-                        className="font-medium text-gray-900 hover:text-primary-600 break-all"
+                        className={`font-medium break-all ${
+                          resv?.invalid
+                            ? "text-red-600 hover:text-red-800"
+                            : "text-gray-900 hover:text-primary-600"
+                        }`}
                       >
+                        {resv?.invalid && "! "}
                         {queueId}
                       </Link>
                       {queue.totalJobs !== undefined && queue.totalJobs !== null && (

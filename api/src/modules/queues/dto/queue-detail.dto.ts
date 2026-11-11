@@ -274,6 +274,13 @@ export class QueueReservationDTO {
 
   @Expose()
   @ApiProperty({
+    description: 'Invalid reservation, reservation contains nodes from different partitions',
+    nullable: true,
+  })
+  invalid?: boolean | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Whether the reservation has started (reserve_state === 5)',
     nullable: true,
   })

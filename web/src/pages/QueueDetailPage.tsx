@@ -86,15 +86,28 @@ export function QueueDetailPage() {
     ? `${data.data.name}@${data.data.server}.metacentrum.cz`
     : data.data.name;
 
+  const isInvalidReservation = !!data.data.reservation?.invalid;
+
   return (
     <>
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-primary-900">
-            {t("pages.queueDetail")}: {queueDisplayName}
+            {t("pages.queueDetail")}:{" "}
+            <span className={isInvalidReservation ? "text-red-600" : undefined}>
+              {isInvalidReservation && "! "}
+              {queueDisplayName}
+            </span>
           </h1>
         </div>
       </header>
+      {isInvalidReservation && (
+        <div className="px-6 pt-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 font-medium">
+            {t("queues.invalidReservation")}
+          </div>
+        </div>
+      )}
       <QueueDetailContent queue={data.data} queueId={queueId || ""} />
     </>
   );
