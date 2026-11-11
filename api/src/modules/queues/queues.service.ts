@@ -780,8 +780,10 @@ export class QueuesService {
     const nodes: string[] = [];
     if (serverData.nodes?.items) {
       for (const node of serverData.nodes.items) {
-        const nodeResv = node.attributes.resv;
-        if (nodeResv && nodeResv === reservation.name) {
+        const nodeResv = node.attributes?.resv?.split(',')
+          .map((u) => u.trim())
+          .filter(Boolean)
+        if (nodeResv && nodeResv.includes(reservation.name)) {
           nodes.push(node.name);
         }
       }
