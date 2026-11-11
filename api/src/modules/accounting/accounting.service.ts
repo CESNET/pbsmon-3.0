@@ -29,8 +29,10 @@ import { ArchivedJobDTO, ArchivedJobsListDTO } from './dto/archived-job.dto';
 import {
   StatisticsGraphChartDTO,
   StatisticsGraphDataDTO,
+  StatisticsGraphInfoDTO,
 } from './dto/statistics-graph.dto';
 import {
+  STATISTICS_GRAPH_QUERIES,
   StatisticsGraphAccess,
   StatisticsGraphParams,
   StatisticsGraphQuery,
@@ -714,6 +716,21 @@ export class AccountingService implements OnModuleDestroy {
       );
       return [];
     }
+  }
+
+  /**
+   * List the statistics graphs with their parameters.
+   * Only for users who can read statistics (statistics role or admin).
+   */
+  getStatisticsGraphs(userContext: UserContext): StatisticsGraphInfoDTO[] {
+    this.getStatisticsAccess(userContext);
+
+    return Object.entries(STATISTICS_GRAPH_QUERIES).map(([graphId, graph]) => ({
+      graphId,
+      title: graph.title,
+      hasChart: !!graph.chart,
+      params: graph.params.map((param) => ({ ...param })),
+    }));
   }
 
   /**

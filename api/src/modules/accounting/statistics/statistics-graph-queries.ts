@@ -33,6 +33,35 @@ export interface StatisticsGraphAccess {
   organizations: string[] | null;
 }
 
+/** Kind of a graph parameter (see StatisticsGraphParamDefinition) */
+export type StatisticsGraphParamType =
+  | 'cluster'
+  | 'queue'
+  | 'organization'
+  | 'user'
+  | 'dateRange'
+  | 'boolean'
+  | 'enum';
+
+/**
+ * Description of one graph parameter, listed by the graph list endpoint.
+ * Must match what the graph's values() / chart() accept.
+ */
+export interface StatisticsGraphParamDefinition {
+  /** Key in the request params */
+  name: string;
+  type: StatisticsGraphParamType;
+  /** Required by the data endpoint (and so by the chart endpoint too) */
+  required: boolean;
+  /** Used (and required) only by the chart endpoint */
+  chartOnly?: boolean;
+  /** Allowed values of an 'enum' parameter */
+  values?: string[];
+  /** API endpoint listing the possible values, if any */
+  valuesEndpoint?: string;
+  description: string;
+}
+
 /**
  * SQL query behind one statistics graph.
  *
@@ -40,6 +69,10 @@ export interface StatisticsGraphAccess {
  * id used in the frontend (useStatisticsGraphDefinitions.ts).
  */
 export interface StatisticsGraphQuery {
+  /** Human-readable name of the graph */
+  title: string;
+  /** Parameters accepted by the graph, listed by the graph list endpoint */
+  params: StatisticsGraphParamDefinition[];
   /** Parametrized SQL ($1, $2, ...) - never interpolate request values */
   sql: string;
   /**
@@ -267,6 +300,95 @@ export function jobOnClusters(
   `;
 }
 
+// --- parameter definitions (graph list endpoint) -----------------------------
+
+const PARAM_PERIOD: StatisticsGraphParamDefinition = {
+  name: 'period',
+  type: 'dateRange',
+  required: true,
+  description: 'Time period { from, to }, dates in YYYY-MM-DD format',
+};
+
+const PARAM_CLUSTER: StatisticsGraphParamDefinition = {
+  name: 'cluster',
+  type: 'cluster',
+  required: true,
+  valuesEndpoint: '/accounting/statistics/clusters',
+  description: 'Cluster (physical resource) name',
+};
+
+const PARAM_QUEUE: StatisticsGraphParamDefinition = {
+  name: 'queue',
+  type: 'queue',
+  required: true,
+  valuesEndpoint: '/accounting/statistics/queues',
+  description: 'Queue name',
+};
+
+const PARAM_ORGANIZATION: StatisticsGraphParamDefinition = {
+  name: 'organization',
+  type: 'organization',
+  required: false,
+  valuesEndpoint: '/accounting/statistics/organizations',
+  description:
+    'Organization name, empty = all organizations, ' +
+    `'${ALL_ACADEMIES}' = all the Czech Academies ` +
+    '(only for users not limited in organizations)',
+};
+
+const PARAM_USER: StatisticsGraphParamDefinition = {
+  name: 'user',
+  type: 'user',
+  required: false,
+  description:
+    'User nickname, empty = all users ' +
+    '(limited to the users allowed, see /accounting/statistics/access)',
+};
+
+const PARAM_GROUP_ACADEMIES: StatisticsGraphParamDefinition = {
+  name: 'groupAcademies',
+  type: 'boolean',
+  required: false,
+  description: `Group all the academies into one organization ('AV ČR')`,
+};
+
+const PARAM_OMIT_SHORT_BAR: StatisticsGraphParamDefinition = {
+  name: 'omitShortBar',
+  type: 'boolean',
+  required: false,
+  description: 'Omit the first, 0-10 s bucket',
+};
+
+/** 'shape' parameter offering the given chart shapes */
+function shapeParam(shapes: string[]): StatisticsGraphParamDefinition {
+  return {
+    name: 'shape',
+    type: 'enum',
+    required: false,
+    chartOnly: true,
+    values: shapes,
+    description: 'Chart shape',
+  };
+}
+
+const RANKING_SHAPES = ['barVertical', 'barHorizontal', 'pie'];
+
+/** Params of the organization rankings (see rankingValues()) */
+const ORGANIZATION_RANKING_PARAMS: StatisticsGraphParamDefinition[] = [
+  PARAM_PERIOD,
+  PARAM_ORGANIZATION,
+  PARAM_GROUP_ACADEMIES,
+  shapeParam(RANKING_SHAPES),
+];
+
+/** Params of the rankings with a user (see rankingValuesWithUser()) */
+const RANKING_PARAMS_WITH_USER: StatisticsGraphParamDefinition[] = [
+  PARAM_PERIOD,
+  PARAM_ORGANIZATION,
+  PARAM_USER,
+  shapeParam(RANKING_SHAPES),
+];
+
 // --- chart shape helpers ------------------------------------------------------
 
 /**
@@ -363,11 +485,19 @@ function jobDurationHistogram(
   durationSql: string,
   buckets: DurationBucket[],
   chartTitle: string,
+  title: string,
 ): StatisticsGraphQuery {
   const selectedBuckets = (params: StatisticsGraphParams) =>
     optionalBoolean(params, 'omitShortBar') ? buckets.slice(1) : buckets;
 
   return {
+    title,
+    params: [
+      PARAM_QUEUE,
+      PARAM_PERIOD,
+      PARAM_OMIT_SHORT_BAR,
+      shapeParam(RANKING_SHAPES),
+    ],
     sql: `
       WITH buckets AS (
         SELECT *
@@ -584,6 +714,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // Daily workload of the cluster in the period, limited to the days when
   // the cluster was enabled. Params: cluster, period { from, to } - all required.
   clusterUsage: {
+    title: 'Usage of a specific cluster',
+    params: [PARAM_CLUSTER, PARAM_PERIOD, shapeParam(['area', 'line'])],
     sql: `
       SELECT w.*
       FROM physical_resources pr
@@ -639,6 +771,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // utilization are left out. Params: period { from, to },
   // shape ('barVertical' | 'barHorizontal').
   averageUsage: {
+    title: 'Average usage of all clusters',
+    params: [PARAM_PERIOD, shapeParam(['barVertical', 'barHorizontal'])],
     sql: `
       SELECT
         w.ph_resources_id,
@@ -686,6 +820,13 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // shape ('barVertical' | 'barHorizontal' | 'pie'), groupAcademies (all the
   // academies as one organization).
   clusterOrganizations: {
+    title: 'Usage of a single cluster by organizations',
+    params: [
+      PARAM_CLUSTER,
+      PARAM_PERIOD,
+      PARAM_GROUP_ACADEMIES,
+      shapeParam(RANKING_SHAPES),
+    ],
     sql: `
       SELECT
         pr.name AS cluster,
@@ -741,6 +882,7 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     'p.start_time - p.create_time',
     WAIT_TIME_BUCKETS,
     'job wait time before start',
+    'Job wait time before start in a queue',
   ),
 
   // Job run time in a queue (end_time - start_time)
@@ -748,6 +890,7 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     'p.end_time - p.start_time',
     RUN_TIME_BUCKETS,
     'job run time',
+    'Job run time in a queue',
   ),
   // Organizations by job time
   // Hours of jobs running in the period per organization (counted per host
@@ -755,6 +898,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // (required), organization (optional),
   // shape ('barVertical' | 'barHorizontal' | 'pie'), groupAcademies.
   organizationsByJobTime: {
+    title: 'Organizations by job time',
+    params: ORGANIZATION_RANKING_PARAMS,
     sql: `
       SELECT
         ${ORGANIZATION_LABEL('org', 5)} AS organization,
@@ -786,6 +931,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // Params: period { from, to } (required), organization (optional),
   // shape ('barVertical' | 'barHorizontal' | 'pie'), groupAcademies.
   organizationsByJobCount: {
+    title: 'Organizations by number of jobs',
+    params: ORGANIZATION_RANKING_PARAMS,
     sql: `
       SELECT ${ORGANIZATION_LABEL('org', 5)} AS organization, count(*) AS jobs
       FROM acct_pbs_record j
@@ -814,6 +961,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // period { from, to } (required), organization and user (optional, empty
   // = all), shape ('barVertical' | 'barHorizontal' | 'pie').
   usersByJobTime: {
+    title: 'Users by job time',
+    params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT
         au.user_name,
@@ -840,6 +989,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // period { from, to } (required), organization and user (optional, empty
   // = all), shape ('barVertical' | 'barHorizontal' | 'pie').
   usersByJobCount: {
+    title: 'Users by number of jobs',
+    params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT au.user_name, count(*) AS jobs
       FROM acct_pbs_record j
@@ -863,6 +1014,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // (required), organization and user (optional, empty = all),
   // shape ('barVertical' | 'barHorizontal' | 'pie').
   queuesByJobCount: {
+    title: 'Queues by number of jobs',
+    params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT ${QUEUE_LABEL} AS queue, count(*) AS jobs
       FROM acct_pbs_record j
@@ -885,6 +1038,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // Params: period { from, to } (required), organization and user (optional,
   // empty = all), shape ('barVertical' | 'barHorizontal' | 'pie').
   queuesByComputedTime: {
+    title: 'Queues by computed time',
+    params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT
         ${QUEUE_LABEL} AS queue,
@@ -915,6 +1070,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // resource. Params: period { from, to } (required), organization and user
   // (optional, empty = all), shape ('barVertical' | 'barHorizontal' | 'pie').
   clustersByComputedTime: {
+    title: 'Clusters by computed time',
+    params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT
         pr.name,
@@ -936,6 +1093,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   // (required), organization and user (optional, empty = all),
   // shape ('barVertical' | 'barHorizontal' | 'pie').
   clustersByJobCount: {
+    title: 'Clusters by number of jobs',
+    params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT pr.name, count(DISTINCT j.acct_id_string) AS jobs
       ${CLUSTER_JOBS_FROM}

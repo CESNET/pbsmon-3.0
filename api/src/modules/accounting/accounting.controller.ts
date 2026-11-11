@@ -35,6 +35,7 @@ import { StatisticsAccessDTO } from './dto/statistics-access.dto';
 import {
   StatisticsGraphChartDTO,
   StatisticsGraphDataDTO,
+  StatisticsGraphInfoDTO,
   StatisticsGraphRequestDTO,
 } from './dto/statistics-graph.dto';
 import {
@@ -171,6 +172,22 @@ export class AccountingController {
     const data =
       await this.accountingService.getStatisticsOrganizations(userContext);
     return new ApiResponseDto(data);
+  }
+
+  @Get('statistics/graphs')
+  @ApiOperation({
+    summary: 'List statistics graphs',
+    description:
+      'Returns all statistics graphs with their graphId and the parameters they accept, for use with POST statistics/graphs/:graphId and POST statistics/graphs/:graphId/chart. Only for users with the statistics or admin role.',
+  })
+  @ApiOkResponseArray(StatisticsGraphInfoDTO, 'List of statistics graphs')
+  @ApiResponse({ status: 403, description: 'Access to statistics denied' })
+  getStatisticsGraphs(
+    @UserContextDecorator() userContext: UserContext,
+  ): ApiResponseDto<StatisticsGraphInfoDTO[]> {
+    return new ApiResponseDto(
+      this.accountingService.getStatisticsGraphs(userContext),
+    );
   }
 
   @Post('statistics/graphs/:graphId')
