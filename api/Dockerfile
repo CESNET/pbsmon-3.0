@@ -1,5 +1,5 @@
 # Build stage for Node.js application
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ RUN npm run build
 # Note: pbscaller is now a separate service in docker-compose.prod.yml
 
 # Production stage
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 
 WORKDIR /app
 

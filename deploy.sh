@@ -98,7 +98,7 @@ if [ -f "$ENV_FILE" ]; then
         --env-file "$ENV_FILE" \
         -v "$SCRIPT_DIR:/workspace" \
         -w /workspace/api \
-        node:24-alpine \
+        node:26-alpine \
         sh -c "npm ci && npm run generate:openapi -- --output /workspace/web/openapi/openapi.json"; then
         echo -e "${GREEN}✓ OpenAPI spec generated${NC}"
     else
@@ -109,7 +109,7 @@ else
     if docker run --rm \
         -v "$SCRIPT_DIR:/workspace" \
         -w /workspace/api \
-        node:24-alpine \
+        node:26-alpine \
         sh -c "npm ci && npm run generate:openapi -- --output /workspace/web/openapi/openapi.json"; then
         echo -e "${GREEN}✓ OpenAPI spec generated${NC}"
     else
@@ -123,7 +123,7 @@ if docker run --rm \
     -e OPENAPI_SPEC_FILE=/workspace/web/openapi/openapi.json \
     -v "$SCRIPT_DIR:/workspace" \
     -w /workspace/web \
-    node:24-alpine \
+    node:26-alpine \
     sh -c "npm ci && npm run generate:api"; then
     echo -e "${GREEN}✓ Web API client generated${NC}"
 else
