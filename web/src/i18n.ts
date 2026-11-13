@@ -609,24 +609,24 @@ i18n.use(initReactI18next).init({
             title: "Job run time in individual queues",
             description: "Select a queue, chart shape and time period.",
           },
-          clusterOrganizations: {
-            title: "Usage of a single cluster by organizations",
+          clusterOrganizationsByComputedTime: {
+            title: "Single cluster: organizations by computed time",
             description: "Select a cluster, chart shape and time period.",
           },
-          organizationsByJobTime: {
-            title: "Organizations by job time",
+          organizationsByComputedTime: {
+            title: "Organizations by computed time",
             description:
-              "Hours computed by jobs per organization. Select an organization (or all organizations), chart shape and time period.",
+              "CPU years computed by jobs per organization. Select an organization (or all organizations), chart shape and time period.",
           },
           organizationsByJobCount: {
             title: "Organizations by number of jobs",
             description:
               "Number of jobs per organization. Select an organization (or all organizations), chart shape and time period.",
           },
-          usersByJobTime: {
-            title: "Users by job time",
+          usersByComputedTime: {
+            title: "Users by computed time",
             description:
-              "Hours computed by jobs of the 60 most active users. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+              "CPU years computed by jobs of the 60 most active users. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
           },
           usersByJobCount: {
             title: "Users by number of jobs",
@@ -641,12 +641,12 @@ i18n.use(initReactI18next).init({
           queuesByComputedTime: {
             title: "Queues by computed time",
             description:
-              "CPU hours computed by jobs per queue. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+              "CPU years computed by jobs per queue. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
           },
           clustersByComputedTime: {
             title: "Clusters by computed time",
             description:
-              "Hours computed by jobs per cluster. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
+              "CPU years computed by jobs per cluster. Optionally enter a user nickname, select an organization (or all organizations), chart shape and time period.",
           },
           clustersByJobCount: {
             title: "Clusters by number of jobs",
@@ -1281,24 +1281,24 @@ i18n.use(initReactI18next).init({
             title: "Graf doby běhu úloh v jednotlivých frontách",
             description: "Vyberte frontu, tvar grafu a časové období.",
           },
-          clusterOrganizations: {
-            title: "Graf využití jednoho clusteru organizacemi",
+          clusterOrganizationsByComputedTime: {
+            title: "Jeden cluster: organizace podle propočítaného času",
             description: "Vyberte cluster, tvar grafu a časové období.",
           },
-          organizationsByJobTime: {
-            title: "Organizace podle času úloh",
+          organizationsByComputedTime: {
+            title: "Organizace podle propočítaného času",
             description:
-              "Propočítané hodiny úloh podle organizací. Vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+              "Propočítané CPU roky úloh podle organizací. Vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
           },
           organizationsByJobCount: {
             title: "Organizace podle počtu úloh",
             description:
               "Počet úloh podle organizací. Vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
           },
-          usersByJobTime: {
-            title: "Uživatelé podle času úloh",
+          usersByComputedTime: {
+            title: "Uživatelé podle propočítaného času",
             description:
-              "Propočítané hodiny úloh 60 nejaktivnějších uživatelů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+              "Propočítané CPU roky úloh 60 nejaktivnějších uživatelů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
           },
           usersByJobCount: {
             title: "Uživatelé podle počtu úloh",
@@ -1313,12 +1313,12 @@ i18n.use(initReactI18next).init({
           queuesByComputedTime: {
             title: "Fronty podle propočítaného času",
             description:
-              "Propočítané CPU hodiny úloh podle front. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+              "Propočítané CPU roky úloh podle front. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
           },
           clustersByComputedTime: {
             title: "Clustery podle propočítaného času",
             description:
-              "Propočítané hodiny úloh podle clusterů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
+              "Propočítané CPU roky úloh podle clusterů. Volitelně zadejte přezdívku uživatele, vyberte organizaci (nebo všechny organizace), tvar grafu a časové období.",
           },
           clustersByJobCount: {
             title: "Clustery podle počtu úloh",

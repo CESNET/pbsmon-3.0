@@ -813,14 +813,15 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     },
   },
 
-  // Cluster usage by organizations
-  // Hours computed by jobs on the cluster's hosts in the period, per user
-  // organization. Job time is clipped to the period. Params: cluster,
+  // Single cluster: organizations by computed time
+  // CPU years (job time x used CPUs, a year = 365 days) computed by jobs on
+  // the cluster's hosts in the period, per user organization. Job time is
+  // clipped to the period. Params: cluster,
   // period { from, to } (required),
   // shape ('barVertical' | 'barHorizontal' | 'pie'), groupAcademies (all the
   // academies as one organization).
-  clusterOrganizations: {
-    title: 'Usage of a single cluster by organizations',
+  clusterOrganizationsByComputedTime: {
+    title: 'Single cluster: organizations by computed time',
     params: [
       PARAM_CLUSTER,
       PARAM_PERIOD,
@@ -833,11 +834,13 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
         ${ORGANIZATION_LABEL('org', 4)} AS organization,
         ROUND(
           SUM(
-            LEAST(j.end_time, extract(epoch from $3::timestamp))
-            - GREATEST(j.start_time, extract(epoch from $2::timestamp))
-          )::numeric / 3600,
-          1
-        ) AS hours
+            (
+              LEAST(j.end_time, extract(epoch from $3::timestamp))
+              - GREATEST(j.start_time, extract(epoch from $2::timestamp))
+            )
+          )::numeric / (365 * 24 * 3600),
+          3
+        ) AS cpu_years
       FROM physical_resources pr
       JOIN physical_hosts_resources_rel phrr ON phrr.ph_resources_id = pr.id
       JOIN physical_hosts ph ON ph.id = phrr.ph_hosts_id
@@ -853,7 +856,7 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
         AND phrr.start_time < to_timestamp(j.start_time)
         AND to_timestamp(j.start_time) < phrr.end_time
       GROUP BY 1, 2
-      ORDER BY hours DESC
+      ORDER BY cpu_years DESC
     `,
     values: (params, access) => [
       requireCluster(params, access),
@@ -863,15 +866,17 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     chart: (rows, params) => {
       const [from, to] = requireDateRange(params, 'period');
       const chart = {
-        title: `${requireString(params, 'cluster')}: usage by organizations`,
+        title:
+          `${requireString(params, 'cluster')}: ` +
+          'organizations by computed time',
         subtitle: `${formatDay(from)} – ${formatDay(to)}`,
         labels: rows.map((row) =>
           typeof row.organization === 'string' ? row.organization : 'Unknown',
         ),
-        values: rows.map((row) => toNumber(row.hours)),
+        values: rows.map((row) => toNumber(row.cpu_years)),
       };
       return selectChart(params, {
-        ...barCharts({ ...chart, valueLabel: 'Hours', color: '#e8001c' }),
+        ...barCharts({ ...chart, valueLabel: 'CPU years', color: '#e8001c' }),
         pie: () => pieChart({ ...chart, maxSlices: 15 }),
       });
     },
@@ -892,18 +897,23 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     'job run time',
     'Job run time in a queue',
   ),
-  // Organizations by job time
-  // Hours of jobs running in the period per organization (counted per host
+  // Organizations by computed time
+  // CPU years (job time x used CPUs, a year = 365 days) of jobs running in
+  // the period per organization (counted per host
   // the job ran on, not clipped to the period). Params: period { from, to }
   // (required), organization (optional),
   // shape ('barVertical' | 'barHorizontal' | 'pie'), groupAcademies.
-  organizationsByJobTime: {
-    title: 'Organizations by job time',
+  organizationsByComputedTime: {
+    title: 'Organizations by computed time',
     params: ORGANIZATION_RANKING_PARAMS,
     sql: `
       SELECT
         ${ORGANIZATION_LABEL('org', 5)} AS organization,
-        ROUND(SUM(j.end_time - j.start_time)::numeric / 3600, 2) AS hours
+        ROUND(
+          SUM(j.end_time - j.start_time)::numeric
+            / (365 * 24 * 3600),
+          3
+        ) AS cpu_years
       FROM acct_pbs_record j
       JOIN ci_acct_pbs_server s
         ON j.ci_acct_pbs_server_id = s.ci_acct_pbs_server_id
@@ -916,14 +926,14 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
         AND ${ORG_MATCHES('org')}
         AND ${jobOnClusters('j', 4, 'l')}
       GROUP BY 1
-      ORDER BY hours DESC NULLS LAST, organization
+      ORDER BY cpu_years DESC NULLS LAST, organization
     `,
     values: rankingValues,
     chart: rankingChart(
-      'Organizations by job time',
+      'Organizations by computed time',
       'organization',
-      'hours',
-      'Hours',
+      'cpu_years',
+      'CPU years',
     ),
   },
 
@@ -956,17 +966,22 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     ),
   },
 
-  // Users by job time
-  // Hours of jobs running in the period, top 60 users. Params:
+  // Users by computed time
+  // CPU years (job time x used CPUs, a year = 365 days) of jobs running in
+  // the period, top 60 users. Params:
   // period { from, to } (required), organization and user (optional, empty
   // = all), shape ('barVertical' | 'barHorizontal' | 'pie').
-  usersByJobTime: {
-    title: 'Users by job time',
+  usersByComputedTime: {
+    title: 'Users by computed time',
     params: RANKING_PARAMS_WITH_USER,
     sql: `
       SELECT
         au.user_name,
-        ROUND(SUM(j.end_time - j.start_time)::numeric / 3600, 2) AS hours
+        ROUND(
+          SUM(j.end_time - j.start_time)::numeric
+            / (365 * 24 * 3600),
+          3
+        ) AS cpu_years
       FROM acct_pbs_record j
       JOIN ci_acct_pbs_server s
         ON j.ci_acct_pbs_server_id = s.ci_acct_pbs_server_id
@@ -977,11 +992,16 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
         AND ${USER_NAME}
         AND ${jobOnClusters('j', 5)}
       GROUP BY au.user_name
-      ORDER BY hours DESC NULLS LAST, au.user_name
+      ORDER BY cpu_years DESC NULLS LAST, au.user_name
       LIMIT 60
     `,
     values: rankingValuesWithUser,
-    chart: rankingChart('Users by job time', 'user_name', 'hours', 'Hours'),
+    chart: rankingChart(
+      'Users by computed time',
+      'user_name',
+      'cpu_years',
+      'CPU years',
+    ),
   },
 
   // Users by number of jobs
@@ -1034,7 +1054,8 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
   },
 
   // Queues by computed time
-  // CPU hours (job time clipped to the period x used CPUs) per queue@server.
+  // CPU years (job time clipped to the period x used CPUs) per queue@server
+  // (a year = 365 days).
   // Params: period { from, to } (required), organization and user (optional,
   // empty = all), shape ('barVertical' | 'barHorizontal' | 'pie').
   queuesByComputedTime: {
@@ -1043,8 +1064,11 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     sql: `
       SELECT
         ${QUEUE_LABEL} AS queue,
-        ROUND(SUM((${JOB_TIME_IN_PERIOD}) * j.used_ncpus)::numeric / 3600, 1)
-          AS cpu_hours
+        ROUND(
+          SUM((${JOB_TIME_IN_PERIOD}) * j.used_ncpus)::numeric
+            / (365 * 24 * 3600),
+          3
+        ) AS cpu_years
       FROM acct_pbs_record j
       JOIN ci_acct_pbs_server s
         ON j.ci_acct_pbs_server_id = s.ci_acct_pbs_server_id
@@ -1054,20 +1078,21 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
         AND ${USER_NAME}
         AND ${jobOnClusters('j', 5)}
       GROUP BY 1
-      ORDER BY cpu_hours DESC NULLS LAST, queue
+      ORDER BY cpu_years DESC NULLS LAST, queue
     `,
     values: rankingValuesWithUser,
     chart: rankingChart(
       'Queues by computed time',
       'queue',
-      'cpu_hours',
-      'CPU hours',
+      'cpu_years',
+      'CPU years',
     ),
   },
 
   // Clusters by computed time
-  // Hours of jobs (clipped to the period, counted per host) per physical
-  // resource. Params: period { from, to } (required), organization and user
+  // CPU years (job time clipped to the period x used CPUs, counted per host,
+  // a year = 365 days) per physical resource. Params: period { from, to }
+  // (required), organization and user
   // (optional, empty = all), shape ('barVertical' | 'barHorizontal' | 'pie').
   clustersByComputedTime: {
     title: 'Clusters by computed time',
@@ -1075,17 +1100,26 @@ export const STATISTICS_GRAPH_QUERIES: Record<string, StatisticsGraphQuery> = {
     sql: `
       SELECT
         pr.name,
-        ROUND(SUM(${JOB_TIME_IN_PERIOD})::numeric / 3600, 1) AS hours
+        ROUND(
+          SUM(${JOB_TIME_IN_PERIOD})::numeric
+            / (365 * 24 * 3600),
+          3
+        ) AS cpu_years
       ${CLUSTER_JOBS_FROM}
       WHERE ${JOB_IN_PERIOD}
         AND ${USER_IN_ORGANIZATION}
         AND ${USER_NAME}
         AND ($5::text[] IS NULL OR pr.name = ANY($5::text[]))
       GROUP BY pr.name
-      ORDER BY hours DESC NULLS LAST, pr.name
+      ORDER BY cpu_years DESC NULLS LAST, pr.name
     `,
     values: rankingValuesWithUser,
-    chart: rankingChart('Clusters by computed time', 'name', 'hours', 'Hours'),
+    chart: rankingChart(
+      'Clusters by computed time',
+      'name',
+      'cpu_years',
+      'CPU years',
+    ),
   },
 
   // Clusters by number of jobs

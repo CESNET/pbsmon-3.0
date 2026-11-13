@@ -188,9 +188,9 @@ export function useStatisticsGraphDefinitions(
       fields: queueDurationFields(),
     },
     {
-      id: "clusterOrganizations",
-      title: t("statistics.clusterOrganizations.title"),
-      description: t("statistics.clusterOrganizations.description"),
+      id: "clusterOrganizationsByComputedTime",
+      title: t("statistics.clusterOrganizationsByComputedTime.title"),
+      description: t("statistics.clusterOrganizationsByComputedTime.description"),
       fields: [
         {
           type: "row",
@@ -204,9 +204,9 @@ export function useStatisticsGraphDefinitions(
       ],
     },
     {
-      id: "organizationsByJobTime",
-      title: t("statistics.organizationsByJobTime.title"),
-      description: t("statistics.organizationsByJobTime.description"),
+      id: "organizationsByComputedTime",
+      title: t("statistics.organizationsByComputedTime.title"),
+      description: t("statistics.organizationsByComputedTime.description"),
       fields: [...rankingFields(), groupAcademiesField],
     },
     {
@@ -216,9 +216,9 @@ export function useStatisticsGraphDefinitions(
       fields: [...rankingFields(), groupAcademiesField],
     },
     {
-      id: "usersByJobTime",
-      title: t("statistics.usersByJobTime.title"),
-      description: t("statistics.usersByJobTime.description"),
+      id: "usersByComputedTime",
+      title: t("statistics.usersByComputedTime.title"),
+      description: t("statistics.usersByComputedTime.description"),
       fields: rankingFields(true),
     },
     {
